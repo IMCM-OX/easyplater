@@ -891,10 +891,12 @@ find_independent_switches_using_sas <- function(depth, plate_df,
 
   ss_matrix_rejiggled <- ss_matrix[new_jiggled_matrix_indices, new_jiggled_matrix_indices]
       
-  sas_score <- calc_spatial_auto_score(rownames(ss_matrix_rejiggled),sample_communities,mask)
+  #sas_score <- calc_spatial_auto_score(rownames(ss_matrix_rejiggled),sample_communities,mask)
 
   temp_plate_df <- plate_df  %>% slice(match(rownames(ss_matrix_rejiggled), SampleID))
       
+  sas_score <- calc_sas(temp_plate_df, columns_for_scoring, column_weights, rownames(ss_matrix_rejiggled), mask, plate_n_rows, plate_n_cols, internal_control_well_indices)
+  
   plating_score<-calc_row_column_score(temp_plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols) +
                      calc_patch_score(temp_plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols)
 

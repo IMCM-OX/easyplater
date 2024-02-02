@@ -1,7 +1,7 @@
 #### CONSIDERATION OF SUBJECTID
 
 # R: version 4.2.1 
-source("optimize_sample_wells_in_plate_functions.r")
+source("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/optimize_sample_wells_in_plate_functions.r")
 
 ################################################################################
 # I am trying to neaten up code here, so have to remover some comments.
@@ -40,18 +40,18 @@ internal_control_ids <- c("SC1","SC2","SC3","NC1","NC2","PC1","PC2","PC3") # SC 
 
 CLOSE_THRESH <- 2
 
-#weights = c(0,5,5,1,1,1) # first weight is 0: this just corresponds to the SampleID
+weights = c(0,5,5,1,1,1) # first weight is 0: this just corresponds to the SampleID
                          # column comparison (which will always be 0 anyway, as we
-			 # don't compare samples to themselves).)
+			                   # don't compare samples to themselves).)
                          # Doing this just means fewer steps in terms of extracting
-			 # columns from vectors, in the sample similarity calculations.
-weights = c(0,1)
+			                   # columns from vectors, in the sample similarity calculations.
 
-#columns_for_scoring <- c("SubjectGroup","Sex","TimePoint","AgeGroup","LatencyGroup")
-#column_weights <- c(5,5,1,1,1) # See notes below... should this always just be weights[2:6]?
+columns_for_scoring <- c("SubjectGroup","Sex","TimePoint","AgeGroup","LatencyGroup")
+column_weights <- c(5,5,1,1,1) # See notes below... should this always just be weights[2:6]?
 
-columns_for_scoring <- c("Sex")
-column_weights <- c(1)
+#weights = c(0,1)
+#columns_for_scoring <- c("Sex")
+#column_weights <- c(1)
 
 splitting_ss_thresh <- 0.5
 splitting_wd_thresh <- 1
@@ -61,7 +61,8 @@ switching_wd_thresh <- 6
 
 # NOTE: If this works, will need to put try-catch around the code that uses this!
 
-imbalance_fixer <- c(F,"","",0)
+#imbalance_fixer <- c(F,"","",0)
+imbalance_fixer <- c(T,"SubjectGroup","ALS",2)
 
 # IMPORTANT NOTE: At the moment only thinking about 96 well plates. And thresholds
 # for what is a big or small distance between wells is HARDCODED accordingly...
@@ -102,19 +103,19 @@ scoring_mask <- make_scoring_mask(well_distances_matrix)
 
 
 # Read in randomized manifest
-#manifest_df <- read_csv("../../data/ALS_example_randomized_manifest.csv")
-manifest_df <- read_csv("test_data/pos_spatial_correlation_manifest_2.csv")
+manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/ALS_example_randomized_manifest.csv")
+#manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/pos_spatial_correlation_manifest_2.csv")
 #manifest_df <- cbind(manifest_df[sample(1:nrow(manifest_df)),c("SampleID","Sex")],manifest_df[,c("plate","column","row","well")])
 # Make a list of the plates:
 plates <- unique(manifest_df$plate)
 
-for (p in plates[1]){
+for (p in plates[2]){
 
-  #cols_for_analysis <- c("SampleID","SubjectGroup","Sex","TimePoint","AgeGroup","LatencyGroup")
-  #cols_to_categorize <- list(c("Age",10,0,"AgeGroup"), c("Latency",10,0,"LatencyGroup"))
+  cols_for_analysis <- c("SampleID","SubjectGroup","Sex","TimePoint","AgeGroup","LatencyGroup")
+  cols_to_categorize <- list(c("Age",10,0,"AgeGroup"), c("Latency",10,0,"LatencyGroup"))
 
-  cols_for_analysis <- c("SampleID","Sex")
-  cols_to_categorize <- list()
+  #cols_for_analysis <- c("SampleID","Sex")
+  #cols_to_categorize <- list()
 
   plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, p, cols_for_analysis, cols_to_categorize, imbalance_fixer, 
 							 plate_size, plate_wells, internal_control_well_indices, internal_control_ids) 
@@ -129,18 +130,17 @@ for (p in plates[1]){
   sample_similarities_sj_names <- ss_matrices_list[[3]]
 
   sample_communities <- find_sample_communities(sample_similarities_matrix, splitting_ss_thresh)
-  sas_original <- calc_spatial_auto_score(plate_df$SampleID , sample_communities, scoring_mask)
+  #sas_original <- calc_spatial_auto_score(plate_df$SampleID , sample_communities, scoring_mask)
 
   #cc_original=cor(as.numeric(well_pair_distances_df$d), as.numeric(lowerTriangle(sample_similarities_matrix)),use='complete.obs')
   
   temp_plate_df_original <- plate_df  %>% slice(match(rownames(sample_similarities_matrix), SampleID))
+  sas_original <- calc_sas(temp_plate_df_original,columns_for_scoring, column_weights, temp_plate_df_original$SampleID, scoring_mask, plate_num_rows, plate_num_cols,internal_control_well_indices)
   plating_score_original<-calc_row_column_score(temp_plate_df_original, columns_for_scoring, column_weights, plate_num_rows, plate_num_cols) +
                           calc_patch_score(temp_plate_df_original, columns_for_scoring, column_weights, plate_num_rows, plate_num_cols)
 
 
-  print("Developing function...")
-  #calc_spatial_auto_score_v2(temp_plate_df_original,columns_for_scoring, column_weights, temp_plate_df_original$SampleID, scoring_mask, plate_num_rows, plate_num_cols)
-  calc_sas(temp_plate_df_original,columns_for_scoring, column_weights, temp_plate_df_original$SampleID, scoring_mask, plate_num_rows, plate_num_cols,internal_control_well_indices)
+
 
 
   #print(cc_original)
@@ -177,6 +177,7 @@ for (p in plates[1]){
     #cc_reordered_starter=cor(as.numeric(well_pair_distances_df$d), as.numeric(lowerTriangle(sample_similarities_matrix_reordered_starter)),use='complete.obs')
 
     temp_plate_df <- plate_df  %>% slice(match(rownames(sample_similarities_matrix_reordered_starter), SampleID))
+    sas_starter <- calc_sas(temp_plate_df,columns_for_scoring, column_weights, samples_reordered_starter, scoring_mask, plate_num_rows, plate_num_cols,internal_control_well_indices)
     plating_score_starter<-calc_row_column_score(temp_plate_df, columns_for_scoring, column_weights, plate_num_rows, plate_num_cols) +
                            calc_patch_score(temp_plate_df, columns_for_scoring, column_weights, plate_num_rows, plate_num_cols)
 
@@ -196,8 +197,8 @@ for (p in plates[1]){
     #}
     ##scores[s] <- (cc_reordered_starter + plating_score_starter)
 
-    sas_starter <- calc_spatial_auto_score(samples_reordered_starter, sample_communities, scoring_mask) 
-
+    #sas_starter <- calc_spatial_auto_score(samples_reordered_starter, sample_communities, scoring_mask) 
+    
     if((sas_starter + plating_score_starter) > best_score){ 
       print("New Best Score!")
       best_score <- (sas_starter + plating_score_starter)
@@ -349,8 +350,9 @@ for (p in plates[1]){
   new_plate_df$well <- plate_wells
 
 
-  for(label in c("Sex")){
+  #for(label in c("Sex")){
 
+  for(label in cols_for_analysis){  
   # Visualize the old and new plate layouts coloured by the chosen group
     my_plot <- olink_displayPlateLayout(data = plate_df_aux,
                            fill.color = label,include.label = T)+
