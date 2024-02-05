@@ -35,19 +35,25 @@ plate_num_cols <- 12
 mask_edge_thresh <- 3
 # *************************************************************************
 
-internal_control_well_indices <- c(88,89,90,91,92,93,94,95) # This can change! Expecting zero index, and numbering going first top to bottom, then left to right, as per the order of plate_wells constant.
-internal_control_ids <- c("SC1","SC2","SC3","NC1","NC2","PC1","PC2","PC3") # SC = sample control, NC = negative control, PC = plate control (aka callibrator)
+internal_control_well_indices <- c(86,87,88,89,90,91,92,93,94,95) # This can change! Expecting zero index, and numbering going first top to bottom, then left to right, as per the order of plate_wells constant.
+internal_control_ids <- c("SC1","SC2","NC1","NC2","NC3","PC1","PC2","PC3","PC4","PC5") # SC = sample control, NC = negative control, PC = plate control (aka callibrator)
 
 CLOSE_THRESH <- 2
 
-weights = c(0,5,5,1,1,1) # first weight is 0: this just corresponds to the SampleID
+#weights = c(0,5,5,4,4,4,4,3,3,2,1,1,1,1) # first weight is 0: this just corresponds to the SampleID
                          # column comparison (which will always be 0 anyway, as we
 			                   # don't compare samples to themselves).)
                          # Doing this just means fewer steps in terms of extracting
 			                   # columns from vectors, in the sample similarity calculations.
+weights = c(0,5,5,4,4,4,4,3,3,2,1,1,1,1,1,1)
+#columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","LatencyGroupRBD","TimePoint","Gene","ProgressionRateGroup","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
+#columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","TimePoint","Gene","ProgressionRateGroup","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
+columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","TimePoint",
+                         "YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp","Gene","LatencyGroupRBD")
 
-columns_for_scoring <- c("SubjectGroup","Sex","TimePoint","AgeGroup","LatencyGroup")
-column_weights <- c(5,5,1,1,1) # See notes below... should this always just be weights[2:6]?
+#column_weights <- c(5,5,4,4,4,4,3,3,3,2,1,1,1,1,1,1) # See notes below... should this always just be weights[2:length(columns_for_scoring)]?
+#column_weights <- c(5,5,4,4,4,4,3,3,2,1,1,1,1,1,1) # See notes below... should this always just be weights[2:length(columns_for_scoring)]?
+column_weights <- weights[2:(length(columns_for_scoring)+1)]
 
 #weights = c(0,1)
 #columns_for_scoring <- c("Sex")
@@ -62,7 +68,8 @@ switching_wd_thresh <- 6
 # NOTE: If this works, will need to put try-catch around the code that uses this!
 
 #imbalance_fixer <- c(F,"","",0)
-imbalance_fixer <- list(T,"SubjectGroup",list("ALS"),2)
+#imbalance_fixer <- c(T,"ParticipantGroup",list("ALS","Control","PD","RBD"),3)
+imbalance_fixer <- list(T,"ParticipantGroup",list("ALS","Control","PD","RBD"),3)
 
 # IMPORTANT NOTE: At the moment only thinking about 96 well plates. And thresholds
 # for what is a big or small distance between wells is HARDCODED accordingly...
@@ -103,7 +110,8 @@ scoring_mask <- make_scoring_mask(well_distances_matrix)
 
 
 # Read in randomized manifest
-manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/ALS_example_randomized_manifest.csv")
+manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/SERUM_example_randomized_manifest.csv")
+#manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/ALS_example_randomized_manifest.csv")
 #manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/pos_spatial_correlation_manifest_2.csv")
 #manifest_df <- cbind(manifest_df[sample(1:nrow(manifest_df)),c("SampleID","Sex")],manifest_df[,c("plate","column","row","well")])
 # Make a list of the plates:
@@ -111,8 +119,8 @@ plates <- unique(manifest_df$plate)
 
 for (p in plates[2]){
 
-  cols_for_analysis <- c("SampleID","SubjectGroup","Sex","TimePoint","AgeGroup","LatencyGroup")
-  cols_to_categorize <- list(c("Age",10,NULL,"AgeGroup"), c("Latency",10,NULL,"LatencyGroup"))
+  cols_for_analysis <- c("SampleID",columns_for_scoring)
+  cols_to_categorize <- list(c("AgeAtSampling",10,NULL,"AgeGroup"), c("LatencyFromSymptoms",10,NULL,"LatencyGroupALS"),c("latency_from_PD_motor",10,NULL,"LatencyGroupPD"),c("latency_from_RBD_sx",10,NULL,"LatencyGroupRBD"),c("ProgressionRate",5,NULL,"ProgressionRateGroup"))
 
   #cols_for_analysis <- c("SampleID","Sex")
   #cols_to_categorize <- list()

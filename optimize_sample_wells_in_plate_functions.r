@@ -109,15 +109,21 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, cols_for
 
   if(length(cols_to_categorize)>0){ #cols_to_categorize is list of tuples with structure (col_name,num_cats,na_replacement,categorized_col_name)
     for(col_to_categorize_tuple in cols_to_categorize){
+      
       col_name <- col_to_categorize_tuple[1]
       num_cats <- as.numeric(col_to_categorize_tuple[2])
-      na_replacement <- col_to_categorize_tuple[3]
-      categorized_col_name <- col_to_categorize_tuple[4]
-
       categorized_col_vec <- as.numeric(cut_number(as.matrix(plate_df_aux[,col_name]),num_cats))
+      
+      if(length(col_to_categorize_tuple)==4){
+        na_replacement <- col_to_categorize_tuple[3]
+        categorized_col_name <- col_to_categorize_tuple[4]
+        replace(categorized_col_vec, is.na(categorized_col_vec), na_replacement)
+      }else{
+        categorized_col_name <- col_to_categorize_tuple[3]
+      }
 
-      replace(categorized_col_vec, is.na(categorized_col_vec), na_replacement)
       plate_df_aux[paste(categorized_col_name)] <- categorized_col_vec
+      print(categorized_col_name)
     }
   }
 
@@ -126,11 +132,12 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, cols_for
 
   # Now account for imbalance in samples, as required
   imbalanceFix_vec <- c()
-  if(imbalance_fixer[1]){
-    plate_df_column_for_fixing <- select(plate_df,imbalance_fixer[2])
+  if(imbalance_fixer[[1]]){
+    plate_df_column_for_fixing <- select(plate_df,imbalance_fixer[[2]])
     imbalanceFix_vec <- rep(1,length(plate_df$SampleID))
-    imbalanceFix_vec <- replace(imbalanceFix_vec,which(plate_df_column_for_fixing == imbalance_fixer[3]),unlist(plate_df[which(plate_df_column_for_fixing == imbalance_fixer[3]),'SampleID']))
-
+    for(imbalance_val in imbalance_fixer[[3]]){
+      imbalanceFix_vec <- replace(imbalanceFix_vec,which(plate_df_column_for_fixing == imbalance_val),unlist(plate_df[which(plate_df_column_for_fixing == imbalance_val),'SampleID']))
+    }
     plate_df <- cbind(plate_df, imbalanceFix_vec)
   }
 
@@ -146,7 +153,7 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, cols_for
 
     for(ni in (num_samples_on_plate+1):real_plate_size){
       row<-c(paste("Empty",ni,sep="_"),rep(NA,length(cols_for_analysis)-1))
-      if(imbalance_fixer[1]){
+      if(imbalance_fixer[[1]]){
         row<- c(row,"NA")
       }
       plate_df <- rbind(plate_df,row)
@@ -164,7 +171,7 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, cols_for
 
   for(ici in 1:num_internal_controls){
     row<-c(internal_control_ids[ici],rep(NA,length(cols_for_analysis)-1))
-    if(imbalance_fixer[1]){
+    if(imbalance_fixer[[1]]){
       row<- c(row,"NA")
     }
     plate_df <- rbind(plate_df,row)
@@ -200,8 +207,8 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, cols_for
 
 make_ss_matrices <- function(plate_df, weights, imbalance_fixer, plate_size){
 
-  if(imbalance_fixer[1]){
-    weights <- c(weights,as.numeric(imbalance_fixer[4]))
+  if(imbalance_fixer[[1]]){
+    weights <- c(weights,as.numeric(imbalance_fixer[[4]]))
   }
   sample_similarities_matrix <- matrix(0, nrow=plate_size, ncol=plate_size)
   rownames(sample_similarities_matrix) <- plate_df$SampleID
@@ -216,7 +223,11 @@ make_ss_matrices <- function(plate_df, weights, imbalance_fixer, plate_size){
     for (sj in (si+1):plate_size){
       sample_sj <- plate_df[sj,]
 
-      ss = sum(weights * (sample_si == sample_sj))/sum(weights)
+      print(sample_si)
+      print(sample_sj)
+      print(weights)
+      ss = sum(weights * (sample_si == sample_sj), na.rm=TRUE)/sum(weights)
+      print(ss)
       sample_similarities_matrix[si,sj] <- ss
       sample_similarities_matrix[sj,si] <- ss
 
@@ -448,6 +459,7 @@ calc_sas <- function(plate_df, columns_for_scoring, column_weights, sample_reord
   # larger dimension will be its columns... This just aligns with the usual "8x12" implied layout of 96 well plates, which
   # (for the moment) is a primary assumption of this library.
  
+  print("In calc_sas")
   num_samples <- (plate_n_rows * plate_n_cols) - length(internal_control_well_indices)
   min_dim <- min(c(plate_n_rows, plate_n_cols))
   max_dim_floor <- num_samples %/% min_dim
@@ -487,10 +499,11 @@ calc_sas <- function(plate_df, columns_for_scoring, column_weights, sample_reord
 
     print(sub_score)
 
-    score <- score + sub_score
+    score <- sum(c(score, sub_score), na.rm=TRUE)
 
     cwi <- cwi + 1
   }
+  print("DEBUG")
   print(score)
   return(score)
 }
