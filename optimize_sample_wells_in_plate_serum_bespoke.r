@@ -45,11 +45,11 @@ CLOSE_THRESH <- 2
 			                   # don't compare samples to themselves).)
                          # Doing this just means fewer steps in terms of extracting
 			                   # columns from vectors, in the sample similarity calculations.
-weights = c(0,5,5,4,4,4,4,3,3,2,1,1,1,1,1,1)
+weights = c(0,5,5,4,4,4,4,3,3,1,1,2,2,1,1,1,1)
 #columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","LatencyGroupRBD","TimePoint","Gene","ProgressionRateGroup","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
 #columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","TimePoint","Gene","ProgressionRateGroup","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
-columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","TimePoint",
-                         "YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp","Gene","LatencyGroupRBD")
+columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","LatencyGroupRBD","Gene","TimePointPD","TimePointALS",
+                         "YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
 
 #column_weights <- c(5,5,4,4,4,4,3,3,3,2,1,1,1,1,1,1) # See notes below... should this always just be weights[2:length(columns_for_scoring)]?
 #column_weights <- c(5,5,4,4,4,4,3,3,2,1,1,1,1,1,1) # See notes below... should this always just be weights[2:length(columns_for_scoring)]?
@@ -99,8 +99,7 @@ imbalance_fixer <- list(T,"ParticipantGroup",list("ALS","Control","PD","RBD"),3)
 
 ################################################################################
 # Open PDF for plotting to:
-pdf("myplot.pdf")
-
+#pdf("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_output_files/within_plate_variables_spatial_distribution_EXAMPLE_NOT_FOR_USE.pdf")
 ################################################################################
 
 well_pair_distances_df <- make_well_distance_df(plate_size)
@@ -110,17 +109,39 @@ scoring_mask <- make_scoring_mask(well_distances_matrix)
 
 
 # Read in randomized manifest
-manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/SERUM_example_randomized_manifest.csv")
+AssignmentSeed = 1973461
+manifest_df <- read_csv(paste("~/IMCM - UAT Playground/edit/Avi_manifest_playground/cleaned_plating_allocation_manifests/randomized_manifest_CLEANED_AssignmentSeed_",
+      AssignmentSeed, ".csv"))
+
+# Create main directory for output:
+full_manifest_assignment_seed_dir = paste0("IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/output_full_manifests/full_manifest_AssignmentSeed_",AssignmentSeed)
+dir.create(xfun::relative_path(here::here(full_manifest_assignment_seed_dir)),recursive = TRUE)
+
+#manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/SERUM_example_randomized_manifest.csv")
 #manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/ALS_example_randomized_manifest.csv")
 #manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/pos_spatial_correlation_manifest_2.csv")
 #manifest_df <- cbind(manifest_df[sample(1:nrow(manifest_df)),c("SampleID","Sex")],manifest_df[,c("plate","column","row","well")])
 # Make a list of the plates:
 plates <- unique(manifest_df$plate)
 
-for (p in plates[2]){
 
+#for (p in plates[2]){
+for (p in c("plate 2")){
+
+  set.seed(2)
+    
+  single_plate_assignment_seed_dir = paste0("IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/output_full_manifests/full_manifest_AssignmentSeed_",AssignmentSeed,
+                                            "/full_manifest_AssignmentSeed_", AssignmentSeed,
+                                            "_", trimws(p))
+  dir.create(xfun::relative_path(here::here(single_plate_assignment_seed_dir)),recursive = TRUE)
+  
+  ################################################################################
+  # Open PDF for plotting to:
+  pdf(paste0(single_plate_assignment_seed_dir,"/within_plate_variables_spatial_distribution_AssignmentSeed_", AssignmentSeed, "_", trimws(p),".pdf"))
+  ################################################################################
+  
   cols_for_analysis <- c("SampleID",columns_for_scoring)
-  cols_to_categorize <- list(c("AgeAtSampling",10,NULL,"AgeGroup"), c("LatencyFromSymptoms",10,NULL,"LatencyGroupALS"),c("latency_from_PD_motor",10,NULL,"LatencyGroupPD"),c("latency_from_RBD_sx",10,NULL,"LatencyGroupRBD"),c("ProgressionRate",5,NULL,"ProgressionRateGroup"))
+  cols_to_categorize <- list(c("AgeAtSampling",10,NULL,"AgeGroup"), c("LatencyFromSymptoms",10,NULL,"LatencyGroupALS"),c("latency_from_PD_motor",10,NULL,"LatencyGroupPD"),c("latency_from_RBD_sx",10,NULL,"LatencyGroupRBD"),c("ProgressionRate",10,NULL,"ProgressionRateGroup"))
 
   #cols_for_analysis <- c("SampleID","Sex")
   #cols_to_categorize <- list()
@@ -222,7 +243,7 @@ for (p in plates[2]){
     scores[s] <- (sas_starter)   
   }
 
-  hist(scores)
+  #hist(scores)
   
   #print(cc_original)
   #print(cc_reordered)
@@ -323,17 +344,17 @@ for (p in plates[2]){
   reordered_df <- data.frame(ss=lowerTriangle(sample_similarities_matrix_reordered), d=well_pair_distances_df$d)
   final_df <- data.frame(ss=lowerTriangle(sample_similarities_matrix_final_order), d=well_pair_distances_df$d)
 
-  plot(original_df$d, original_df$ss, main = cor(as.numeric(original_df$d), as.numeric(original_df$ss),use='complete.obs'),
-     xlab = "Distance between wells", ylab = "Sample similarity", frame = FALSE)
-     abline(lm(ss ~ d, data = original_df), col = "blue")
-
-  plot(reordered_df$d, reordered_df$ss, main = cor(as.numeric(reordered_df$d), as.numeric(reordered_df$ss),use='complete.obs'),
-     xlab = "Distance between wells", ylab = "Sample similarity", frame = FALSE)
-     abline(lm(ss ~ d, data = reordered_df), col = "blue")
-
-  plot(final_df$d, final_df$ss, main = cor(as.numeric(final_df$d), as.numeric(final_df$ss),use='complete.obs'),
-     xlab = "Distance between wells", ylab = "Sample similarity", frame = FALSE)
-     abline(lm(ss ~ d, data = final_df), col = "blue")
+  # plot(original_df$d, original_df$ss, main = cor(as.numeric(original_df$d), as.numeric(original_df$ss),use='complete.obs'),
+  #    xlab = "Distance between wells", ylab = "Sample similarity", frame = FALSE)
+  #    abline(lm(ss ~ d, data = original_df), col = "blue")
+  # 
+  # plot(reordered_df$d, reordered_df$ss, main = cor(as.numeric(reordered_df$d), as.numeric(reordered_df$ss),use='complete.obs'),
+  #    xlab = "Distance between wells", ylab = "Sample similarity", frame = FALSE)
+  #    abline(lm(ss ~ d, data = reordered_df), col = "blue")
+  # 
+  # plot(final_df$d, final_df$ss, main = cor(as.numeric(final_df$d), as.numeric(final_df$ss),use='complete.obs'),
+  #    xlab = "Distance between wells", ylab = "Sample similarity", frame = FALSE)
+  #    abline(lm(ss ~ d, data = final_df), col = "blue")
 
 
   #******************************************************************************************
@@ -360,18 +381,18 @@ for (p in plates[2]){
 
   #for(label in c("Sex")){
 
-  for(label in cols_for_analysis){  
+  for(label in cols_for_analysis[2:length(cols_for_analysis)]){  
   # Visualize the old and new plate layouts coloured by the chosen group
-    my_plot <- olink_displayPlateLayout(data = plate_df_aux,
-                           fill.color = label,include.label = T)+
-    theme(legend.position = "none") + ggtitle(paste(p, ". First plating: Coloured samples by ", label, sep=""))
-    print(my_plot)
-
-
-    my_plot <- olink_displayPlateLayout(data = first_reordered_plate_df,
-                           fill.color = label,include.label = T)+
-    theme(legend.position = "none") + ggtitle(paste(p, ". First reordered plating: Coloured samples by ", label, sep=""))
-    print(my_plot)
+    # my_plot <- olink_displayPlateLayout(data = plate_df_aux,
+    #                        fill.color = label,include.label = T)+
+    # theme(legend.position = "none") + ggtitle(paste(p, ". First plating: Coloured samples by ", label, sep=""))
+    # print(my_plot)
+    # 
+    # 
+    # my_plot <- olink_displayPlateLayout(data = first_reordered_plate_df,
+    #                        fill.color = label,include.label = T)+
+    # theme(legend.position = "none") + ggtitle(paste(p, ". First reordered plating: Coloured samples by ", label, sep=""))
+    # print(my_plot)
 
 
     my_plot <- olink_displayPlateLayout(data = new_plate_df,
@@ -381,6 +402,17 @@ for (p in plates[2]){
 
   }
 
-}
-dev.off()
+  dev.off()
 
+  write.csv(new_plate_df[,c("SampleID","Cohort","ParticipantGroup","plate","column","row","well")],
+            paste0(single_plate_assignment_seed_dir,"/plate_manifest_", AssignmentSeed, "_", trimws(p),".csv"),
+            row.names=FALSE,quote=FALSE)
+
+  new_plate_design <- lapply(c("A","B","C","D","E","F","G","H"), function(x) {new_plate_df[new_plate_df$row==x,]$SampleID })
+
+
+  write.table(do.call("rbind",new_plate_design),
+              paste0(single_plate_assignment_seed_dir,"/plate_design_", AssignmentSeed, "_", trimws(p),".csv"),
+              row.names=FALSE,col.names=FALSE,quote=FALSE,sep=",")
+
+}
