@@ -45,10 +45,18 @@ CLOSE_THRESH <- 2
 			                   # don't compare samples to themselves).)
                          # Doing this just means fewer steps in terms of extracting
 			                   # columns from vectors, in the sample similarity calculations.
-weights = c(0,5,5,4,4,4,4,3,3,1,1,2,2,1,1,1,1)
+#weights = c(0,5,5,4,4,4,4,3,3,1,1,2,2,1,1,1,1)
+weights = c(0,5,5,10,4,4,4,
+            3,3,3,
+            1,1,
+            1,1,1,1)
 #columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","LatencyGroupRBD","TimePoint","Gene","ProgressionRateGroup","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
 #columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","TimePoint","Gene","ProgressionRateGroup","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
-columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","LatencyGroupRBD","Gene","TimePointPD","TimePointALS",
+#columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","LatencyGroupRBD","Gene","TimePointPD","TimePointALS",
+#                         "YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
+columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite",
+                         "latency_from_ALS_symptoms_group","latency_from_PD_motor_group","latency_from_RBD_sx_group",
+                         "latency_from_PD_diagnosis_group","latency_from_RBD_diagnosis_group",
                          "YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
 
 #column_weights <- c(5,5,4,4,4,4,3,3,3,2,1,1,1,1,1,1) # See notes below... should this always just be weights[2:length(columns_for_scoring)]?
@@ -109,7 +117,7 @@ scoring_mask <- make_scoring_mask(well_distances_matrix)
 
 
 # Read in randomized manifest
-AssignmentSeed = 1973461
+AssignmentSeed = 1973461#523146
 manifest_df <- read_csv(paste("~/IMCM - UAT Playground/edit/Avi_manifest_playground/cleaned_plating_allocation_manifests/randomized_manifest_CLEANED_AssignmentSeed_",
       AssignmentSeed, ".csv"))
 
@@ -126,9 +134,10 @@ plates <- unique(manifest_df$plate)
 
 
 #for (p in plates[2]){
-for (p in c("plate 2")){
+for (p in c("plate 1", "plate 2")){
 
-  set.seed(2)
+  set.seed(175) #(30 works for plate 1 and plate 2 with 10 starting scores. 25 with 20 for plate 1 and plate 2. 372 + 20 good for plate 1 but not for plate 2)
+                # plate 1: seed 175 + 20 starting scores + sex weighting = 10
     
   single_plate_assignment_seed_dir = paste0("IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/output_full_manifests/full_manifest_AssignmentSeed_",AssignmentSeed,
                                             "/full_manifest_AssignmentSeed_", AssignmentSeed,
@@ -141,8 +150,13 @@ for (p in c("plate 2")){
   ################################################################################
   
   cols_for_analysis <- c("SampleID",columns_for_scoring)
-  cols_to_categorize <- list(c("AgeAtSampling",10,NULL,"AgeGroup"), c("LatencyFromSymptoms",10,NULL,"LatencyGroupALS"),c("latency_from_PD_motor",10,NULL,"LatencyGroupPD"),c("latency_from_RBD_sx",10,NULL,"LatencyGroupRBD"),c("ProgressionRate",10,NULL,"ProgressionRateGroup"))
-
+  #cols_to_categorize <- list(c("AgeAtSampling",10,NULL,"AgeGroup"), c("LatencyFromSymptoms",10,NULL,"LatencyGroupALS"),c("latency_from_PD_motor",10,NULL,"LatencyGroupPD"),c("latency_from_RBD_sx",10,NULL,"LatencyGroupRBD"),c("ProgressionRate",10,NULL,"ProgressionRateGroup"))
+  cols_to_categorize <- list(c("AgeAtSampling",10,NULL,"AgeGroup"), 
+                             c("latency_from_ALS_symptoms",10,NULL,"latency_from_ALS_symptoms_group"),
+                             c("latency_from_PD_motor",10,NULL,"latency_from_PD_motor_group"),c("latency_from_RBD_sx",10,NULL,"latency_from_RBD_sx_group"),
+                             c("latency_from_PD_diagnosis",10,NULL,"latency_from_PD_diagnosis_group"),c("latency_from_RBD_diagnosis",10,NULL,"latency_from_RBD_diagnosis_group"),
+                             c("ProgressionRate",10,NULL,"ProgressionRateGroup"))
+  
   #cols_for_analysis <- c("SampleID","Sex")
   #cols_to_categorize <- list()
 
@@ -187,8 +201,8 @@ for (p in c("plate 2")){
   #best_score <- cc_reordered + plating_score
   best_score <- sas_reordered + plating_score_reordered
 
-  scores <- rep(0,10)
-  for(s in 1:10) {
+  scores <- rep(0,20)
+  for(s in 1:20) {
     print(s)
     shuffled_df <- shuffle_well_pairs_within_distance_groups(well_pair_distances_df, CLOSE_THRESH)
 
@@ -374,6 +388,11 @@ for (p in c("plate 2")){
 
   new_plate_df <- plate_df_aux  %>% slice(match(samples_final_order, SampleID))  
   # Need to reset rows and columns (otherwise nothing changes!)
+  new_plate_df$PseudoSubjectID <- unlist(lapply(unlist(lapply(new_plate_df$SampleID, function(x) {substr(x,1,max(unlist(gregexpr("_",x)))-1)})),function(y){which(unique(unlist(lapply(new_plate_df$SampleID, function(x) {substr(x,1,max(unlist(gregexpr("_",x)))-1)})))==y)}))
+  randomizedPSID_aux <- sample(unique(new_plate_df$PseudoSubjectID))
+  new_plate_df$randomizedPSID <- unlist(lapply(new_plate_df$PseudoSubjectID, function(x) which(randomizedPSID_aux==x)))
+  
+  cols_for_analysis <- c(cols_for_analysis,'PseudoSubjectID')
   new_plate_df$row <- plate_rows
   new_plate_df$column <- plate_columns
   new_plate_df$well <- plate_wells
@@ -395,16 +414,26 @@ for (p in c("plate 2")){
     # print(my_plot)
 
 
-    my_plot <- olink_displayPlateLayout(data = new_plate_df,
-                           fill.color = label,include.label = T)+
-    theme(legend.position = "none") + ggtitle(paste(p, ". Optimized plating: Coloured samples by ", label, sep=""))
-    print(my_plot)
+    if(label=="PseudoSubjectID"){
+      my_plot <- olink_displayPlateLayout(data = new_plate_df,
+                            fill.color = "randomizedPSID",include.label = F)+
+      theme(legend.position = "none") + ggtitle(paste(p, ": ", label, sep=""))
+      
+      print(my_plot)
+    }else{
+      my_plot <- olink_displayPlateLayout(data = new_plate_df,
+                                          fill.color = label,include.label = T)+
+        theme(legend.position = "none") + ggtitle(paste(p, ": ", label, sep=""))
+      print(my_plot)
+    }
 
   }
+  
+  
 
   dev.off()
 
-  write.csv(new_plate_df[,c("SampleID","Cohort","ParticipantGroup","plate","column","row","well")],
+  write.csv(new_plate_df[,c("SampleID","plate","column","row","well","Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")],
             paste0(single_plate_assignment_seed_dir,"/plate_manifest_", AssignmentSeed, "_", trimws(p),".csv"),
             row.names=FALSE,quote=FALSE)
 
@@ -413,6 +442,6 @@ for (p in c("plate 2")){
 
   write.table(do.call("rbind",new_plate_design),
               paste0(single_plate_assignment_seed_dir,"/plate_design_", AssignmentSeed, "_", trimws(p),".csv"),
-              row.names=FALSE,col.names=FALSE,quote=FALSE,sep=",")
+              row.names=c("A","B","C","D","E","F","G","H"),col.names=c("1","2","3","4","5","6","7","8","9","10","11","12"),quote=FALSE,sep=",")
 
 }
