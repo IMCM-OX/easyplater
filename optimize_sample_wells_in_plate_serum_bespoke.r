@@ -38,6 +38,7 @@ mask_edge_thresh <- 3
 internal_control_well_indices <- c(86,87,88,89,90,91,92,93,94,95) # This can change! Expecting zero index, and numbering going first top to bottom, then left to right, as per the order of plate_wells constant.
 internal_control_ids <- c("SC1","SC2","NC1","NC2","NC3","PC1","PC2","PC3","PC4","PC5") # SC = sample control, NC = negative control, PC = plate control (aka callibrator)
 
+INITIAL_PERMS <- 20
 CLOSE_THRESH <- 2
 
 #weights = c(0,5,5,4,4,4,4,3,3,2,1,1,1,1) # first weight is 0: this just corresponds to the SampleID
@@ -122,28 +123,43 @@ manifest_df <- read_csv(paste("~/IMCM - UAT Playground/edit/Avi_manifest_playgro
       AssignmentSeed, ".csv"))
 
 # Create main directory for output:
-full_manifest_assignment_seed_dir = paste0("IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/output_full_manifests/full_manifest_AssignmentSeed_",AssignmentSeed)
-dir.create(xfun::relative_path(here::here(full_manifest_assignment_seed_dir)),recursive = TRUE)
+MAKING_NEW_DIRECTORY=FALSE
+if(MAKING_NEW_DIRECTORY){ # TEMPORARY!! Only here because already made first two plates!!
+  full_manifest_assignment_seed_dir = paste0("IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/output_full_manifests/full_manifest_AssignmentSeed_",AssignmentSeed)
+  dir.create(xfun::relative_path(here::here(full_manifest_assignment_seed_dir)),recursive = TRUE)
+}
 
 #manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/SERUM_example_randomized_manifest.csv")
 #manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/ALS_example_randomized_manifest.csv")
 #manifest_df <- read_csv("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/test_data/pos_spatial_correlation_manifest_2.csv")
 #manifest_df <- cbind(manifest_df[sample(1:nrow(manifest_df)),c("SampleID","Sex")],manifest_df[,c("plate","column","row","well")])
 # Make a list of the plates:
-plates <- unique(manifest_df$plate)
+plates <- str_sort(unique(manifest_df$plate),numeric=TRUE)
+print(plates)
 
+set.seed(AssignmentSeed) # Might as well use this seed again!
+plate_seeds <- c(175,175,sample(1000000,length(plates))) # NOTE! Usually all seeds will be chosen randomly... We are only hardcoding first two here to keep the output consistent with the first runs of this code for the serum manifests.
 
 #for (p in plates[2]){
-for (p in c("plate 1", "plate 2")){
+#for (p in c("plate 1", "plate 2")){
 
-  set.seed(175) #(30 works for plate 1 and plate 2 with 10 starting scores. 25 with 20 for plate 1 and plate 2. 372 + 20 good for plate 1 but not for plate 2)
+#submission_df <- data.frame(matrix(ncol = 13, nrow = 0))
+#for (pi in 1:length(plates)){
+for (pi in 34){
+  
+  p <- plates[pi]
+  pseed <- plate_seeds[pi] + 1001
+  
+  set.seed(pseed) #(30 works for plate 1 and plate 2 with 10 starting scores. 25 with 20 for plate 1 and plate 2. 372 + 20 good for plate 1 but not for plate 2)
                 # plate 1: seed 175 + 20 starting scores + sex weighting = 10
     
   single_plate_assignment_seed_dir = paste0("IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/output_full_manifests/full_manifest_AssignmentSeed_",AssignmentSeed,
                                             "/full_manifest_AssignmentSeed_", AssignmentSeed,
                                             "_", trimws(p))
-  dir.create(xfun::relative_path(here::here(single_plate_assignment_seed_dir)),recursive = TRUE)
   
+  if(pi>2){ # TEMPORARY IF STATEMENT!! ONLY HERE BECAUSE HAVE ALREADY MADE FIRST TWO PLATES!!!
+    dir.create(xfun::relative_path(here::here(single_plate_assignment_seed_dir)),recursive = TRUE)
+  }
   ################################################################################
   # Open PDF for plotting to:
   pdf(paste0(single_plate_assignment_seed_dir,"/within_plate_variables_spatial_distribution_AssignmentSeed_", AssignmentSeed, "_", trimws(p),".pdf"))
@@ -201,8 +217,8 @@ for (p in c("plate 1", "plate 2")){
   #best_score <- cc_reordered + plating_score
   best_score <- sas_reordered + plating_score_reordered
 
-  scores <- rep(0,20)
-  for(s in 1:20) {
+  scores <- rep(0,INITIAL_PERMS)
+  for(s in 1:INITIAL_PERMS) {
     print(s)
     shuffled_df <- shuffle_well_pairs_within_distance_groups(well_pair_distances_df, CLOSE_THRESH)
 
@@ -433,15 +449,47 @@ for (p in c("plate 1", "plate 2")){
 
   dev.off()
 
-  write.csv(new_plate_df[,c("SampleID","plate","column","row","well","Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")],
+  if(pi>2){#TEMPORARY!!! First two plates already made!!!
+    write.csv(new_plate_df[,c("SampleID","plate","column","row","well","Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")],
             paste0(single_plate_assignment_seed_dir,"/plate_manifest_", AssignmentSeed, "_", trimws(p),".csv"),
             row.names=FALSE,quote=FALSE)
 
-  new_plate_design <- lapply(c("A","B","C","D","E","F","G","H"), function(x) {new_plate_df[new_plate_df$row==x,]$SampleID })
+    new_plate_design <- lapply(c("A","B","C","D","E","F","G","H"), function(x) {new_plate_df[new_plate_df$row==x,]$SampleID })
 
 
-  write.table(do.call("rbind",new_plate_design),
+    write.table(do.call("rbind",new_plate_design),
               paste0(single_plate_assignment_seed_dir,"/plate_design_", AssignmentSeed, "_", trimws(p),".csv"),
-              row.names=c("A","B","C","D","E","F","G","H"),col.names=c("1","2","3","4","5","6","7","8","9","10","11","12"),quote=FALSE,sep=",")
+              row.names=c("A","B","C","D","E","F","G","H"),col.names=c(",1","2","3","4","5","6","7","8","9","10","11","12"),quote=FALSE,sep=",")
+  }
+  
+    
+  new_plate_df_for_submission_temp <- new_plate_df[1:86,c("well","SampleID","plate","Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")]
+  new_plate_df_for_submission_temp['Volume provided'] <- NA
+  new_plate_df_for_submission_temp['Sample/Well Location'] <- new_plate_df_for_submission_temp$well
+  new_plate_df_for_submission_temp['Sample/Name'] <- new_plate_df_for_submission_temp$SampleID
+  new_plate_df_for_submission_temp['PlateName'] <- new_plate_df_for_submission_temp$plate
+  
+  new_plate_df_for_submission <- new_plate_df_for_submission_temp[,c("Sample/Well Location","Sample/Name","PlateName","Volume provided","Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")]
 
+  write.csv(new_plate_df_for_submission,
+            paste0(single_plate_assignment_seed_dir,"/submission_form_", AssignmentSeed, "_", trimws(p),".csv"),
+            row.names=FALSE,quote=FALSE)
+  
+  writeLines(c(paste("pseed =", pseed),
+               paste("INITIAL_PERMS =", INITIAL_PERMS)),
+             paste0(single_plate_assignment_seed_dir,"/LOG_", AssignmentSeed, "_", trimws(p),".csv"))
+  #submission_df <- rbind(submission_df, new_plate_df_for_submission)  
 }
+
+#colnames(submission_df) <- c("Sample/Well Location","Sample/Name","PlateName","Volume provided","Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
+#write.csv(submission_df,
+#          paste0(single_plate_assignment_seed_dir,"/submission_form_AssignmentSeed_", AssignmentSeed,".csv"),
+#          row.names=FALSE,quote=FALSE)
+
+
+
+
+
+
+
+
