@@ -1,7 +1,11 @@
-#### CONSIDERATION OF SUBJECTID
+# author: avigailtaylor
+
+# ALWAYS clear R Environment before running the rest of this code. *************
+rm(list = ls())
+# ******************************************************************************
 
 # R: version 4.2.1 
-source("~/IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/optimize_sample_wells_in_plate_functions.r")
+source("~/ALS_CSF_MassSpec_Sample_to_Well_Allocation/optimize_sample_wells_in_plate_functions.r")
 
 ################################################################################
 # I am trying to neaten up code here, so have to remover some comments.
@@ -35,8 +39,8 @@ plate_num_cols <- 12
 mask_edge_thresh <- 3
 # *************************************************************************
 
-internal_control_well_indices <- c(86,87,88,89,90,91,92,93,94,95) # This can change! Expecting zero index, and numbering going first top to bottom, then left to right, as per the order of plate_wells constant.
-internal_control_ids <- c("SC1","SC2","NC1","NC2","NC3","PC1","PC2","PC3","PC4","PC5") # SC = sample control, NC = negative control, PC = plate control (aka callibrator)
+internal_control_well_indices <- c(88,89,90,91,92,93,94,95) # This can change! Expecting zero index, and numbering going first top to bottom, then left to right, as per the order of plate_wells constant.
+internal_control_ids <- c("TC1","TC2","TC3","TC4","TC5","TC6","TC7","TC8") # TC = technical control
 
 INITIAL_PERMS <- 20
 CLOSE_THRESH <- 2
@@ -47,26 +51,18 @@ CLOSE_THRESH <- 2
                          # Doing this just means fewer steps in terms of extracting
 			                   # columns from vectors, in the sample similarity calculations.
 #weights = c(0,5,5,4,4,4,4,3,3,1,1,2,2,1,1,1,1)
-weights = c(0,5,5,10,4,4,4,
-            3,3,3,
-            1,1,
-            1,1,1,1)
+weights = c(0,7,7,7,7,4,4,4,1,1)
 #columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","LatencyGroupRBD","TimePoint","Gene","ProgressionRateGroup","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
 #columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","TimePoint","Gene","ProgressionRateGroup","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
 #columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","LatencyGroupRBD","Gene","TimePointPD","TimePointALS",
 #                         "YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
-columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite",
-                         "latency_from_ALS_symptoms_group","latency_from_PD_motor_group","latency_from_RBD_sx_group",
-                         "latency_from_PD_diagnosis_group","latency_from_RBD_diagnosis_group",
-                         "YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
+#columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite",
+#                         "latency_from_ALS_symptoms_group","latency_from_PD_motor_group","latency_from_RBD_sx_group",
+#                         "latency_from_PD_diagnosis_group","latency_from_RBD_diagnosis_group",
+#                         "YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
 
-#column_weights <- c(5,5,4,4,4,4,3,3,3,2,1,1,1,1,1,1) # See notes below... should this always just be weights[2:length(columns_for_scoring)]?
-#column_weights <- c(5,5,4,4,4,4,3,3,2,1,1,1,1,1,1) # See notes below... should this always just be weights[2:length(columns_for_scoring)]?
-column_weights <- weights[2:(length(columns_for_scoring)+1)]
-
-#weights = c(0,1)
-#columns_for_scoring <- c("Sex")
-#column_weights <- c(1)
+columns_for_scoring <- c('ParticipantGroup','Study','Sex','MidRangeAgeAtSamplingGroup','OnsetSite','ProgressionRateGroup','MidRangeLatencyFromSymptomsGroup','Gene','TimePoint')
+column_weights <- weights[2:(length(columns_for_scoring)+1)] # See notes below... should this always just be weights[2:length(columns_for_scoring)]?
 
 splitting_ss_thresh <- 0.5
 splitting_wd_thresh <- 1
@@ -78,7 +74,7 @@ switching_wd_thresh <- 6
 
 #imbalance_fixer <- c(F,"","",0)
 #imbalance_fixer <- c(T,"ParticipantGroup",list("ALS","Control","PD","RBD"),3)
-imbalance_fixer <- list(T,"ParticipantGroup",list("ALS","Control","PD","RBD"),3)
+imbalance_fixer <- list(T,"ParticipantGroup",list("AMYOTROPHIC LATERAL SCLEROSIS"),3)
 
 # IMPORTANT NOTE: At the moment only thinking about 96 well plates. And thresholds
 # for what is a big or small distance between wells is HARDCODED accordingly...
@@ -116,16 +112,29 @@ well_distances_matrix <- make_well_distances_matrix(plate_size)
 full_mask <- make_full_mask(well_distances_matrix, mask_edge_thresh)
 scoring_mask <- make_scoring_mask(well_distances_matrix)
 
+# Copy the randomized cleaned plating manifest from terra workspace and read into dataframe ############
+out_results_version_date = "_v20240805"
+AssignmentSeed = 9258583
 
-# Read in randomized manifest
-AssignmentSeed = 1973461#523146
-manifest_df <- read_csv(paste("~/IMCM - UAT Playground/edit/Avi_manifest_playground/cleaned_plating_allocation_manifests/randomized_manifest_CLEANED_AssignmentSeed_",
-      AssignmentSeed, ".csv"))
+# Create a new data directory in the current working directory if one does not already exist.
+if (!file.exists(xfun::relative_path(here::here(paste0("data/alternative_manifest_randomizations",out_results_version_date))))){
+  dir.create(xfun::relative_path(here::here(paste0("data/alternative_manifest_randomizations",out_results_version_date))),
+             recursive = TRUE)}
+
+system(command = paste0("gcloud storage cp gs://fc-029a9f38-1015-4e06-9bbd-b1cd7d3998fa/ALS_CSF_MassSpec_Sample_to_Plate_Allocation/alternative_manifest_randomizations",out_results_version_date,
+                        "/randomized_manifest_CLEANED_AssignmentSeed_",AssignmentSeed,".csv data/alternative_manifest_randomizations",out_results_version_date,"/"))
+       
+# Now read this manifest into a dataframe:
+manifest_df <- read_csv(paste0("data/alternative_manifest_randomizations",out_results_version_date,"/randomized_manifest_CLEANED_AssignmentSeed_",AssignmentSeed, ".csv"))
+################################################################################
 
 # Create main directory for output:
-MAKING_NEW_DIRECTORY=FALSE
+
+for (plate_seed_additive in 2:100){
+full_manifest_assignment_seed_dir = paste0("output_full_manifests/full_manifest_AssignmentSeed_",AssignmentSeed,"_psa", plate_seed_additive)
+
+MAKING_NEW_DIRECTORY=TRUE
 if(MAKING_NEW_DIRECTORY){ # TEMPORARY!! Only here because already made first two plates!!
-  full_manifest_assignment_seed_dir = paste0("IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/output_full_manifests/full_manifest_AssignmentSeed_",AssignmentSeed)
   dir.create(xfun::relative_path(here::here(full_manifest_assignment_seed_dir)),recursive = TRUE)
 }
 
@@ -138,28 +147,24 @@ plates <- str_sort(unique(manifest_df$plate),numeric=TRUE)
 print(plates)
 
 set.seed(AssignmentSeed) # Might as well use this seed again!
-plate_seeds <- c(175,175,sample(1000000,length(plates))) # NOTE! Usually all seeds will be chosen randomly... We are only hardcoding first two here to keep the output consistent with the first runs of this code for the serum manifests.
+plate_seeds <- sample(1000000,length(plates))
 
 #for (p in plates[2]){
 #for (p in c("plate 1", "plate 2")){
 
 #submission_df <- data.frame(matrix(ncol = 13, nrow = 0))
-#for (pi in 1:length(plates)){
-for (pi in 34){
+for (pi in 1:length(plates)){
+#for (pi in 34){
   
   p <- plates[pi]
-  pseed <- plate_seeds[pi] + 1001
+  pseed <- plate_seeds[pi] + plate_seed_additive
   
-  set.seed(pseed) #(30 works for plate 1 and plate 2 with 10 starting scores. 25 with 20 for plate 1 and plate 2. 372 + 20 good for plate 1 but not for plate 2)
-                # plate 1: seed 175 + 20 starting scores + sex weighting = 10
-    
-  single_plate_assignment_seed_dir = paste0("IMCM - UAT Playground/edit/Olink_well_allocator/OLINK_WELL_ALLOCATOR/output_full_manifests/full_manifest_AssignmentSeed_",AssignmentSeed,
-                                            "/full_manifest_AssignmentSeed_", AssignmentSeed,
-                                            "_", trimws(p))
+  set.seed(pseed) 
   
-  if(pi>2){ # TEMPORARY IF STATEMENT!! ONLY HERE BECAUSE HAVE ALREADY MADE FIRST TWO PLATES!!!
-    dir.create(xfun::relative_path(here::here(single_plate_assignment_seed_dir)),recursive = TRUE)
-  }
+  single_plate_assignment_seed_dir = paste0(full_manifest_assignment_seed_dir, "/full_manifest_AssignmentSeed_", AssignmentSeed,"_", trimws(p))
+  
+  dir.create(xfun::relative_path(here::here(single_plate_assignment_seed_dir)),recursive = TRUE)
+  
   ################################################################################
   # Open PDF for plotting to:
   pdf(paste0(single_plate_assignment_seed_dir,"/within_plate_variables_spatial_distribution_AssignmentSeed_", AssignmentSeed, "_", trimws(p),".pdf"))
@@ -167,14 +172,10 @@ for (pi in 34){
   
   cols_for_analysis <- c("SampleID",columns_for_scoring)
   #cols_to_categorize <- list(c("AgeAtSampling",10,NULL,"AgeGroup"), c("LatencyFromSymptoms",10,NULL,"LatencyGroupALS"),c("latency_from_PD_motor",10,NULL,"LatencyGroupPD"),c("latency_from_RBD_sx",10,NULL,"LatencyGroupRBD"),c("ProgressionRate",10,NULL,"ProgressionRateGroup"))
-  cols_to_categorize <- list(c("AgeAtSampling",10,NULL,"AgeGroup"), 
-                             c("latency_from_ALS_symptoms",10,NULL,"latency_from_ALS_symptoms_group"),
-                             c("latency_from_PD_motor",10,NULL,"latency_from_PD_motor_group"),c("latency_from_RBD_sx",10,NULL,"latency_from_RBD_sx_group"),
-                             c("latency_from_PD_diagnosis",10,NULL,"latency_from_PD_diagnosis_group"),c("latency_from_RBD_diagnosis",10,NULL,"latency_from_RBD_diagnosis_group"),
+  cols_to_categorize <- list(c("MidRangeAgeAtSampling",10,NULL,"MidRangeAgeAtSamplingGroup"), 
+                             c("MidRangeLatencyFromSymptoms",10,NULL,"MidRangeLatencyFromSymptomsGroup"),
                              c("ProgressionRate",10,NULL,"ProgressionRateGroup"))
   
-  #cols_for_analysis <- c("SampleID","Sex")
-  #cols_to_categorize <- list()
 
   plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, p, cols_for_analysis, cols_to_categorize, imbalance_fixer, 
 							 plate_size, plate_wells, internal_control_well_indices, internal_control_ids) 
@@ -438,8 +439,9 @@ for (pi in 34){
       print(my_plot)
     }else{
       my_plot <- olink_displayPlateLayout(data = new_plate_df,
-                                          fill.color = label,include.label = T)+
-        theme(legend.position = "none") + ggtitle(paste(p, ": ", label, sep=""))
+                                          fill.color = label,include.label = F)+
+        theme(legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size=6)) + 
+        ggtitle(paste(p, ": ", label, sep=""))
       print(my_plot)
     }
 
@@ -449,27 +451,25 @@ for (pi in 34){
 
   dev.off()
 
-  if(pi>2){#TEMPORARY!!! First two plates already made!!!
-    write.csv(new_plate_df[,c("SampleID","plate","column","row","well","Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")],
+  write.csv(new_plate_df[,c("SampleID","plate","column","row","well",'ParticipantGroup','Study','Sex','MidRangeAgeAtSamplingGroup','OnsetSite','ProgressionRateGroup','MidRangeLatencyFromSymptomsGroup','Gene','TimePoint')],
             paste0(single_plate_assignment_seed_dir,"/plate_manifest_", AssignmentSeed, "_", trimws(p),".csv"),
             row.names=FALSE,quote=FALSE)
 
-    new_plate_design <- lapply(c("A","B","C","D","E","F","G","H"), function(x) {new_plate_df[new_plate_df$row==x,]$SampleID })
+  new_plate_design <- lapply(c("A","B","C","D","E","F","G","H"), function(x) {new_plate_df[new_plate_df$row==x,]$SampleID })
 
 
-    write.table(do.call("rbind",new_plate_design),
+  write.table(do.call("rbind",new_plate_design),
               paste0(single_plate_assignment_seed_dir,"/plate_design_", AssignmentSeed, "_", trimws(p),".csv"),
               row.names=c("A","B","C","D","E","F","G","H"),col.names=c(",1","2","3","4","5","6","7","8","9","10","11","12"),quote=FALSE,sep=",")
-  }
   
     
-  new_plate_df_for_submission_temp <- new_plate_df[1:86,c("well","SampleID","plate","Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")]
+  new_plate_df_for_submission_temp <- new_plate_df[1:plate_size - length(internal_control_well_indices),c("well","SampleID","plate",'ParticipantGroup','Study','Sex','MidRangeAgeAtSamplingGroup','OnsetSite','ProgressionRateGroup','MidRangeLatencyFromSymptomsGroup','Gene','TimePoint')]
   new_plate_df_for_submission_temp['Volume provided'] <- NA
   new_plate_df_for_submission_temp['Sample/Well Location'] <- new_plate_df_for_submission_temp$well
   new_plate_df_for_submission_temp['Sample/Name'] <- new_plate_df_for_submission_temp$SampleID
   new_plate_df_for_submission_temp['PlateName'] <- new_plate_df_for_submission_temp$plate
   
-  new_plate_df_for_submission <- new_plate_df_for_submission_temp[,c("Sample/Well Location","Sample/Name","PlateName","Volume provided","Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")]
+  new_plate_df_for_submission <- new_plate_df_for_submission_temp[,c("Sample/Well Location","Sample/Name","PlateName","Volume provided",'ParticipantGroup','Study','Sex','MidRangeAgeAtSamplingGroup','OnsetSite','ProgressionRateGroup','MidRangeLatencyFromSymptomsGroup','Gene','TimePoint')]
 
   write.csv(new_plate_df_for_submission,
             paste0(single_plate_assignment_seed_dir,"/submission_form_", AssignmentSeed, "_", trimws(p),".csv"),
@@ -485,7 +485,7 @@ for (pi in 34){
 #write.csv(submission_df,
 #          paste0(single_plate_assignment_seed_dir,"/submission_form_AssignmentSeed_", AssignmentSeed,".csv"),
 #          row.names=FALSE,quote=FALSE)
-
+}
 
 
 
