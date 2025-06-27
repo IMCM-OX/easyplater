@@ -190,7 +190,6 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
 
 
 #*******************************************************************************
-
 make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer, plate_size){
 
   weights <- c(0, column_weights)
@@ -211,11 +210,7 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer, plate_si
     for (sj in (si+1):plate_size){
       sample_sj <- plate_df[sj,]
 
-      #print(sample_si)
-      #print(sample_sj)
-      #print(weights)
       ss = sum(weights * (sample_si == sample_sj), na.rm=TRUE)/sum(weights)
-      #print(ss)
       sample_similarities_matrix[si,sj] <- ss
       sample_similarities_matrix[sj,si] <- ss
 
@@ -226,8 +221,8 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer, plate_si
   }
   return(list(sample_similarities_matrix, sample_similarities_si_names, sample_similarities_sj_names))
 }
-#*******************************************************************************
 
+#*******************************************************************************
 find_n_wells <- function(full_mask, n_wells, wells_pre_allocated, plate_size=96){
   if((length(wells_pre_allocated) + n_wells) > plate_size){
     stop("Cannot allocate more wells on plate than there are available.")
@@ -305,6 +300,7 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
   sample_communities <- cluster_edge_betweenness(sample_similarities_graph)
   return(sample_communities)
 }
+
 #*******************************************************************************
 reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communities, full_mask,
 				       internal_control_ids, internal_control_well_indices, plate_size=96){
@@ -367,28 +363,6 @@ reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communit
 }
 
 #*******************************************************************************
-
-calc_spatial_auto_score <- function(sample_reordering, sample_communities, mask){
-
-   sample_communities_non_singleton <- sample_communities[which(sizes(sample_communities)>1)]
-
-   #print("In calc_spatial_auto_score")
-
-   #print(unlist(lapply(sample_communities_non_singleton, function(x) { sum(lowerTriangle(mask[ which(sample_reordering %in% x), which(sample_reordering %in% x)])) }  )))
-   #print(unlist(lapply(sample_communities_non_singleton , function(x) {(length(x)*(length(x)-1))/2})))
-
-   observed_connectivity <- sum(unlist(lapply(sample_communities_non_singleton, function(x) { sum(lowerTriangle(mask[ which(sample_reordering %in% x), which(sample_reordering %in% x)])) }  )))
-   upper_bound_connectivity <- sum(unlist(lapply(sample_communities_non_singleton , function(x) {(length(x)*(length(x)-1))/2})))
-
-   #print(observed_connectivity)
-   #print(upper_bound_connectivity)
-
-   return(observed_connectivity/upper_bound_connectivity)
-}
-
-#********************************************************************************
-
-
 calc_sas_edge_max <- function(n, nrow, ncol){
 
   edge_max_temp <- (n*(n-1))/2
@@ -415,15 +389,16 @@ calc_sas_edge_min <- function(n, nrow, ncol){
   return(edge_min)
 }
 
+#*******************************************************************************
 calc_sas_edge_range <- function(n, nrow, ncol){
   edge_max <- calc_sas_edge_max(n, nrow, ncol)
   edge_min <- calc_sas_edge_min(n, nrow, ncol)
   return(edge_max - edge_min)
 }
 
-
+#*******************************************************************************
 calc_pds_global <- function(plate_df, columns_for_scoring, column_weights, 
-                            sample_reordering, mask, plate_n_rows, plate_n_cols, 
+                            mask, plate_n_rows, plate_n_cols, 
                             internal_control_well_indices)
 {
   # This bit of code assumes that internal controls are pre-placed in the last column.
@@ -435,7 +410,6 @@ calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
   # larger dimension will be its columns... This just aligns with the usual "8x12" implied layout of 96 well plates, which
   # (for the moment) is a primary assumption of this library.
  
-  #print("In calc_sa_score")
   num_samples <- (plate_n_rows * plate_n_cols) - length(internal_control_well_indices)
   min_dim <- min(c(plate_n_rows, plate_n_cols))
   max_dim_floor <- num_samples %/% min_dim
@@ -453,63 +427,22 @@ calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
     }
     column_weight <- column_weights[cwi]
 
-    #print(cs)
-    #print(column_values)
-
     val <- column_values[1]
-    #print(((sum(lowerTriangle(mask[ which(column_data==val), which(column_data==val)])) -
-    #                                                                             calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor))/
-    #                                                                           calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)))
-
     val <- column_values[2]
-    #print(((sum(lowerTriangle(mask[ which(column_data==val), which(column_data==val)])) -
-    #                                                                             calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor))/
-    #                                                                            calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)))
-
-
 
     sub_score <- column_weight * median(unlist(lapply(column_values, 
                                                       function(val) { max(min(((sum(lowerTriangle(mask[ which(column_data==val), which(column_data==val)])) - 
 								                 calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor))/ 
                                                                                 calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)),1),0) } )))
 
-    #print(sub_score)
-
     score <- sum(c(score, sub_score), na.rm=TRUE)
 
     cwi <- cwi + 1
   }
-  #print("DEBUG")
-  #print(score)
   return(score)
 }
 
-
-#calc_spatial_auto_score_v2 <- function(plate_df, columns_for_scoring, column_weights, sample_reordering, mask, plate_n_rows, plate_n_cols)
-#{
-#  score <- 0
-#  cwi <- 1
-#  for(cs in columns_for_scoring){
-#    column_data <- pull(plate_df, cs)
-#    column_values <- na.omit(unique(column_data))
-#    column_weight <- column_weights[cwi]
-
-#    sub_score <- column_weight * median(unlist(lapply(column_values, 
-#                                                      function(val) {sum(lowerTriangle(mask[ which(column_data==val), which(column_data==val)]))/ 
-#                                                                     calc_spatial_auto_score_v2_aux(sum(na.omit(column_data==val)), plate_n_rows, plate_n_cols)} )))
-#
-#    score <- score + sub_score
-#
-#    cwi <- cwi + 1
-#  }
-#
-#  return(score)
-#}
-
-
-
 #*******************************************************************************
-
 calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols)
 {
 
@@ -533,17 +466,16 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights,
 }
 
 #*******************************************************************************
-
-calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols, patch_weight)
+calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols, patch_weight=NULL)
 {
   # setup *******************************************************************
   sub_plate_n_cols <- plate_n_cols - 2  
   sub_plate_n_rows <- plate_n_rows - 2  
   sub_plate_size <- sub_plate_n_cols * sub_plate_n_rows
 
-  # if(is.null(patch_weight)){
-  #   patch_weight <- min(c(1, (plate_n_rows + plate_n_cols)/sub_plate_size))
-  # }
+  if(is.null(patch_weight)){
+     patch_weight <- min(c(1, (plate_n_rows + plate_n_cols)/sub_plate_size))
+  }
 
   x <- matrix(1:(plate_n_rows * plate_n_cols), plate_n_rows, plate_n_cols)
   x[,1] <- 0
@@ -579,10 +511,9 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, plat
 
 
 #***************************************************************************
-
 calc_pds_local <- function(plate_df, columns_for_scoring, column_weights, 
                            plate_n_rows, plate_n_cols, 
-                           patch_weight){
+                           patch_weight=NULL){
   
   row_column_score <- calc_row_column_score(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols)
   patch_score <- calc_patch_score(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols, patch_weight)
@@ -591,14 +522,15 @@ calc_pds_local <- function(plate_df, columns_for_scoring, column_weights,
 }
 
 #***************************************************************************
-
-calc_pds <- function(plate_df, columns_for_scoring, column_weights, sample_reordering, mask, 
+calc_pds <- function(plate_df, columns_for_scoring, column_weights, mask, 
                                                     plate_n_rows, plate_n_cols, 
                                                     internal_control_well_indices, 
-                                                    pds_local_weight, patch_weight){
+                                                    pds_local_weight=1, patch_weight=NULL){
+  
+  
   
   pds_global <- calc_pds_global(plate_df, columns_for_scoring, column_weights, 
-                                sample_reordering, mask, plate_n_rows, plate_n_cols, 
+                                mask, plate_n_rows, plate_n_cols, 
                                 internal_control_well_indices)
 
   pds_local <- calc_pds_local(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols, patch_weight)
@@ -606,127 +538,14 @@ calc_pds <- function(plate_df, columns_for_scoring, column_weights, sample_reord
   return(pds_global + (pds_local_weight*pds_local))
 }
 
-
 #***************************************************************************
-
-# find_independent_switches <- function(depth, plate_df,
-# 			       ss_matrix,well_distances,jiggled_matrix_indices,
-#                                splitting_ss_thresh, splitting_wd_thresh,
-#                                replacing_ss_thresh, replacing_wd_thresh,
-#                                columns_for_scoring, column_weights, plate_n_rows, plate_n_cols,
-#                                plate_size, internal_control_well_indices){
-# 
-#   internal_control_well_inidices_one_indexed <- internal_control_well_indices + 1
-# 
-#   ss_matrix_jiggled <- ss_matrix[jiggled_matrix_indices, jiggled_matrix_indices] 
-# 
-#   ss_vec=lowerTriangle(ss_matrix_jiggled)
-# 
-# 
-#   pairs_for_splitting_indicator_vec_aux <- rep(0,length(ss_vec))
-#   pairs_for_splitting_indicator_vec_aux[which((ss_vec>splitting_ss_thresh) & (well_distances<splitting_wd_thresh))] <- 1
-#   pairs_for_splitting_inidicator_matrix <- matrix(0, nrow=plate_size, ncol=plate_size)
-#   lowerTriangle(pairs_for_splitting_inidicator_matrix) <- pairs_for_splitting_indicator_vec_aux
-#   upperTriangle(pairs_for_splitting_inidicator_matrix) <- upperTriangle(t(pairs_for_splitting_inidicator_matrix))
-#   pairs_for_splitting <- sample(which(pairs_for_splitting_inidicator_matrix==1))
-# 
-#   pairs_available_for_switching_indicator_vec_aux <- rep(0,length(ss_vec))
-#   pairs_available_for_switching_indicator_vec_aux[which((ss_vec<=replacing_ss_thresh) & (well_distances>replacing_wd_thresh))] <- 1
-#   pairs_available_for_switching_inidicator_matrix <- matrix(0, nrow=plate_size, ncol=plate_size)
-#   lowerTriangle(pairs_available_for_switching_inidicator_matrix) <- pairs_available_for_switching_indicator_vec_aux
-#   upperTriangle(pairs_available_for_switching_inidicator_matrix) <- upperTriangle(t(pairs_available_for_switching_inidicator_matrix))
-#   #pairs_for_switching <- sample(which(pairs_available_for_switching_inidicator_matrix==1))
-# 
-#   switches_df <- data.frame(matrix(ncol = 2, nrow = 0))
-#   
-#   moved_samples <- c()
-# 
-# 
-#   for(pair_for_splitting in pairs_for_splitting){
-#     anchor_sample <- ((pair_for_splitting-1) %% plate_size) + 1
-#     moveable_sample <- ((pair_for_splitting-1) %/% plate_size) + 1
-# 
-#     if(!(moveable_sample %in% internal_control_well_inidices_one_indexed) & !(anchor_sample %in% moved_samples) & !(moveable_sample %in% moved_samples)){
-#       
-#        SANITY_CHECK_PRINTING = FALSE
-#        
-#        if(SANITY_CHECK_PRINTING){
-#          print("TRYING TO FIND SOME MOVABLE SAMPLE PAIRS")
-#          print(anchor_sample)
-#          print(moveable_sample)
-#        }
-# 
-#        moveable_sample_2_options_vec <- pairs_available_for_switching_inidicator_matrix[anchor_sample,]
-# 
-#        if(SANITY_CHECK_PRINTING){
-#          print("moveable_sample_2_options_vec before filtering:")
-#          print(moveable_sample_2_options_vec)
-#          print("****")
-#          print("Filters:")
-#          print("moveable_sample")
-#          print(moveable_sample)
-#          print("moved_samples")
-#          print(moved_samples)
-#          print("internal_control_well_inidices_one_indexed")
-#          print(internal_control_well_inidices_one_indexed)
-#        }
-#        
-#        moveable_sample_2_options_vec[moveable_sample] <- 0  ## SHOULD ALREADY BE ZERO,I think (splitting pair cannot be switching pair if thresholds set properly)... but just in case
-#        moveable_sample_2_options_vec[moved_samples] <- 0
-#        moveable_sample_2_options_vec[internal_control_well_inidices_one_indexed] <- 0
-#        
-#        if(SANITY_CHECK_PRINTING){
-#          print("moveable_sample_2_options_vec after filtering:")
-#          print(moveable_sample_2_options_vec)
-#          print("***************")
-#        }       
-# 
-#        if(any(moveable_sample_2_options_vec>0)){
-#           if(length(which(moveable_sample_2_options_vec>0))==1){
-#             moveable_sample_2 <- which(moveable_sample_2_options_vec>0)
-#           }else{
-#             moveable_sample_2 <- sample(which(moveable_sample_2_options_vec>0))[1]
-#           }
-#   
-#           switches_df <- rbind(switches_df, sort(c(moveable_sample, moveable_sample_2)))
-#           moved_samples <- c(moved_samples,  sort(c(moveable_sample, moveable_sample_2)))
-#        }
-# 
-#     }
-# 
-#   }
-#   
-#   switches_df <- unique(switches_df)
-#   colnames(switches_df) <- c("A","B")
-# 
-# 
-#   new_jiggled_matrix_indices <- jiggled_matrix_indices
-#   new_jiggled_matrix_indices[switches_df$A] <- jiggled_matrix_indices[switches_df$B]
-#   new_jiggled_matrix_indices[switches_df$B] <- jiggled_matrix_indices[switches_df$A]
-# 
-#   ss_matrix_rejiggled <- ss_matrix[new_jiggled_matrix_indices, new_jiggled_matrix_indices]
-#       
-#   corrcoef=cor(as.numeric(well_distances), as.numeric(lowerTriangle(ss_matrix_rejiggled)),use='complete.obs')
-# 
-#   temp_plate_df <- plate_df  %>% slice(match(rownames(ss_matrix_rejiggled), SampleID))
-#       
-#   plating_score<-calc_row_column_score(temp_plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols) +
-#                      calc_patch_score(temp_plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols)
-# 
-#   
-#   return(data.frame(depth=depth, total_score=corrcoef + plating_score, jiggled_matrix_indices=I(list(new_jiggled_matrix_indices))))
-#}
-
-
-#***************************************************************************
-
 find_independent_switches_using_pds <- function(depth, plate_df,
 			                                          ss_matrix,well_distances,jiggled_matrix_indices,
                                                 splitting_ss_thresh, splitting_wd_thresh,
                                                 replacing_ss_thresh, replacing_wd_thresh,
                                                 columns_for_scoring, column_weights, plate_n_rows, plate_n_cols,
                                                 plate_size, internal_control_well_indices, sample_communities, mask,
-			                                          pds_local_weight, patch_weight){
+			                                          pds_local_weight=1, patch_weight=NULL){
 
   internal_control_well_inidices_one_indexed <- internal_control_well_indices + 1
 
@@ -818,17 +637,10 @@ find_independent_switches_using_pds <- function(depth, plate_df,
 
   ss_matrix_rejiggled <- ss_matrix[new_jiggled_matrix_indices, new_jiggled_matrix_indices]
       
-  #sas_score <- calc_spatial_auto_score(rownames(ss_matrix_rejiggled),sample_communities,mask)
-
   temp_plate_df <- plate_df  %>% slice(match(rownames(ss_matrix_rejiggled), SampleID))
-      
-  # sas_score <- calc_sa_score(temp_plate_df, columns_for_scoring, column_weights, rownames(ss_matrix_rejiggled), mask, plate_n_rows, plate_n_cols, internal_control_well_indices)
-  # 
-  # plating_score<-calc_row_column_score(temp_plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols) +
-  #                    calc_patch_score(temp_plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols)
 
   plate_design_score <- calc_pds(temp_plate_df, columns_for_scoring, column_weights, 
-                                 rownames(ss_matrix_rejiggled), mask, 
+                                 mask, 
                                  plate_n_rows, plate_n_cols, 
                                  internal_control_well_indices,
                                  pds_local_weight, patch_weight)
@@ -839,32 +651,27 @@ find_independent_switches_using_pds <- function(depth, plate_df,
 
 
 #**********************************************************
-
 get_column_from_well_coords <- function(well_coords){
   return(paste("Column", substr(well_coords,2,3), sep=" "))
 }
 
 #**********************************************************
-
 get_row_from_well_coords <- function(well_coords){
   return(substr(well_coords,1,1))
 }
 
 #**********************************************************
-
 get_column_as_zero_indexed_index_from_well_coords <- function(well_coords){
   return(as.numeric(substr(well_coords,2,3))-1)
 }
 
 #**********************************************************
-
 get_row_as_zero_indexed_index_from_well_coords <- function(well_coords){
   row_labels <- c("A","B","C","D","E","F","G","H")
   return(which(row_labels == substr(well_coords,1,1))-1)
 }
 
 #***********************************************************
-
 make_chessboard_matrix_and_count_edges <- function(nrow, ncol, set_zero, set_one, zero_start){
 
   n <- ncol
@@ -897,17 +704,6 @@ make_chessboard_matrix_and_count_edges <- function(nrow, ncol, set_zero, set_one
   }
 
 
-  
-  #for(i in 0:87){
-  #  #d[(i),which(unlist(lapply(0:87, function(x) {(x %/% 8) == ((i-1) %/% 8)})))] <- 0
-  #  #d[which(unlist(lapply(0:87, function(x) {(x %% 8) == ((i-1) %% 8)}))),(i)] <- 0
-
-  #  d[(i+1),which(unlist(lapply(0:87, function(x) {(x %/% 8) == ((i) %/% 8)})))] <- 0
-  #  d[which(unlist(lapply(0:87, function(x) {(x %% 8) == ((i) %% 8)}))),(i+1)] <- 0
-
-  #}
-
-
   num_edges <- sum((lowerTriangle(d)))
 
   # ***********
@@ -916,30 +712,19 @@ make_chessboard_matrix_and_count_edges <- function(nrow, ncol, set_zero, set_one
   row_penalty <- ((t %/% nrow) * (t %% nrow)) + (nrow * (( ((t %/% nrow) - 1) * (t %/% nrow) )/2) )
   col_penalty <- ((t %/% ncol) * (t %% ncol)) + (ncol * (( ((t %/% ncol) - 1) * (t %/% ncol) )/2) )
 
-  #print("*****")
-  #print(sum(x))
-  #print(edge_max)
-  #print(row_penalty)
-  #print(col_penalty)
-  #print("*****")
-
 
   calc_max_edges <- edge_max - row_penalty - col_penalty 
- 
-
   # ***********
 
   return(c(num_edges, calc_max_edges))
 }
 
-
 #***********************************************************
-
 allocate_similar_samples_to_distal_wells <- function(plate_df_list, columns_for_scoring, column_weights, imbalance_fixer,
                                                      plate_num_rows, plate_num_cols, plate_size,
                                                      full_mask, splitting_ss_thresh, 
                                                      internal_control_ids, internal_control_well_indices,
-                                                     pds_local_weight, patch_weight){
+                                                     pds_local_weight=1, patch_weight=NULL){
   
   plate_df <- plate_df_list[[1]]
   plate_df_aux <- plate_df_list[[2]]
@@ -952,26 +737,13 @@ allocate_similar_samples_to_distal_wells <- function(plate_df_list, columns_for_
   
   sample_communities <- find_sample_communities(sample_similarities_matrix, splitting_ss_thresh)
   
-  #temp_plate_df_original <- plate_df  %>% slice(match(rownames(sample_similarities_matrix), SampleID))
-  #best_score <- calc_pds(temp_plate_df_original,columns_for_scoring, column_weights,
-  
   best_score <- calc_pds(plate_df,columns_for_scoring, column_weights,                       
-                         temp_plate_df_original$SampleID, scoring_mask,
+                         scoring_mask,
                          plate_num_rows, plate_num_cols,internal_control_well_indices,
                          pds_local_weight, patch_weight)
   
-  # sas_original <- calc_sa_score(temp_plate_df_original,columns_for_scoring, column_weights, temp_plate_df_original$SampleID, scoring_mask, plate_num_rows, plate_num_cols,internal_control_well_indices)
-  # plating_score_original<-calc_row_column_score(temp_plate_df_original, columns_for_scoring, column_weights, plate_num_rows, plate_num_cols) +
-  #   calc_patch_score(temp_plate_df_original, columns_for_scoring, column_weights, plate_num_rows, plate_num_cols)
-  # 
-  
   samples_reordered <- plate_df$SampleID
   sample_similarities_matrix_reordered <- sample_similarities_matrix
-  
-  # plating_score_reordered <- plating_score_original
-  # sas_reordered <- sas_original
-  # 
-  # best_score <- sas_reordered + plating_score_reordered
   
   for(s in 1:initial_perms) {
     
@@ -983,20 +755,13 @@ allocate_similar_samples_to_distal_wells <- function(plate_df_list, columns_for_
     
     
     temp_plate_df <- plate_df  %>% slice(match(rownames(sample_similarities_matrix_reordered_starter), SampleID))
-    # sas_starter <- calc_sa_score(temp_plate_df,columns_for_scoring, column_weights, samples_reordered_starter, scoring_mask, plate_num_rows, plate_num_cols,internal_control_well_indices)
-    # plating_score_starter<-calc_row_column_score(temp_plate_df, columns_for_scoring, column_weights, plate_num_rows, plate_num_cols) +
-    #   calc_patch_score(temp_plate_df, columns_for_scoring, column_weights, plate_num_rows, plate_num_cols)
-    # 
+    
     starter_pds_score <- calc_pds(temp_plate_df,columns_for_scoring, column_weights,
-                                  samples_reordered_starter, scoring_mask,
+                                  scoring_mask,
                                   plate_num_rows, plate_num_cols,internal_control_well_indices,
                                   pds_local_weight, patch_weight)
     
-    #if((sas_starter + plating_score_starter) > best_score){
     if(starter_pds_score > best_score){ 
-      # best_score <- (sas_starter + plating_score_starter)
-      # plating_score_reordered <- plating_score_starter
-      # sas_reordered <- sas_starter
       samples_reordered <- samples_reordered_starter
       sample_similarities_matrix_reordered <- sample_similarities_matrix_reordered_starter
       best_score <- starter_pds_score
@@ -1008,7 +773,6 @@ allocate_similar_samples_to_distal_wells <- function(plate_df_list, columns_for_
 
 
 #***********************************************************
-
 perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
                                          plate_df_list, sample_allocation_outputs, 
                                          well_pair_distances_df,
@@ -1016,7 +780,7 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
                                          replacing_ss_thresh, replacing_wd_thresh,
                                          columns_for_scoring, column_weights, plate_num_rows, plate_num_cols,
                                          plate_size, internal_control_well_indices,scoring_mask,
-                                         pds_local_weight, patch_weight){
+                                         pds_local_weight=1, patch_weight=NULL){
   
 
     
@@ -1098,7 +862,6 @@ make_easyplater_design_aux <- function(plate_df_list, samples_final_order, colum
 }
 
 #***********************************************************
-
 make_easyplater_design <- function(manifest_df, p, 
                                    columns_for_scoring, column_weights, cols_to_categorize, imbalance_fixer, 
                                    plate_num_rows, plate_num_cols, plate_size, plate_wells, 
@@ -1114,12 +877,12 @@ make_easyplater_design <- function(manifest_df, p,
   plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, p, columns_for_scoring, cols_to_categorize, imbalance_fixer, 
                                                          plate_size, plate_wells, internal_control_well_indices, internal_control_ids)
   
-  if(is.null(patch_weight)){
-    sub_plate_num_cols <- plate_num_cols - 2  
-    sub_plate_num_rows <- plate_num_rows - 2  
-    sub_plate_size <- sub_plate_num_cols * sub_plate_num_rows
-    patch_weight <- min(c(1, (plate_num_rows + plate_num_cols)/sub_plate_size))
-  }
+  # if(is.null(patch_weight)){
+  #   sub_plate_num_cols <- plate_num_cols - 2  
+  #   sub_plate_num_rows <- plate_num_rows - 2  
+  #   sub_plate_size <- sub_plate_num_cols * sub_plate_num_rows
+  #   patch_weight <- min(c(1, (plate_num_rows + plate_num_cols)/sub_plate_size))
+  # }
   
   print("Allocating similar samples to distal wells.")
   sample_allocation_outputs <- allocate_similar_samples_to_distal_wells(
@@ -1184,29 +947,5 @@ print_easyplater_log <- function(filepath){
 }
 
 #***********************************************************
-#***********************************************************
-#***********************************************************
 
-# Use this function to calculate pds scores for any design *OUTSIDE* of the main design function
-# Eg for plotting histograms of scores obtained for plate designs obtained using different methods
 
-calc_pds_wrapper <- function(plate_df, columns_for_scoring, column_weights, sample_reordering, mask, 
-                             plate_n_rows, plate_n_cols, 
-                             internal_control_well_indices, 
-                             pds_local_weight=1, patch_weight=NULL){
-  
-  # NOT FINISHED YET! WHERE DO WE GET plate_df from?
-  
-  if(is.null(patch_weight)){
-    sub_plate_n_cols <- plate_n_cols - 2  
-    sub_plate_n_rows <- plate_n_rows - 2  
-    sub_plate_size <- sub_plate_n_cols * sub_plate_n_rows
-  
-    patch_weight <- min(c(1, (plate_n_rows + plate_n_cols)/sub_plate_size))
-  }
-  
-  pds <- calc_pds(plate_df, columns_for_scoring, column_weights, sample_reordering, mask, 
-                  plate_n_rows, plate_n_cols, 
-                  internal_control_well_indices, 
-                  pds_local_weight, patch_weight)
-}

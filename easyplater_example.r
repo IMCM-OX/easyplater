@@ -6,7 +6,7 @@ source("~/IMCM/projects/Bioinformatics/well plate design/src/easyPlateR/easyplat
 
 # Read in example manifest and give the manifest a name for the purpose of outputs
 manifest_df <- read_csv("~/IMCM/projects/Bioinformatics/well plate design/src/easyPlateR/data/example_manifest.csv")
-manifest_name = "example_design_test2"
+manifest_name = "example_design_test10"
 
 # Create main directory for output:
 manifest_output_dir = paste0("~/IMCM/projects/Bioinformatics/well plate design/src/easyPlateR/outputs/manifest_",manifest_name)
@@ -30,26 +30,17 @@ internal_control_ids <- c("SC1","SC2","NC1","NC2","NC3","PC1","PC2","PC3","PC4",
 
 # Set up variables that need to be turned into categorical variables
 # (variables are referred to as columns because each variable has a column in manifest_df)
-
-# cols_to_categorize <- list(c("AgeAtSampling",10,NULL,"AgeGroup"), 
-#                            c("LatencyFromSymptoms",10,NULL,"LatencyGroupALS"),
-#                            c("latency_from_PD_motor",10,NULL,"LatencyGroupPD"),
-#                            c("ProgressionRate",10,NULL,"ProgressionRateGroup"))
-
-cols_to_categorize <- list(c("Age",10,NULL,"AgeGroup"), 
-                           c("Latency",10,NULL,"LatencyGroup"))
+cols_to_categorize <- list(c("Age",10,NULL,"AgeGroup"))
 
 # Give list of variables for scoring
-#columns_for_scoring <- c("Cohort","ParticipantGroup","Sex","AgeGroup","Cluster","OnsetSite","LatencyGroupALS","LatencyGroupPD","TimePoint","Gene","ProgressionRateGroup","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp")
-columns_for_scoring <- c("Cohort","Group","Sex","AgeGroup","LatencyGroup")
+columns_for_scoring <- c("Cohort","Group","Sex","AgeGroup")
 
 
 # Supply variable weights
-column_weights <- c(5,5,10,4,4)
+column_weights <- c(5,5,10,4)
 
 
 # Build an imbalance_fixer, if required.
-#imbalance_fixer <- list(T,"ParticipantGroup",list("ALS","Control","PD","RBD"),3)
 imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
 # NOTE: Need to put try-catch around the code that uses this!
 # Also, this is an ugly piece of code and needs fixing. Probably best wrapped in a function that builds
@@ -114,14 +105,12 @@ for (pi in 1:length(plates)){
   
   print("Printing output files.")
   print_easyplater_manifest(easy_plate_df, 
-                            #c("Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp"),
                             c("Cohort","Group","Sex"),
                             paste0(single_plate_dir,"/plate_manifest_", manifest_name, "_", trimws(p),".csv"))
   
   print_easyplater_design(easy_plate_df, paste0(single_plate_dir,"/plate_design_", manifest_name, "_", trimws(p),".csv"))
   
   print_easyplater_submissionform(easy_plate_df, 
-                                  #c("Cohort","ParticipantGroup","Sex","Cluster","OnsetSite","YearSamplePD","YearSampleALS","FreezeThaw","StorageTemp"), 
                                   c("Cohort","Group","Sex"), 
                                   paste0(single_plate_dir,"/submission_form_", manifest_name, "_", trimws(p),".csv"))
   
