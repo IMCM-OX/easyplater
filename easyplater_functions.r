@@ -1,18 +1,5 @@
 # R: version 4.2.1
 
-# Load packages required
-library(OlinkAnalyze)
-library(readxl)
-library(writexl)
-library(tidyverse)
-library("dplyr")
-library("ggpubr")
-library('gdata')
-library(igraph)
-library(networkD3)
-
-source("~/IMCM/projects/Bioinformatics/well plate design/src/easyPlateR/easyplater_init_functions.r")
-
 ################################################################################
 # easyplater algorithm variables
 ################################################################################

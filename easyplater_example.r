@@ -1,6 +1,13 @@
 # R: version 4.2.1 
 source("~/IMCM/projects/Bioinformatics/well plate design/src/easyPlateR/easyplater_functions.r")
 
+library(OlinkAnalyze)
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(ggpubr)
+library(igraph)
+library(networkD3)
 
 # SETUP ########################################################################
 
