@@ -1,6 +1,4 @@
 # R: version 4.2.1 
-source("~/IMCM/projects/Bioinformatics/well plate design/src/easyPlateR/easyplater_functions.r")
-
 library(OlinkAnalyze)
 library(tidyverse)
 library(readxl)
@@ -8,19 +6,23 @@ library(writexl)
 library(ggpubr)
 library(igraph)
 library(networkD3)
+library(here)
+
+source(here("easyplater_init_functions.r"))
+source(here("easyplater_functions.r"))
 
 # SETUP ########################################################################
 
 # Read in example manifest and give the manifest a name for the purpose of outputs
-manifest_df <- read_csv("~/IMCM/projects/Bioinformatics/well plate design/src/easyPlateR/data/example_manifest.csv")
+manifest_df <- read_csv(here("data/example_manifest.csv"))
 manifest_name = "example_design_test10"
 
 # Create main directory for output:
-manifest_output_dir = paste0("~/IMCM/projects/Bioinformatics/well plate design/src/easyPlateR/outputs/manifest_",manifest_name)
+manifest_output_dir = here(paste0("outputs/manifest_",manifest_name))
 if (file.exists(manifest_output_dir)){
   stop("Output directory already exists. Please delete it or create a new directory for your output.")
 }
-dir.create(xfun::relative_path(here::here(manifest_output_dir)),recursive = TRUE)
+dir.create(here(manifest_output_dir), recursive = TRUE)
 
 # Make a list of the plates:
 plates <- str_sort(unique(manifest_df$plate),numeric=TRUE)
@@ -70,10 +72,10 @@ for (pi in 1:length(plates)){
   
   # create output directory for plate, with a subdirectory for plots
   single_plate_dir = paste0(manifest_output_dir,"/manifest_", manifest_name,"_", trimws(p))
-  dir.create(xfun::relative_path(here::here(single_plate_dir)),recursive = TRUE)
+  dir.create(here(single_plate_dir), recursive = TRUE)
   
   single_plate_plots_dir = paste0(manifest_output_dir,"/manifest_", manifest_name,"_", trimws(p),"/plots")
-  dir.create(xfun::relative_path(here::here(single_plate_plots_dir)),recursive = TRUE)
+  dir.create(here(single_plate_plots_dir), recursive = TRUE)
   
   #******************************************************************************************
   # Design the plate
@@ -124,13 +126,3 @@ for (pi in 1:length(plates)){
   print_easyplater_log(paste0(single_plate_dir,"/LOG_", manifest_name, "_", trimws(p),".csv"))
   
 }
-
-
-
-
-
-
-
-
-
-
