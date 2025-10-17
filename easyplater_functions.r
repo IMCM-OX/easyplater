@@ -61,9 +61,10 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
   cols_for_analysis <- c("SampleID", columns_for_scoring)
   
   plate_df_aux <- filter(manifest_df, plate == plateID)
+  
   num_internal_controls <- length(internal_control_well_indices)
   real_plate_size <- plate_size - num_internal_controls
-
+  
   if(length(cols_to_categorize)>0){ #cols_to_categorize is list of tuples with structure (col_name,num_cats,na_replacement,categorized_col_name)
     for(col_to_categorize_tuple in cols_to_categorize){
       
@@ -142,19 +143,21 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
 
   # Now add internal controls to plate_df and plate_df_aux
 
-  for(ici in 1:num_internal_controls){
-    row<-c(internal_control_ids[ici],rep(NA,length(cols_for_analysis)-1))
-    if(imbalance_fixer[[1]]){
-      row<- c(row,"NA")
-    }
-    plate_df <- rbind(plate_df,row)
+  if(num_internal_controls>0){
+    for(ici in 1:num_internal_controls){
+      row<-c(internal_control_ids[ici],rep(NA,length(cols_for_analysis)-1))
+      if(imbalance_fixer[[1]]){
+        row<- c(row,"NA")
+      }
+      plate_df <- rbind(plate_df,row)
  
-    assigned_well <- plate_wells[internal_control_well_indices[ici]+1]
-    assigned_column <- get_column_from_well_coords(assigned_well)
-    assigned_row <- get_row_from_well_coords(assigned_well)
-    row_aux <- c(internal_control_ids[ici], rep(NA,length(cols_for_analysis)-1),c(plateID,assigned_column, assigned_row, assigned_well))
-    plate_df_aux <- rbind(plate_df_aux, row_aux)
+      assigned_well <- plate_wells[internal_control_well_indices[ici]+1]
+      assigned_column <- get_column_from_well_coords(assigned_well)
+      assigned_row <- get_row_from_well_coords(assigned_well)
+      row_aux <- c(internal_control_ids[ici], rep(NA,length(cols_for_analysis)-1),c(plateID,assigned_column, assigned_row, assigned_well))
+      plate_df_aux <- rbind(plate_df_aux, row_aux)
 
+    }
   }
 
 
@@ -372,7 +375,6 @@ calc_sas_edge_min <- function(n, nrow, ncol){
   remainder_edges <- remainder * (min_dim * (max_dim - 1))
 
   edge_min <- edge_min_temp + remainder_edges
-
   return(edge_min)
 }
 
@@ -400,7 +402,7 @@ calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
   num_samples <- (plate_n_rows * plate_n_cols) - length(internal_control_well_indices)
   min_dim <- min(c(plate_n_rows, plate_n_cols))
   max_dim_floor <- num_samples %/% min_dim
-
+  
   score <- 0
   cwi <- 1
   for(cs in columns_for_scoring){
@@ -414,9 +416,13 @@ calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
     }
     column_weight <- column_weights[cwi]
 
-    val <- column_values[1]
-    val <- column_values[2]
-
+    #val <- column_values[1]
+    #val <- column_values[2]
+   
+    # lapply(column_values, function(val){print(paste(val,sum(lowerTriangle(mask[ which(column_data==val), which(column_data==val)])),
+    #                                                 calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor),
+    #                                                 calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)))})
+    
     sub_score <- column_weight * median(unlist(lapply(column_values, 
                                                       function(val) { max(min(((sum(lowerTriangle(mask[ which(column_data==val), which(column_data==val)])) - 
 								                 calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor))/ 
@@ -440,11 +446,13 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights,
     column_data <- unlist(as.list(select(plate_df, cs)))
     column_weight <- column_weights[cwi]
     column_as_plate <- matrix(column_data, nrow=plate_n_rows, ncol=plate_n_cols)
-
-    column_penalty <- sum(apply(column_as_plate,1,function(r) length(unique(r[which(!is.na(r))]))==1 & length(which(!is.na(r)))>(0.7 * plate_n_cols)  )) 
-                      + sum(apply(column_as_plate,2,function(c) length(unique(c[which(!is.na(c))]))==1 & length(which(!is.na(c)))>(0.7 * plate_n_rows)  ))
+    
+    
+    column_penalty <- sum(apply(column_as_plate,1,function(r) length(unique(r[which(!is.na(r))]))==1 & length(which(!is.na(r)))>(0.7 * plate_n_cols)  )) +
+       sum(apply(column_as_plate,2,function(c) length(unique(c[which(!is.na(c))]))==1 & length(which(!is.na(c)))>(0.7 * plate_n_rows)  ))
+    
     column_score <- column_weight* ((plate_n_rows + plate_n_cols) - column_penalty)
- 
+   
     score <- score + column_score
     cwi <- cwi + 1
   }
@@ -461,7 +469,9 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, plat
   sub_plate_size <- sub_plate_n_cols * sub_plate_n_rows
 
   if(is.null(patch_weight)){
-     patch_weight <- min(c(1, (plate_n_rows + plate_n_cols)/sub_plate_size))
+     patch_weight <- min(c(1, (plate_n_rows + plate_n_cols)/(2*sub_plate_size))) 
+     #Multiplying denominator by 2 so that patch penalties are down-weighted to match the importance of row and column penalties separately, 
+     #rather than being as important as the sum of them (which would make the penalty patch twice as important as either the row or column penalty - I think!)
   }
 
   x <- matrix(1:(plate_n_rows * plate_n_cols), plate_n_rows, plate_n_cols)
@@ -493,6 +503,7 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, plat
     cwi <- cwi + 1
   }
 
+  
   return(score)
 }
 
@@ -521,7 +532,7 @@ calc_pds <- function(plate_df, columns_for_scoring, column_weights, mask,
                                 internal_control_well_indices)
 
   pds_local <- calc_pds_local(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols, patch_weight)
-
+  
   return(pds_global + (pds_local_weight*pds_local))
 }
 
@@ -534,6 +545,7 @@ find_independent_switches_using_pds <- function(depth, plate_df,
                                                 plate_size, internal_control_well_indices, sample_communities, mask,
 			                                          pds_local_weight=1, patch_weight=NULL){
 
+  
   internal_control_well_inidices_one_indexed <- internal_control_well_indices + 1
 
   ss_matrix_jiggled <- ss_matrix[jiggled_matrix_indices, jiggled_matrix_indices] 
@@ -558,8 +570,7 @@ find_independent_switches_using_pds <- function(depth, plate_df,
   switches_df <- data.frame(matrix(ncol = 2, nrow = 0))
   
   moved_samples <- c()
-
-
+  
   for(pair_for_splitting in pairs_for_splitting){
     anchor_sample <- ((pair_for_splitting-1) %% plate_size) + 1
     moveable_sample <- ((pair_for_splitting-1) %/% plate_size) + 1
@@ -616,7 +627,6 @@ find_independent_switches_using_pds <- function(depth, plate_df,
   
   switches_df <- unique(switches_df)
   colnames(switches_df) <- c("A","B")
-
 
   new_jiggled_matrix_indices <- jiggled_matrix_indices
   new_jiggled_matrix_indices[switches_df$A] <- jiggled_matrix_indices[switches_df$B]
@@ -766,7 +776,7 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
                                          splitting_ss_thresh, splitting_wd_thresh,
                                          replacing_ss_thresh, replacing_wd_thresh,
                                          columns_for_scoring, column_weights, plate_num_rows, plate_num_cols,
-                                         plate_size, internal_control_well_indices,scoring_mask,
+                                         plate_size, internal_control_well_indices, scoring_mask,
                                          pds_local_weight=1, patch_weight=NULL){
   
 
@@ -820,7 +830,6 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
   
   top_switch_df <- head(jiggled_indices_df[which(jiggled_indices_df$pds == max(jiggled_indices_df$pds)),], n=1)
   samples_final_order  <- samples_reordered[unlist(top_switch_df[1,]$jiggled_matrix_indices)]
-  
   return(samples_final_order)
 }
 

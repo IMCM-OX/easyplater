@@ -16,7 +16,7 @@ source(here("easyplater_functions.r"))
 
 # Read in example manifest and give the manifest a name for the purpose of outputs
 manifest_df <- read_csv(here("data/example_manifest.csv"))
-manifest_name = "example_design_test10"
+manifest_name = "example_design"
 
 # Create main directory for output:
 manifest_output_dir = here(paste0("outputs/manifest_",manifest_name))
