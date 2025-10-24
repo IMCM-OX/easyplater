@@ -9,7 +9,7 @@ Authors@R: c(
   person("Avigail", "Taylor",
     email = avigail.taylor@well.ox.ac.uk,
     role = c("aut"),
-    role = c(ORCID = "0000-0002-8199-1007"))
+    comment = c(ORCID = "0000-0002-8199-1007"))
 )
     
 Description: An easy to use algorithm for generating 96-well plate designs without confounding clinical variables with plate location effects. Simply input clinical data and user-assigned clinical variable weights, and easyplater outputs the most deconvolved plate design it finds in plain text and R Markdown formats. 
