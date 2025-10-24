@@ -113,12 +113,14 @@
 #' @examples
 #' \dontrun{
 #' # **TO DO:** use internal dataset and cached variables to set example up
-#' plate_df <- plate_df
+#' plate_df <- example_manifest[example_manifest$plate == "plate 1",]
+#' cols_to_categorize <- list(c("Age",10,NULL,"AgeGroup"))
+#' plate_df <- categorize_cols(plate_df, cols_to_categorize)
 #' cols_for_scoring <- c("Cohort", "Group", "Sex", "AgeGroup")
 #' col_weights <- c(5, 5, 10, 4)
 #' n_rows <- 8
 #' n_cols <- 12
-#' well_distances_matrix <- make_well_distances_matrix(n_rows*n_cols) |>
+#' well_distances_matrix <- make_well_distances_matrix(n_rows*n_cols)
 #' scoring_mask <- make_scoring_mask(well_distances_matrix)
 #' ic_well_idcs <- c(86:95)
 #' calc_pds_global(plate_df, cols_for_scoring, col_weights, scoring_mask, n_rows, n_cols, ic_well_idcs)
