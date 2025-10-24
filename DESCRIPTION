@@ -1,5 +1,5 @@
 Package: easyplater
-Title: Decoupling Clinical Variables From Microplate Well Location Effects, Made Easy!
+Title: Decoupling Clinical Data From Plate Location Effects, Made Easy!
 Version: 0.0.0.9000
 Authors@R: c(
   person("Micah", "Fletcher", 
