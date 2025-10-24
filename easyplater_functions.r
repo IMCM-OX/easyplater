@@ -423,10 +423,21 @@ calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
     #                                                 calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor),
     #                                                 calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)))})
     
-    sub_score <- column_weight * median(unlist(lapply(column_values, 
-                                                      function(val) { max(min(((sum(lowerTriangle(mask[ which(column_data==val), which(column_data==val)])) - 
-								                 calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor))/ 
-                                                                                calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)),1),0) } )))
+    sub_sub_score <- lapply(column_values, function(val) { 
+      max(
+        min(
+          (
+            (
+              sum(lowerTriangle(mask[which(column_data==val), which(column_data==val)])) - 
+                calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor))/
+              calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)
+            ),
+          1),
+        0) 
+      }) |>
+      unlist()
+    
+    sub_score <- column_weight * median(sub_sub_score)
 
     score <- sum(c(score, sub_score), na.rm=TRUE)
 
