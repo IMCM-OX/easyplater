@@ -2,16 +2,14 @@ Package: easyplater
 Title: Decoupling Clinical Data From Plate Location Effects, Made Easy!
 Version: 0.0.0.9000
 Authors@R: c(
-  person("Micah", "Fletcher", 
-    email = "micahpfletcher@gmail.com@gmail.com", 
+  person("Micah", "Fletcher",
+    email = "micahpfletcher@gmail.com", 
     role = c("aut", "cre"),
     comment = c(ORCID = "0000-0003-1535-2052")),
   person("Avigail", "Taylor",
-    email = avigail.taylor@well.ox.ac.uk,
+    email = "avigail.taylor@well.ox.ac.uk",
     role = c("aut"),
-    comment = c(ORCID = "0000-0002-8199-1007"))
-)
-    
+    comment = c(ORCID = "0000-0002-8199-1007")))
 Description: An easy to use algorithm for generating 96-well plate designs without confounding clinical variables with plate location effects. Simply input clinical data and user-assigned clinical variable weights, and easyplater outputs the most deconvolved plate design it finds in plain text and R Markdown formats. 
 License: MIT + file LICENSE
 Encoding: UTF-8
