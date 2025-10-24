@@ -1,5 +1,5 @@
 Package: easyplater
-Title: What the Package Does (One Line, Title Case)
+Title: Decoupling Clinical Variables From Microplate Well Location Effects, Made Easy!
 Version: 0.0.0.9000
 Authors@R: c(
   person("Micah", "Fletcher", 
@@ -12,7 +12,7 @@ Authors@R: c(
     role = c(ORCID = "0000-0002-8199-1007"))
 )
     
-Description: What the package does (one paragraph).
+Description: An easy to use algorithm for generating 96-well plate designs without confounding clinical variables with plate location effects. Simply input clinical data and user-assigned clinical variable weights, and easyplater outputs the most deconvolved plate design it finds in plain text and R Markdown formats. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
