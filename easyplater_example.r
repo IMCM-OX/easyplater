@@ -97,33 +97,33 @@ for (pi in 1:length(plates)){
   # Save using ggsave
   #******************************************************************************************
 
-  print("Visualize and save to file plate layouts coloured by variables.")
-  for(label in columns_for_scoring){ 
-  # Visualize plate layouts coloured by the chosen variable
-  
-    my_plot <- olink_displayPlateLayout(data = easy_plate_df,
-                                          fill.color = label,include.label = T)+
-        theme(legend.position = "none") + ggtitle(paste(p, ": ", label, sep=""))
-
-
-    ggsave(my_plot, filename=paste(p, "_", label, ".png", sep=""), path=single_plate_plots_dir)
-  }
-  
-  #******************************************************************************************
-  # Print output files
-  #******************************************************************************************
-  
-  print("Printing output files.")
-  print_easyplater_manifest(easy_plate_df, 
-                            c("Cohort","Group","Sex"),
-                            paste0(single_plate_dir,"/plate_manifest_", manifest_name, "_", trimws(p),".csv"))
-  
-  print_easyplater_design(easy_plate_df, paste0(single_plate_dir,"/plate_design_", manifest_name, "_", trimws(p),".csv"))
-  
-  print_easyplater_submissionform(easy_plate_df, 
-                                  c("Cohort","Group","Sex"), 
-                                  paste0(single_plate_dir,"/submission_form_", manifest_name, "_", trimws(p),".csv"))
-  
-  print_easyplater_log(paste0(single_plate_dir,"/LOG_", manifest_name, "_", trimws(p),".csv"))
+  # print("Visualize and save to file plate layouts coloured by variables.")
+  # for(label in columns_for_scoring){ 
+  # # Visualize plate layouts coloured by the chosen variable
+  # 
+  #   my_plot <- olink_displayPlateLayout(data = easy_plate_df,
+  #                                         fill.color = label,include.label = T)+
+  #       theme(legend.position = "none") + ggtitle(paste(p, ": ", label, sep=""))
+  # 
+  # 
+  #   ggsave(my_plot, filename=paste(p, "_", label, ".png", sep=""), path=single_plate_plots_dir)
+  # }
+  # 
+  # #******************************************************************************************
+  # # Print output files
+  # #******************************************************************************************
+  # 
+  # print("Printing output files.")
+  # print_easyplater_manifest(easy_plate_df, 
+  #                           c("Cohort","Group","Sex"),
+  #                           paste0(single_plate_dir,"/plate_manifest_", manifest_name, "_", trimws(p),".csv"))
+  # 
+  # print_easyplater_design(easy_plate_df, paste0(single_plate_dir,"/plate_design_", manifest_name, "_", trimws(p),".csv"))
+  # 
+  # print_easyplater_submissionform(easy_plate_df, 
+  #                                 c("Cohort","Group","Sex"), 
+  #                                 paste0(single_plate_dir,"/submission_form_", manifest_name, "_", trimws(p),".csv"))
+  # 
+  # print_easyplater_log(paste0(single_plate_dir,"/LOG_", manifest_name, "_", trimws(p),".csv"))
   
 }
