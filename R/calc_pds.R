@@ -93,55 +93,88 @@
 #
 #   return(score)
 # }
-#
-# calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
-#                             mask, plate_n_rows, plate_n_cols,
-#                             internal_control_well_indices)
-# {
-#   # This bit of code assumes that internal controls are pre-placed in the last column.
-#   # Later, will add an if statement so that this only runs when internal controls are in a fixed position...
-#   # Note that this will remove one assumption, but the assumption that fixed internal controls are in right-most column(s)
-#   # of plate will remain... The upshot is that in situations when this is not the case the score is an approximation and,
-#   # moreover, we need to bound the score between 0 and 1 for the cases where the approximation is outside of this boundary.
-#   # One last, albeit less important, assumption is that we will always think of the smaller dimension of a plate as being its rows, and the
-#   # larger dimension will be its columns... This just aligns with the usual "8x12" implied layout of 96 well plates, which
-#   # (for the moment) is a primary assumption of this library.
-#
-#   num_samples <- (plate_n_rows * plate_n_cols) - length(internal_control_well_indices)
-#   min_dim <- min(c(plate_n_rows, plate_n_cols))
-#   max_dim_floor <- num_samples %/% min_dim
-#
-#   score <- 0
-#   cwi <- 1
-#   for(cs in columns_for_scoring){
-#     column_data <- pull(plate_df, cs)
-#     column_values_aux <- na.omit(unique(column_data))
-#     column_values <- c()
-#     for(cv in column_values_aux){
-#       if(length(which(column_data==cv)) > 1){
-#         column_values <- c(column_values, cv)
-#       }
-#     }
-#     column_weight <- column_weights[cwi]
-#
-#     #val <- column_values[1]
-#     #val <- column_values[2]
-#
-#     # lapply(column_values, function(val){print(paste(val,sum(lowerTriangle(mask[ which(column_data==val), which(column_data==val)])),
-#     #                                                 calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor),
-#     #                                                 calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)))})
-#
-#     sub_score <- column_weight * median(unlist(lapply(column_values,
-#                                                       function(val) { max(min(((sum(lowerTriangle(mask[ which(column_data==val), which(column_data==val)])) -
-#                                                                                   calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor))/
-#                                                                                  calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)),1),0) } )))
-#
-#     score <- sum(c(score, sub_score), na.rm=TRUE)
-#
-#     cwi <- cwi + 1
-#   }
-#   return(score)
-# }
+
+#' Calculate global plate design score
+#'
+#' @description
+#' `calc_pds_global()` calculates \eqn{PDS_{v_x}}, the sub-score of \eqn{PDS_v} where \eqn{v} is a clinical metadata variable and \eqn{x} is a unique value of \eqn{v}, accounting for the randomization of value \eqn{x} of \eqn{v} across a plate design.
+#'
+#' @param plate_df Data frame of samples and associated clinical metadata variables.
+#' @param columns_for_scoring Character vector of column names to use for scoring.
+#' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
+#' @param mask Matrix with `plate_n_rows` rows and `plate_n_cols` cols. *TO DO: Ask Avi for a argument description*
+#' @param plate_n_rows Numeric scalar containing the number of rows on plate.
+#' @param plate_n_cols Numeric scalar containing the number of cols on plate.
+#' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
+#'
+#' @returns A numeric scalar.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # **TO DO:** use internal dataset and cached variables to set example up
+#' plate_df <- plate_df
+#' cols_for_scoring <- c("Cohort", "Group", "Sex", "AgeGroup")
+#' col_weights <- c(5, 5, 10, 4)
+#' n_rows <- 8
+#' n_cols <- 12
+#' well_distances_matrix <- make_well_distances_matrix(n_rows*n_cols) |>
+#' scoring_mask <- make_scoring_mask(well_distances_matrix)
+#' ic_well_idcs <- c(86:95)
+#' calc_pds_global(plate_df, cols_for_scoring, col_weights, scoring_mask, n_rows, n_cols, ic_well_idcs)
+#' }
+calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
+                            mask, plate_n_rows, plate_n_cols,
+                            internal_control_well_indices)
+{
+  # This bit of code assumes that internal controls are pre-placed in the last column.
+  # Later, will add an if statement so that this only runs when internal controls are in a fixed position...
+  # Note that this will remove one assumption, but the assumption that fixed internal controls are in right-most column(s)
+  # of plate will remain... The upshot is that in situations when this is not the case the score is an approximation and,
+  # moreover, we need to bound the score between 0 and 1 for the cases where the approximation is outside of this boundary.
+  # One last, albeit less important, assumption is that we will always think of the smaller dimension of a plate as being its rows, and the
+  # larger dimension will be its columns... This just aligns with the usual "8x12" implied layout of 96 well plates, which
+  # (for the moment) is a primary assumption of this library.
+
+  num_samples <- (plate_n_rows * plate_n_cols) - length(internal_control_well_indices)
+  min_dim <- min(c(plate_n_rows, plate_n_cols))
+  max_dim_floor <- num_samples %/% min_dim
+
+  score <- 0
+  cwi <- 1
+  for(cs in columns_for_scoring){
+    column_data <- pull(plate_df, cs)
+    column_values_aux <- na.omit(unique(column_data))
+    column_values <- c()
+    for(cv in column_values_aux){
+      if(length(which(column_data==cv)) > 1){
+        column_values <- c(column_values, cv)
+      }
+    }
+    column_weight <- column_weights[cwi]
+
+    sub_sub_score <- lapply(column_values, function(val) {
+      max(
+        min(
+          (
+            (
+              sum(lowerTriangle(mask[which(column_data==val), which(column_data==val)])) -
+                calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor))/
+              calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)
+          ),
+          1),
+        0)
+    }) |>
+      unlist()
+
+    sub_score <- column_weight * median(sub_sub_score)
+
+    score <- sum(c(score, sub_score), na.rm=TRUE)
+
+    cwi <- cwi + 1
+  }
+  return(score)
+}
 
 
 #' @export
