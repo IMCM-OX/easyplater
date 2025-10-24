@@ -5,3 +5,7 @@ test_that("min sas edge calculation works", {
 test_that("max sas edge calculation works", {
   expect_equal(calc_sas_edge_max(33L, 10, 8), 437)
 })
+
+test_that("sas edge range calculation works", {
+  expect_equal(calc_sas_edge_range(33L, 10, 8), 86)
+})

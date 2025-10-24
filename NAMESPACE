@@ -2,3 +2,4 @@
 
 export(calc_sas_edge_max)
 export(calc_sas_edge_min)
+export(calc_sas_edge_range)

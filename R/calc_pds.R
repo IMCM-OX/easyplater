@@ -142,12 +142,15 @@
 #   }
 #   return(score)
 # }
-#
-# calc_sas_edge_range <- function(n, nrow, ncol){
-#   edge_max <- calc_sas_edge_max(n, nrow, ncol)
-#   edge_min <- calc_sas_edge_min(n, nrow, ncol)
-#   return(edge_max - edge_min)
-# }
+
+
+#' @export
+#' @rdname calc_sas_edge_min
+calc_sas_edge_range <- function(n, nrow, ncol){
+  edge_max <- calc_sas_edge_max(n, nrow, ncol)
+  edge_min <- calc_sas_edge_min(n, nrow, ncol)
+  return(edge_max - edge_min)
+}
 
 #' @export
 #' @rdname calc_sas_edge_min
@@ -167,6 +170,7 @@ calc_sas_edge_max <- function(n, nrow, ncol){
 #'
 #' `calc_sas_edge_max()` returns the maximum samples that could be assigned to row and column exclusive wells.
 #'
+#' `calc_sas_edge_range()` returns the range of samples that could be assigned to row and column exclusive wells.
 #'
 #' @param n Integer. Number of samples from the focal group.
 #' @param nrow Numeric. Number of rows available plate.
@@ -176,11 +180,14 @@ calc_sas_edge_max <- function(n, nrow, ncol){
 #' @export
 #'
 #' @examples
-#' # minimum samples that could be assigned to row and column exclusive wells
+#' # Minimum samples that could be assigned to row and column exclusive wells
 #' calc_sas_edge_min(33L, 10, 8)
 #'
-#' # maximum samples that could be assigned to row and column exclusive wells
+#' # Maximum samples that could be assigned to row and column exclusive wells
 #' calc_sas_edge_max(33L, 10, 8)
+#'
+#' # Range of samples that could be assigned to row and column exclusive wells
+#' calc_sas_edge_range(33L, 10, 8)
 calc_sas_edge_min <- function(n, nrow, ncol){
   max_dim <- max(c(nrow,ncol))
 
