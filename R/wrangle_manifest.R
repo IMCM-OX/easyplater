@@ -10,7 +10,7 @@ categorize_cols <- function(plate_df_aux, cols_to_categorize) {
       while((!cut_interval_has_worked) & num_cats > 0){
         tryCatch(
           {
-            categorized_col_vec <- as.numeric(cut_interval(as.matrix(plate_df_aux[,col_name]),num_cats))
+            categorized_col_vec <- as.numeric(ggplot2::cut_interval(as.matrix(plate_df_aux[,col_name]),num_cats))
             cut_interval_has_worked <- TRUE
             #print(paste0("Final num_cats: ", num_cats))
 

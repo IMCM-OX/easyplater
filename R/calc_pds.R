@@ -102,31 +102,22 @@
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
 #' @param columns_for_scoring Character vector of column names to use for scoring.
 #' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
-#' @param mask Matrix with `plate_n_rows` rows and `plate_n_cols` cols. *TO DO: Ask Avi for a argument description*
-#' @param plate_n_rows Numeric scalar containing the number of rows on plate.
-#' @param plate_n_cols Numeric scalar containing the number of cols on plate.
 #' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
 #'
 #' @returns A numeric scalar.
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # **TO DO:** use internal dataset and cached variables to set example up
-#' plate_df <- example_manifest[example_manifest$plate == "plate 1",]
-#' cols_to_categorize <- list(c("Age",10,NULL,"AgeGroup"))
-#' plate_df <- categorize_cols(plate_df, cols_to_categorize)
-#' cols_for_scoring <- c("Cohort", "Group", "Sex", "AgeGroup")
+#' # An example of a preprocessed plate dataframe
+#' example_plate_df
+#'
+#' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
-#' n_rows <- 8
-#' n_cols <- 12
-#' well_distances_matrix <- make_well_distances_matrix(n_rows*n_cols)
-#' scoring_mask <- make_scoring_mask(well_distances_matrix)
 #' ic_well_idcs <- c(86:95)
-#' calc_pds_global(plate_df, cols_for_scoring, col_weights, scoring_mask, n_rows, n_cols, ic_well_idcs)
-#' }
-calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
-                            mask, plate_n_rows, plate_n_cols,
+#' calc_pds_global(example_plate_df, cols_for_scoring, col_weights, ic_well_idcs)
+calc_pds_global <- function(plate_df,
+                            columns_for_scoring,
+                            column_weights,
                             internal_control_well_indices)
 {
   # This bit of code assumes that internal controls are pre-placed in the last column.
@@ -138,6 +129,17 @@ calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
   # larger dimension will be its columns... This just aligns with the usual "8x12" implied layout of 96 well plates, which
   # (for the moment) is a primary assumption of this library.
 
+  if (nrow(plate_df) == 96) {
+    plate_n_rows <- 8
+    plate_n_cols <- 12
+  } else {
+    stop("nrow(plate_df) != 96: calc_pds_global is currently only implemented for 96 well plates")
+  }
+
+  mask <- nrow(plate_df) |>
+    make_well_distances_matrix(plate_n_rows) |>
+    make_scoring_mask()
+
   num_samples <- (plate_n_rows * plate_n_cols) - length(internal_control_well_indices)
   min_dim <- min(c(plate_n_rows, plate_n_cols))
   max_dim_floor <- num_samples %/% min_dim
@@ -145,8 +147,8 @@ calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
   score <- 0
   cwi <- 1
   for(cs in columns_for_scoring){
-    column_data <- pull(plate_df, cs)
-    column_values_aux <- na.omit(unique(column_data))
+    column_data <- plate_df[[cs]]
+    column_values_aux <- stats::na.omit(unique(column_data))
     column_values <- c()
     for(cv in column_values_aux){
       if(length(which(column_data==cv)) > 1){
@@ -160,16 +162,17 @@ calc_pds_global <- function(plate_df, columns_for_scoring, column_weights,
         min(
           (
             (
-              sum(lowerTriangle(mask[which(column_data==val), which(column_data==val)])) -
-                calc_sas_edge_min(sum(na.omit(column_data==val)), min_dim, max_dim_floor))/
-              calc_sas_edge_range(sum(na.omit(column_data==val)), min_dim, max_dim_floor)
+              sum(gdata::lowerTriangle(mask[which(column_data==val), which(column_data==val)])) -
+                calc_sas_edge_min(sum(stats::na.omit(column_data==val)), min_dim, max_dim_floor)
+             )/
+              calc_sas_edge_range(sum(stats::na.omit(column_data==val)), min_dim, max_dim_floor)
           ),
           1),
         0)
     }) |>
       unlist()
 
-    sub_score <- column_weight * median(sub_sub_score)
+    sub_score <- column_weight * stats::median(sub_sub_score)
 
     score <- sum(c(score, sub_score), na.rm=TRUE)
 

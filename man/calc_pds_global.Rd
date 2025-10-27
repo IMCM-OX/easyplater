@@ -8,9 +8,6 @@ calc_pds_global(
   plate_df,
   columns_for_scoring,
   column_weights,
-  mask,
-  plate_n_rows,
-  plate_n_cols,
   internal_control_well_indices
 )
 }
@@ -21,12 +18,6 @@ calc_pds_global(
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
-\item{mask}{Matrix with \code{plate_n_rows} rows and \code{plate_n_cols} cols. \emph{TO DO: Ask Avi for a argument description}}
-
-\item{plate_n_rows}{Numeric scalar containing the number of rows on plate.}
-
-\item{plate_n_cols}{Numeric scalar containing the number of cols on plate.}
-
 \item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
 }
 \value{
@@ -36,16 +27,11 @@ A numeric scalar.
 \code{calc_pds_global()} calculates \eqn{PDS_{v_x}}, the sub-score of \eqn{PDS_v} where \eqn{v} is a clinical metadata variable and \eqn{x} is a unique value of \eqn{v}, accounting for the randomization of value \eqn{x} of \eqn{v} across a plate design.
 }
 \examples{
-\dontrun{
-# **TO DO:** use internal dataset and cached variables to set example up
-plate_df <- plate_df
-cols_for_scoring <- c("Cohort", "Group", "Sex", "AgeGroup")
+# An example of a preprocessed plate dataframe
+example_plate_df
+
+cols_for_scoring <- names(example_plate_df)[2:5]
 col_weights <- c(5, 5, 10, 4)
-n_rows <- 8
-n_cols <- 12
-well_distances_matrix <- make_well_distances_matrix(n_rows*n_cols) |>
-scoring_mask <- make_scoring_mask(well_distances_matrix)
 ic_well_idcs <- c(86:95)
-calc_pds_global(plate_df, cols_for_scoring, col_weights, scoring_mask, n_rows, n_cols, ic_well_idcs)
-}
+calc_pds_global(example_plate_df, cols_for_scoring, col_weights, ic_well_idcs)
 }
