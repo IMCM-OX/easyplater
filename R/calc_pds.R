@@ -133,7 +133,7 @@ calc_pds_global <- function(plate_df,
     plate_n_rows <- 8
     plate_n_cols <- 12
   } else {
-    stop("nrow(plate_df) != 96: calc_pds_global is currently only implemented for 96 well plates")
+    stop("nrow(plate_df) != 96: calc_pds_global() is currently only implemented for 96-well plates")
   }
 
   mask <- nrow(plate_df) |>
