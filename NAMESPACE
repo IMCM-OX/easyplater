@@ -2,6 +2,7 @@
 
 export(calc_patch_score)
 export(calc_pds_global)
+export(calc_pds_local)
 export(calc_row_column_score)
 export(calc_sas_edge_max)
 export(calc_sas_edge_min)
