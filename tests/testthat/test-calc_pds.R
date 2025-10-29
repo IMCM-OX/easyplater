@@ -51,3 +51,11 @@ test_that("calc_patch_score() errors when given non-96-well plate", {
                     c(5, 5, 10, 4)),
     class = "simpleError")
 })
+
+test_that("calc_pds_local() calculation works", {
+  expect_equal(
+    calc_pds_local(example_plate_df,
+                     names(example_plate_df)[2:5],
+                     c(5, 5, 10, 4)),
+    expected = 709.166667)
+})
