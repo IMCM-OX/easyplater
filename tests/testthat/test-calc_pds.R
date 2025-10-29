@@ -59,3 +59,21 @@ test_that("calc_pds_local() calculation works", {
                      c(5, 5, 10, 4)),
     expected = 709.166667)
 })
+
+test_that("PDS calculation works when given valid input", {
+  expect_equal(
+    calc_pds(example_plate_df,
+             names(example_plate_df)[2:5],
+             c(5, 5, 10, 4),
+             c(86:95)),
+    expected = 729.351215)
+})
+
+test_that("calc_pds() errors when given non-96-well plate", {
+  expect_error(
+    calc_pds(example_plate_df[49:96,],
+             names(example_plate_df)[2:5],
+             c(5, 5, 10, 4),
+             c(86:95)),
+    class = "simpleError")
+})
