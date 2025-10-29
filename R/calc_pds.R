@@ -69,30 +69,63 @@
 #
 #   return(score)
 # }
-#
-# calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols)
-# {
-#
-#   score <- 0
-#   cwi <- 1
-#   for(cs in columns_for_scoring){
-#
-#     column_data <- unlist(as.list(select(plate_df, cs)))
-#     column_weight <- column_weights[cwi]
-#     column_as_plate <- matrix(column_data, nrow=plate_n_rows, ncol=plate_n_cols)
-#
-#
-#     column_penalty <- sum(apply(column_as_plate,1,function(r) length(unique(r[which(!is.na(r))]))==1 & length(which(!is.na(r)))>(0.7 * plate_n_cols)  )) +
-#       sum(apply(column_as_plate,2,function(c) length(unique(c[which(!is.na(c))]))==1 & length(which(!is.na(c)))>(0.7 * plate_n_rows)  ))
-#
-#     column_score <- column_weight* ((plate_n_rows + plate_n_cols) - column_penalty)
-#
-#     score <- score + column_score
-#     cwi <- cwi + 1
-#   }
-#
-#   return(score)
-# }
+
+#' Calculate row column score
+#'
+#' @description
+#' `calc_row_column_score()` calculates **TO DO: Avi fill this in**
+#'
+#' @inheritParams calc_pds_global
+#'
+#' @returns A numeric scalar.
+#' @export
+#'
+#' @examples
+#' # An example of a preprocessed plate dataframe
+#' example_plate_df
+#'
+#' cols_for_scoring <- names(example_plate_df)[2:5]
+#' col_weights <- c(5, 5, 10, 4)
+#' calc_row_column_score(example_plate_df, cols_for_scoring, col_weights)
+calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights) {
+
+  if (nrow(plate_df) == 96) {
+    plate_n_rows <- 8
+    plate_n_cols <- 12
+  } else {
+    stop("nrow(plate_df) != 96: calc_pds_global() is currently only implemented for 96-well plates")
+  }
+
+  score <- 0
+  cwi <- 1
+  for(cs in columns_for_scoring){
+
+    column_data <- plate_df[[cs]]
+    column_weight <- column_weights[cwi]
+    column_as_plate <- matrix(column_data, nrow=plate_n_rows, ncol=plate_n_cols)
+
+
+    column_penalty <- sum(
+      apply(column_as_plate, 1, function(rw) {
+        length(unique(rw[which(!is.na(rw))]))==1 &
+          length(which(!is.na(rw)))>(0.7 * plate_n_cols)
+        })
+      ) +
+      sum(
+        apply(column_as_plate, 2, function(cl) {
+          length(unique(cl[which(!is.na(cl))]))==1 &
+            length(which(!is.na(cl)))>(0.7 * plate_n_rows)
+          })
+        )
+
+    column_score <- column_weight*((plate_n_rows + plate_n_cols) - column_penalty)
+
+    score <- score + column_score
+    cwi <- cwi + 1
+  }
+
+  return(score)
+}
 
 #' Calculate global plate design score
 #'
