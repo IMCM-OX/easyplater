@@ -1,4 +1,10 @@
-make_well_distances_matrix <- function(plate_size, plate_n_rows=8){
+make_well_distances_matrix <- function(plate_size){
+
+  if (plate_size == 96) {
+    plate_n_rows <- 8
+  } else {
+    stop("plate_size != 96: easyplater is currently only implemented for 96-well plates")
+  }
 
   well_distances_matrix <- matrix(0, nrow=plate_size, ncol=plate_size)
   rownames(well_distances_matrix) <- 0:(plate_size-1)

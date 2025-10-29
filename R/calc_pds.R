@@ -84,7 +84,7 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, patc
     plate_n_rows <- 8
     plate_n_cols <- 12
   } else {
-    stop("nrow(plate_df) != 96: calc_patch_score() is currently only implemented for 96-well plates")
+    stop("nrow(plate_df) != 96: easyplater is currently only implemented for 96-well plates")
   }
 
   sub_plate_n_cols <- plate_n_cols - 2
@@ -156,7 +156,7 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights)
     plate_n_rows <- 8
     plate_n_cols <- 12
   } else {
-    stop("nrow(plate_df) != 96: calc_pds_global() is currently only implemented for 96-well plates")
+    stop("nrow(plate_df) != 96: easyplater is currently only implemented for 96-well plates")
   }
 
   score <- 0
@@ -229,11 +229,11 @@ calc_pds_global <- function(plate_df,
     plate_n_rows <- 8
     plate_n_cols <- 12
   } else {
-    stop("nrow(plate_df) != 96: calc_pds_global() is currently only implemented for 96-well plates")
+    stop("nrow(plate_df) != 96: easyplater is currently only implemented for 96-well plates")
   }
 
   mask <- nrow(plate_df) |>
-    make_well_distances_matrix(plate_n_rows) |>
+    make_well_distances_matrix() |>
     make_scoring_mask()
 
   num_samples <- (plate_n_rows * plate_n_cols) - length(internal_control_well_indices)
