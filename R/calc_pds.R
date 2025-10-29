@@ -1,18 +1,38 @@
-# calc_pds <- function(plate_df, columns_for_scoring, column_weights, mask,
-#                      plate_n_rows, plate_n_cols,
-#                      internal_control_well_indices,
-#                      pds_local_weight=1, patch_weight=NULL){
-#
-#
-#
-#   pds_global <- calc_pds_global(plate_df, columns_for_scoring, column_weights,
-#                                 mask, plate_n_rows, plate_n_cols,
-#                                 internal_control_well_indices)
-#
-#   pds_local <- calc_pds_local(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols, patch_weight)
-#
-#   return(pds_global + (pds_local_weight*pds_local))
-# }
+#' Calculate plate design score
+#'
+#' @description
+#' One or two sentences describing the purpose of the function, and its inputs and outputs **TO DO: Avi, fill this in**
+#'
+#' @details
+#' Additional details of nuances, limitations, potential pitfalls... **TO DO: Avi, fill this in**
+#'
+#' @inheritParams calc_pds_global
+#' @inheritParams calc_pds_local
+#' @param pds_local_weight Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.
+#'
+#' @returns A numeric scalar.
+#' @export
+#'
+#' @examples
+#' # An example of a preprocessed plate dataframe
+#' str(example_plate_df)
+#'
+#' cols_for_scoring <- names(example_plate_df)[2:5]
+#' col_weights <- c(5, 5, 10, 4)
+#' ic_well_idcs <- c(86:95)
+#' calc_pds(example_plate_df, cols_for_scoring, col_weights, ic_well_idcs)
+calc_pds <- function(plate_df, columns_for_scoring, column_weights,
+                     internal_control_well_indices,
+                     pds_local_weight=1, patch_weight=NULL){
+
+  pds_global <- calc_pds_global(plate_df, columns_for_scoring, column_weights,
+                                internal_control_well_indices)
+
+  pds_local <- calc_pds_local(plate_df, columns_for_scoring, column_weights,
+                              patch_weight)
+
+  return(pds_global + (pds_local_weight*pds_local))
+}
 
 #' Calculate local plate design score
 #'
