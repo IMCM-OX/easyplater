@@ -23,52 +23,81 @@
 #
 #   return(row_column_score + patch_score)
 # }
-#
-# calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols, patch_weight=NULL)
-# {
-#   # setup *******************************************************************
-#   sub_plate_n_cols <- plate_n_cols - 2
-#   sub_plate_n_rows <- plate_n_rows - 2
-#   sub_plate_size <- sub_plate_n_cols * sub_plate_n_rows
-#
-#   if(is.null(patch_weight)){
-#     patch_weight <- min(c(1, (plate_n_rows + plate_n_cols)/(2*sub_plate_size)))
-#     #Multiplying denominator by 2 so that patch penalties are down-weighted to match the importance of row and column penalties separately,
-#     #rather than being as important as the sum of them (which would make the penalty patch twice as important as either the row or column penalty - I think!)
-#   }
-#
-#   x <- matrix(1:(plate_n_rows * plate_n_cols), plate_n_rows, plate_n_cols)
-#   x[,1] <- 0
-#   x[1,] <- 0
-#   x[,plate_n_cols] <- 0
-#   x[plate_n_rows,] <- 0
-#
-#   y <- x[which(x>0)]
-#
-#   n <- plate_n_rows # this assignment just makes the next line of code neater...
-#   mask <- c( (-n-1), (-n), (-n+1), -1, 0 , 1, (n-1), (n), (n+1) )
-#   # *************************************************************************
-#
-#   score <- 0
-#   cwi <- 1
-#   for(cs in columns_for_scoring){
-#
-#     column_data <- unlist(as.list(select(plate_df, cs)))
-#     column_weight <- column_weights[cwi]
-#     column_as_plate <- matrix(column_data, nrow=plate_n_rows, ncol=plate_n_cols)
-#
-#
-#     column_as_patches <- matrix(unlist(lapply(y, function(a) lapply(mask, function(b) column_as_plate[b + a]))),9,sub_plate_size)
-#     column_penalty <- sum(apply(column_as_patches, 2, function(c) length(unique(c[which(!is.na(c))]))==1 & length(which(!is.na(c)))>(0.7 * 9)  ))
-#     column_score <- patch_weight * (column_weight * ( sub_plate_size - column_penalty ))
-#
-#     score <- score + column_score
-#     cwi <- cwi + 1
-#   }
-#
-#
-#   return(score)
-# }
+
+#' Calculate patch score
+#'
+#' @description
+#' `calc_patch_score()` calculates **TO DO: Avi fill this in**
+#'
+#' @inheritParams calc_pds_global
+#' @param patch_weight down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. **TO DO: Avi, check this description**
+#'
+#' @returns A numeric scalar.
+#' @export
+#'
+#' @examples
+#' # An example of a preprocessed plate dataframe
+#' example_plate_df
+#'
+#' cols_for_scoring <- names(example_plate_df)[2:5]
+#' col_weights <- c(5, 5, 10, 4)
+#' calc_patch_score(example_plate_df, cols_for_scoring, col_weights)
+calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, patch_weight=NULL) {
+
+  if (nrow(plate_df) == 96) {
+    plate_n_rows <- 8
+    plate_n_cols <- 12
+  } else {
+    stop("nrow(plate_df) != 96: calc_pds_global() is currently only implemented for 96-well plates")
+  }
+
+  sub_plate_n_cols <- plate_n_cols - 2
+  sub_plate_n_rows <- plate_n_rows - 2
+  sub_plate_size <- sub_plate_n_cols * sub_plate_n_rows
+
+  if(is.null(patch_weight)){
+    patch_weight <- min(c(1, (plate_n_rows + plate_n_cols)/(2*sub_plate_size)))
+    # Multiplying denominator by 2 so that patch penalties are down-weighted to match the importance of row and column penalties separately,
+    # rather than being as important as the sum of them (which would make the penalty patch twice as important as either the row or column penalty - I think!)
+  }
+
+  x <- matrix(1:(plate_n_rows * plate_n_cols), plate_n_rows, plate_n_cols)
+  x[,1] <- 0
+  x[1,] <- 0
+  x[,plate_n_cols] <- 0
+  x[plate_n_rows,] <- 0
+
+  y <- x[which(x>0)]
+
+  n <- plate_n_rows # this assignment just makes the next line of code neater...
+  mask <- c( (-n-1), (-n), (-n+1), -1, 0 , 1, (n-1), (n), (n+1) )
+
+  score <- 0
+  cwi <- 1
+  for(cs in columns_for_scoring){
+
+    column_data <- plate_df[[cs]]
+    column_weight <- column_weights[cwi]
+    column_as_plate <- matrix(column_data, nrow=plate_n_rows, ncol=plate_n_cols)
+
+
+    column_as_patches <- lapply(y, function(a) {
+      lapply(mask, function(b) column_as_plate[b + a])
+      }) |>
+      unlist() |>
+      matrix(9,sub_plate_size)
+    column_penalty <- apply(column_as_patches, 2, function(cl) {
+      length(unique(cl[which(!is.na(cl))]))==1 & length(which(!is.na(cl))) > (0.7*9)
+      }) |> sum()
+    column_score <- patch_weight * (column_weight * ( sub_plate_size - column_penalty ))
+
+    score <- score + column_score
+    cwi <- cwi + 1
+  }
+
+
+  return(score)
+}
 
 #' Calculate row column score
 #'
