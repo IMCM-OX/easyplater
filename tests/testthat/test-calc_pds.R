@@ -35,3 +35,19 @@ test_that("calc_row_column_score() calculation works", {
                     c(5, 5, 10, 4)),
     expected = 470)
 })
+
+test_that("calc_patch_score() calculation works", {
+  expect_equal(
+    calc_patch_score(example_plate_df,
+                     names(example_plate_df)[2:5],
+                     c(5, 5, 10, 4)),
+    expected = 239.166667)
+})
+
+test_that("calc_patch_score() errors when given non-96-well plate", {
+  expect_error(
+    calc_patch_score(example_plate_df[49:96,],
+                    names(example_plate_df)[2:5],
+                    c(5, 5, 10, 4)),
+    class = "simpleError")
+})
