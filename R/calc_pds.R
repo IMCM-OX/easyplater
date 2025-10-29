@@ -53,7 +53,7 @@ calc_pds_local <- function(plate_df, columns_for_scoring, column_weights,
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
-#' example_plate_df
+#' str(example_plate_df)
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
@@ -125,7 +125,7 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, patc
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
-#' example_plate_df
+#' str(example_plate_df)
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
@@ -185,7 +185,7 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights)
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
-#' example_plate_df
+#' str(example_plate_df)
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
