@@ -24,7 +24,7 @@ calc_pds_local(
 A numeric scalar.
 }
 \description{
-The condition that variable-wise homogeneous rows, columns and patches should be avoided in a plate design is captured by the sub-score \eqn{PDS_local}. We define \eqn{PDS_local} to be an inverse-penalty based score such that plate designs that have a non-homogeneous distribution of values for every variable in every row, column and patch score maximally, while deviations from this are penalized.
+The condition that variable-wise homogeneous rows, columns and patches should be avoided in a plate design is captured by the sub-score \eqn{PDS_{local}}. We define \eqn{PDS_{local}} to be an inverse-penalty based score such that plate designs that have a non-homogeneous distribution of values for every variable in every row, column and patch score maximally, while deviations from this are penalized.
 }
 \examples{
 # An example of a preprocessed plate dataframe

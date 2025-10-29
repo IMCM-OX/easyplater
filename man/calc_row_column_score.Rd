@@ -21,7 +21,7 @@ A numeric scalar.
 }
 \examples{
 # An example of a preprocessed plate dataframe
-example_plate_df
+str(example_plate_df)
 
 cols_for_scoring <- names(example_plate_df)[2:5]
 col_weights <- c(5, 5, 10, 4)
