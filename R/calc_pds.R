@@ -48,7 +48,7 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, patc
     plate_n_rows <- 8
     plate_n_cols <- 12
   } else {
-    stop("nrow(plate_df) != 96: calc_pds_global() is currently only implemented for 96-well plates")
+    stop("nrow(plate_df) != 96: calc_patch_score() is currently only implemented for 96-well plates")
   }
 
   sub_plate_n_cols <- plate_n_cols - 2
@@ -80,7 +80,6 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, patc
     column_weight <- column_weights[cwi]
     column_as_plate <- matrix(column_data, nrow=plate_n_rows, ncol=plate_n_cols)
 
-
     column_as_patches <- lapply(y, function(a) {
       lapply(mask, function(b) column_as_plate[b + a])
       }) |>
@@ -94,7 +93,6 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, patc
     score <- score + column_score
     cwi <- cwi + 1
   }
-
 
   return(score)
 }
