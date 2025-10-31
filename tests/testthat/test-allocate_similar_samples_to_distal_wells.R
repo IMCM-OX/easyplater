@@ -1,3 +1,14 @@
+test_that("make_ss_matrices() works", {
+  expect_equal(
+    object = {
+      imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
+      make_ss_matrices(example_plate_df, c(5, 5, 10, 4), imbalance_fixer)
+    },
+    expected = ss_matrices_list
+
+  )
+})
+
 test_that("find_n_wells() works", {
   expect_equal(
     withr::with_seed(

@@ -59,7 +59,7 @@
 #' @inheritParams calc_pds
 #' @param imbalance_fixer Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. **TO DO: Avi, explain this.**
 #'
-#' @returns Length 3 list, containing 3 96x96 matrices. First element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. **TO DO: Avi, explain this.**
+#' @returns Length 3 list, containing three (plate size) x (plate size) matrices. First element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. **TO DO: Avi, explain this.**
 #' @export
 #'
 #' @examples
