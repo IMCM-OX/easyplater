@@ -4,7 +4,7 @@
 \alias{find_n_wells}
 \title{Find wells to reallocate to distal wells}
 \usage{
-find_n_wells(n_wells, wells_pre_allocated, plate_size = 96)
+find_n_wells(full_mask, n_wells, wells_pre_allocated, plate_size = 96)
 }
 \arguments{
 \item{n_wells}{Integer scalar. Number of wells to search for.}
@@ -20,5 +20,9 @@ Numeric vector with length \code{n_wells}
 \strong{TO DO: Avi, fill this in.}
 }
 \examples{
-find_n_wells(17L, 86:95, 96)
+plate_size <- 96
+full_mask <- plate_size |>
+  make_well_distances_matrix() |>
+  make_full_mask()
+find_n_wells(full_mask, 17L, 86:95, plate_size)
 }

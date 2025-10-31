@@ -48,39 +48,61 @@
 #
 #   return(list(sample_communities, samples_reordered, sample_similarities_matrix_reordered, best_score))
 # }
-#
-# make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer, plate_size){
-#
-#   weights <- c(0, column_weights)
-#
-#   if(imbalance_fixer[[1]]){
-#     weights <- c(weights,as.numeric(imbalance_fixer[[4]]))
-#   }
-#   sample_similarities_matrix <- matrix(0, nrow=plate_size, ncol=plate_size)
-#   rownames(sample_similarities_matrix) <- plate_df$SampleID
-#   colnames(sample_similarities_matrix) <- plate_df$SampleID
-#
-#   sample_similarities_si_names <- matrix("",nrow=plate_size, ncol=plate_size)
-#   sample_similarities_sj_names <- matrix("",nrow=plate_size, ncol=plate_size)
-#
-#   for (si in 1:(plate_size-1)){
-#     sample_si <- plate_df[si,]
-#
-#     for (sj in (si+1):plate_size){
-#       sample_sj <- plate_df[sj,]
-#
-#       ss = sum(weights * (sample_si == sample_sj), na.rm=TRUE)/sum(weights)
-#       sample_similarities_matrix[si,sj] <- ss
-#       sample_similarities_matrix[sj,si] <- ss
-#
-#       sample_similarities_si_names[sj,si] <- sample_si$SampleID
-#       sample_similarities_sj_names[sj,si] <- sample_sj$SampleID
-#
-#     }
-#   }
-#   return(list(sample_similarities_matrix, sample_similarities_si_names, sample_similarities_sj_names))
-# }
-#
+
+
+#' Make ss matrices
+#'
+#' @description
+#' A short description... **TO DO: Avi, explain this.**
+#'
+#'
+#' @inheritParams calc_pds
+#' @param imbalance_fixer Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. **TO DO: Avi, explain this.**
+#'
+#' @returns Length 3 list, containing 3 96x96 matrices. First element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. **TO DO: Avi, explain this.**
+#' @export
+#'
+#' @examples
+#' # Example of a pre-processed plate data frame
+#' str(example_plate_df)
+#'
+#' col_weights <- c(5, 5, 10, 4)
+#' imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
+#' make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)
+make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
+
+  plate_size <- nrow(plate_df)
+
+  weights <- c(0, column_weights)
+
+  if(imbalance_fixer[[1]]){
+    weights <- c(weights, as.numeric(imbalance_fixer[[4]]))
+  }
+  sample_similarities_matrix <- matrix(0, nrow = plate_size, ncol = plate_size)
+  rownames(sample_similarities_matrix) <- plate_df$SampleID
+  colnames(sample_similarities_matrix) <- plate_df$SampleID
+
+  sample_similarities_si_names <- matrix("", nrow = plate_size, ncol = plate_size)
+  sample_similarities_sj_names <- matrix("", nrow = plate_size, ncol = plate_size)
+
+  for (si in 1:(plate_size-1)){
+    sample_si <- plate_df[si,]
+
+    for (sj in (si+1):plate_size){
+      sample_sj <- plate_df[sj,]
+
+      ss = sum(weights * (sample_si == sample_sj), na.rm=TRUE)/sum(weights)
+      sample_similarities_matrix[si,sj] <- ss
+      sample_similarities_matrix[sj,si] <- ss
+
+      sample_similarities_si_names[sj,si] <- sample_si$SampleID
+      sample_similarities_sj_names[sj,si] <- sample_sj$SampleID
+
+    }
+  }
+  return(list(sample_similarities_matrix, sample_similarities_si_names, sample_similarities_sj_names))
+}
+
 # find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thresh){
 #   sample_similarities_matrix_mask <- sample_similarities_matrix
 #   sample_similarities_matrix_mask[which(is.na(sample_similarities_matrix))] <- 0
@@ -94,72 +116,72 @@
 # }
 
 
-#' Reorder samples in plate
-#'
-#' @param sample_similarities_matrix
-#' @param sample_communities
-#' @param full_mask
-#' @param internal_control_ids
-#' @param internal_control_well_indices
-#' @param plate_size
-#'
-#' @returns
-#' @export
-#'
-reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communities, full_mask,
-                                     internal_control_ids, internal_control_well_indices, plate_size=96){
-
-  samples_allocated <- internal_control_ids
-  wells_allocated <- internal_control_well_indices
-
-  community_sizes <- sizes(sample_communities)
-  for(community_size in unique(community_sizes[which(community_sizes>1)])){
-
-    sample_communities_subset <- sample_communities[which(community_sizes==community_size)]
-
-    for(sample_community_index in sample(length(sample_communities_subset))){
-      sample_community <- sample_communities_subset[[sample_community_index]]
-
-      wells_allocated_to_community <- sample(find_n_wells(full_mask, length(sample_community), wells_allocated, plate_size))
-      # Using sample here to randomize well allocation order. By definition we know that > 1 wells have been allocated, so this is safe from odd behaviour from sample.
-
-      samples_allocated <- c(samples_allocated, sample_community)
-      wells_allocated <- c(wells_allocated, wells_allocated_to_community)
-
-      if(length(sample_community) != length(wells_allocated_to_community)){
-
-        print("Found potential problem. Sample community not allocated the correct number of maps.")
-        print(sample_community)
-        print(wells_allocated_to_community)
-        stop()
-      }
-    }
-  }
-
-  # Now allocate singleton samples that are left over
-
-  singleton_samples <- unlist(sample_communities[igraph::sizes(sample_communities)==1])
-  singleton_samples <- singleton_samples[which(!(singleton_samples %in% internal_control_ids))]
-
-  if(length(singleton_samples)>1){
-    # Need to randomize the order of the singleton samples if there is more than one.
-    singleton_samples <- sample(singleton_samples)
-  }
-
-  samples_allocated <- c(samples_allocated, singleton_samples)
-  wells_allocated <- c(wells_allocated, (0:(plate_size-1))[ !(0:(plate_size-1) %in% wells_allocated)])
-
-  ### Finish writing code so that singlton samples are also allocated a well. Then return results as in reorder_samples, but also return community information
-  ### (I feel like there was something else, too??) so that new scoring method based on sample community allocation combined with well allocation can also be calculated in future.
-
-  sample_well_allocation_df <- data.frame(sample=samples_allocated,well=wells_allocated)
-  sample_well_allocation_df_sorted <- sample_well_allocation_df %>% arrange(well)
-
-  samples_reordered <- sample_well_allocation_df_sorted$sample
-  sample_similarities_matrix_reordered <- sample_similarities_matrix[samples_reordered, samples_reordered]
-
-  return(list(samples_reordered, sample_similarities_matrix_reordered))
-}
+# #' Reorder samples in plate
+# #'
+# #' @param sample_similarities_matrix
+# #' @param sample_communities
+# #' @param full_mask
+# #' @param internal_control_ids
+# #' @param internal_control_well_indices
+# #' @param plate_size
+# #'
+# #' @returns
+# #' @export
+# #'
+# reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communities, full_mask,
+#                                      internal_control_ids, internal_control_well_indices, plate_size=96){
+#
+#   samples_allocated <- internal_control_ids
+#   wells_allocated <- internal_control_well_indices
+#
+#   community_sizes <- sizes(sample_communities)
+#   for(community_size in unique(community_sizes[which(community_sizes>1)])){
+#
+#     sample_communities_subset <- sample_communities[which(community_sizes==community_size)]
+#
+#     for(sample_community_index in sample(length(sample_communities_subset))){
+#       sample_community <- sample_communities_subset[[sample_community_index]]
+#
+#       wells_allocated_to_community <- sample(find_n_wells(full_mask, length(sample_community), wells_allocated, plate_size))
+#       # Using sample here to randomize well allocation order. By definition we know that > 1 wells have been allocated, so this is safe from odd behaviour from sample.
+#
+#       samples_allocated <- c(samples_allocated, sample_community)
+#       wells_allocated <- c(wells_allocated, wells_allocated_to_community)
+#
+#       if(length(sample_community) != length(wells_allocated_to_community)){
+#
+#         print("Found potential problem. Sample community not allocated the correct number of maps.")
+#         print(sample_community)
+#         print(wells_allocated_to_community)
+#         stop()
+#       }
+#     }
+#   }
+#
+#   # Now allocate singleton samples that are left over
+#
+#   singleton_samples <- unlist(sample_communities[igraph::sizes(sample_communities)==1])
+#   singleton_samples <- singleton_samples[which(!(singleton_samples %in% internal_control_ids))]
+#
+#   if(length(singleton_samples)>1){
+#     # Need to randomize the order of the singleton samples if there is more than one.
+#     singleton_samples <- sample(singleton_samples)
+#   }
+#
+#   samples_allocated <- c(samples_allocated, singleton_samples)
+#   wells_allocated <- c(wells_allocated, (0:(plate_size-1))[ !(0:(plate_size-1) %in% wells_allocated)])
+#
+#   ### Finish writing code so that singlton samples are also allocated a well. Then return results as in reorder_samples, but also return community information
+#   ### (I feel like there was something else, too??) so that new scoring method based on sample community allocation combined with well allocation can also be calculated in future.
+#
+#   sample_well_allocation_df <- data.frame(sample=samples_allocated,well=wells_allocated)
+#   sample_well_allocation_df_sorted <- sample_well_allocation_df %>% arrange(well)
+#
+#   samples_reordered <- sample_well_allocation_df_sorted$sample
+#   sample_similarities_matrix_reordered <- sample_similarities_matrix[samples_reordered, samples_reordered]
+#
+#   return(list(samples_reordered, sample_similarities_matrix_reordered))
+# }
 
 
 #' Find wells to reallocate to distal wells
