@@ -67,7 +67,7 @@
 #' str(example_plate_df)
 #'
 #' col_weights <- c(5, 5, 10, 4)
-#' imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
+#' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
 #' make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)
 make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
 
@@ -120,7 +120,7 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
 #' str(example_plate_df)
 #'
 #' col_weights <- c(5, 5, 10, 4)
-#' imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
+#' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
 #' ss_mat <- make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
 #' find_sample_communities(ss_mat)
 find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thresh = 0.5){
@@ -154,12 +154,16 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
 #' str(example_plate_df)
 #'
 #' col_weights <- c(5, 5, 10, 4)
-#' imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
+#' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
 #' ss_mat <- make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
 #' s_coms <- find_sample_communities(ss_mat)
+#'
+#' # These functions are internal to easyplater and needn't ever be called by user
+#' # Using these here simply for the sake of a self-contained example.
 #' mask <- nrow(example_plate_df) |>
-#'   make_well_distances_matrix() |>
-#'   make_full_mask()
+#'   easyplater:::make_well_distances_matrix() |>
+#'   easyplater:::make_full_mask()
+#'
 #' ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
 #'
 #' reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
@@ -235,8 +239,8 @@ reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communit
 #' @examples
 #' plate_size <- 96
 #' full_mask <- plate_size |>
-#'   make_well_distances_matrix() |>
-#'   make_full_mask()
+#'   easyplater:::make_well_distances_matrix() |>
+#'   easyplater:::make_full_mask()
 #' find_n_wells(full_mask, 17L, 86:95, plate_size)
 find_n_wells <- function(full_mask, n_wells, wells_pre_allocated, plate_size=96){
 

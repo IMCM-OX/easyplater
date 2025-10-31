@@ -22,7 +22,7 @@ Find sample communities using sample similarity matrix and \code{\link[igraph:cl
 str(example_plate_df)
 
 col_weights <- c(5, 5, 10, 4)
-imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
+imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
 ss_mat <- make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
 find_sample_communities(ss_mat)
 }

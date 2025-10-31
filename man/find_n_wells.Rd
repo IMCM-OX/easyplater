@@ -24,7 +24,7 @@ Numeric vector with length \code{n_wells}
 \examples{
 plate_size <- 96
 full_mask <- plate_size |>
-  make_well_distances_matrix() |>
-  make_full_mask()
+  easyplater:::make_well_distances_matrix() |>
+  easyplater:::make_full_mask()
 find_n_wells(full_mask, 17L, 86:95, plate_size)
 }
