@@ -50,7 +50,7 @@
 # }
 
 
-#' Make ss matrices
+#' Make sample similarity matrices
 #'
 #' @description
 #' A short description... **TO DO: Avi, explain this.**
@@ -103,17 +103,37 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
   return(list(sample_similarities_matrix, sample_similarities_si_names, sample_similarities_sj_names))
 }
 
-# find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thresh){
-#   sample_similarities_matrix_mask <- sample_similarities_matrix
-#   sample_similarities_matrix_mask[which(is.na(sample_similarities_matrix))] <- 0
-#   sample_similarities_matrix_mask[which(sample_similarities_matrix <= splitting_ss_thresh)] <- 0
-#   sample_similarities_matrix_mask[which(sample_similarities_matrix > splitting_ss_thresh)] <- 1
-#
-#   sample_similarities_graph <- graph_from_adjacency_matrix(sample_similarities_matrix_mask, mode="max", diag=FALSE)
-#
-#   sample_communities <- cluster_edge_betweenness(sample_similarities_graph)
-#   return(sample_communities)
-# }
+
+#' Find sample communities
+#'
+#' @description
+#' Find sample communities using sample similarity matrix and [`igraph::cluster_edge_betweenness()`].
+#'
+#' @param sample_similarities_matrix (plate size) x (plate size) numeric matrix. First element of list output by [make_ss_matrices()].
+#' @param splitting_ss_thresh Numeric scalar. Similarity threshold for generating adjacency matrix.
+#'
+#' @returns A [igraph::communities()] object.
+#' @export
+#'
+#' @examples
+#' # Example of a pre-processed plate data frame
+#' str(example_plate_df)
+#'
+#' col_weights <- c(5, 5, 10, 4)
+#' imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
+#' ss_mat <- make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+#' find_sample_communities(ss_mat)
+find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thresh = 0.5){
+  sample_similarities_matrix_mask <- sample_similarities_matrix
+  sample_similarities_matrix_mask[which(is.na(sample_similarities_matrix))] <- 0
+  sample_similarities_matrix_mask[which(sample_similarities_matrix <= splitting_ss_thresh)] <- 0
+  sample_similarities_matrix_mask[which(sample_similarities_matrix > splitting_ss_thresh)] <- 1
+
+  sample_similarities_graph <- igraph::graph_from_adjacency_matrix(sample_similarities_matrix_mask, mode="max", diag=FALSE)
+
+  sample_communities <- igraph::cluster_edge_betweenness(sample_similarities_graph)
+  return(sample_communities)
+}
 
 
 # #' Reorder samples in plate

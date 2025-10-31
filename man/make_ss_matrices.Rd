@@ -2,7 +2,7 @@
 % Please edit documentation in R/allocate_similar_samples_to_distal_wells.R
 \name{make_ss_matrices}
 \alias{make_ss_matrices}
-\title{Make ss matrices}
+\title{Make sample similarity matrices}
 \usage{
 make_ss_matrices(plate_df, column_weights, imbalance_fixer)
 }
@@ -14,10 +14,10 @@ make_ss_matrices(plate_df, column_weights, imbalance_fixer)
 \item{imbalance_fixer}{Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 }
 \value{
-Length 3 list, containing 3 96x96 matrices. First element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. \strong{TO DO: Avi, explain this.}
+Length 3 list, containing three (plate size) x (plate size) matrices. First element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. \strong{TO DO: Avi, explain this.}
 }
 \description{
-Make ss matrices
+A short description... \strong{TO DO: Avi, explain this.}
 }
 \examples{
 # Example of a pre-processed plate data frame
