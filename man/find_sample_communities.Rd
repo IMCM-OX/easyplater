@@ -12,7 +12,7 @@ find_sample_communities(sample_similarities_matrix, splitting_ss_thresh = 0.5)
 \item{splitting_ss_thresh}{Numeric scalar. Similarity threshold for generating adjacency matrix.}
 }
 \value{
-A \code{\link[igraph:communities]{igraph::communities()}} object.
+An \code{\link[igraph:communities]{igraph::communities()}} object.
 }
 \description{
 Find sample communities using sample similarity matrix and \code{\link[igraph:cluster_edge_betweenness]{igraph::cluster_edge_betweenness()}}.

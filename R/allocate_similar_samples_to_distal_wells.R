@@ -112,7 +112,7 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
 #' @param sample_similarities_matrix (plate size) x (plate size) numeric matrix. First element of list output by [make_ss_matrices()].
 #' @param splitting_ss_thresh Numeric scalar. Similarity threshold for generating adjacency matrix.
 #'
-#' @returns A [igraph::communities()] object.
+#' @returns An [igraph::communities()] object.
 #' @export
 #'
 #' @examples
@@ -136,72 +136,87 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
 }
 
 
-# #' Reorder samples in plate
-# #'
-# #' @param sample_similarities_matrix
-# #' @param sample_communities
-# #' @param full_mask
-# #' @param internal_control_ids
-# #' @param internal_control_well_indices
-# #' @param plate_size
-# #'
-# #' @returns
-# #' @export
-# #'
-# reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communities, full_mask,
-#                                      internal_control_ids, internal_control_well_indices, plate_size=96){
-#
-#   samples_allocated <- internal_control_ids
-#   wells_allocated <- internal_control_well_indices
-#
-#   community_sizes <- sizes(sample_communities)
-#   for(community_size in unique(community_sizes[which(community_sizes>1)])){
-#
-#     sample_communities_subset <- sample_communities[which(community_sizes==community_size)]
-#
-#     for(sample_community_index in sample(length(sample_communities_subset))){
-#       sample_community <- sample_communities_subset[[sample_community_index]]
-#
-#       wells_allocated_to_community <- sample(find_n_wells(full_mask, length(sample_community), wells_allocated, plate_size))
-#       # Using sample here to randomize well allocation order. By definition we know that > 1 wells have been allocated, so this is safe from odd behaviour from sample.
-#
-#       samples_allocated <- c(samples_allocated, sample_community)
-#       wells_allocated <- c(wells_allocated, wells_allocated_to_community)
-#
-#       if(length(sample_community) != length(wells_allocated_to_community)){
-#
-#         print("Found potential problem. Sample community not allocated the correct number of maps.")
-#         print(sample_community)
-#         print(wells_allocated_to_community)
-#         stop()
-#       }
-#     }
-#   }
-#
-#   # Now allocate singleton samples that are left over
-#
-#   singleton_samples <- unlist(sample_communities[igraph::sizes(sample_communities)==1])
-#   singleton_samples <- singleton_samples[which(!(singleton_samples %in% internal_control_ids))]
-#
-#   if(length(singleton_samples)>1){
-#     # Need to randomize the order of the singleton samples if there is more than one.
-#     singleton_samples <- sample(singleton_samples)
-#   }
-#
-#   samples_allocated <- c(samples_allocated, singleton_samples)
-#   wells_allocated <- c(wells_allocated, (0:(plate_size-1))[ !(0:(plate_size-1) %in% wells_allocated)])
-#
-#   ### Finish writing code so that singlton samples are also allocated a well. Then return results as in reorder_samples, but also return community information
-#   ### (I feel like there was something else, too??) so that new scoring method based on sample community allocation combined with well allocation can also be calculated in future.
-#
-#   sample_well_allocation_df <- data.frame(sample=samples_allocated,well=wells_allocated)
-#   sample_well_allocation_df_sorted <- sample_well_allocation_df %>% arrange(well)
-#
-#   samples_reordered <- sample_well_allocation_df_sorted$sample
-#   sample_similarities_matrix_reordered <- sample_similarities_matrix[samples_reordered, samples_reordered]
-#
-#   return(list(samples_reordered, sample_similarities_matrix_reordered))
-# }
+#' Reorder samples in plate
+#'
+#' @description
+#' A short description... **TO DO: Avi, explain this.**
+#'
+#' @inheritParams find_sample_communities
+#' @inheritParams find_n_wells
+#' @inheritParams calc_pds
+#' @param sample_communities An [igraph::communities()] object.
+#' @param internal_control_ids Character vector. Names of internal control wells.
+#'
+#' @returns A list. First entry is a character vector of length (plate size), with reordered samples on plate. Second entry is a (plate size) x (plate size) numeric similarity matrix of the reordered plate.
+#' @export
+#' @examples
+#' # Example of a pre-processed plate data frame
+#' str(example_plate_df)
+#'
+#' col_weights <- c(5, 5, 10, 4)
+#' imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
+#' ss_mat <- make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+#' s_coms <- find_sample_communities(ss_mat)
+#' mask <- nrow(example_plate_df) |>
+#'   make_well_distances_matrix() |>
+#'   make_full_mask()
+#' ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
+#'
+#' reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
+reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communities, full_mask,
+                                     internal_control_ids, internal_control_well_indices, plate_size=96){
+
+  samples_allocated <- internal_control_ids
+  wells_allocated <- internal_control_well_indices
+
+  community_sizes <- igraph::sizes(sample_communities)
+  for(community_size in unique(community_sizes[which(community_sizes>1)])){
+
+    sample_communities_subset <- sample_communities[which(community_sizes==community_size)]
+
+    for(sample_community_index in sample(length(sample_communities_subset))){
+      sample_community <- sample_communities_subset[[sample_community_index]]
+
+      wells_allocated_to_community <- sample(find_n_wells(full_mask, length(sample_community), wells_allocated, plate_size))
+      # Using sample here to randomize well allocation order. By definition we know that > 1 wells have been allocated, so this is safe from odd behaviour from sample.
+
+      samples_allocated <- c(samples_allocated, sample_community)
+      wells_allocated <- c(wells_allocated, wells_allocated_to_community)
+
+      if(length(sample_community) != length(wells_allocated_to_community)){
+
+        print("Found potential problem. Sample community not allocated the correct number of maps.")
+        print(sample_community)
+        print(wells_allocated_to_community)
+        stop()
+      }
+    }
+  }
+
+  # Now allocate singleton samples that are left over
+
+  singleton_samples <- unlist(sample_communities[igraph::sizes(sample_communities)==1])
+  singleton_samples <- singleton_samples[which(!(singleton_samples %in% internal_control_ids))]
+
+  if(length(singleton_samples)>1){
+    # Need to randomize the order of the singleton samples if there is more than one.
+    singleton_samples <- sample(singleton_samples)
+  }
+
+  samples_allocated <- c(samples_allocated, singleton_samples)
+  wells_allocated <- c(wells_allocated, (0:(plate_size-1))[ !(0:(plate_size-1) %in% wells_allocated)])
+
+  ### Finish writing code so that singlton samples are also allocated a well. Then return results as in reorder_samples, but also return community information
+  ### (I feel like there was something else, too??) so that new scoring method based on sample community allocation combined with well allocation can also be calculated in future.
+
+  sample_well_allocation_df <- data.frame(sample=samples_allocated,well=wells_allocated)
+  sample_well_allocation_df_sorted <- sample_well_allocation_df[order(sample_well_allocation_df$well),]
+
+  samples_reordered <- sample_well_allocation_df_sorted$sample
+  sample_similarities_matrix_reordered <- sample_similarities_matrix[samples_reordered, samples_reordered]
+
+  return(list(samples_reordered, sample_similarities_matrix_reordered))
+}
 
 
 #' Find wells to reallocate to distal wells
@@ -209,6 +224,7 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
 #' @description
 #' **TO DO: Avi, fill this in.**
 #'
+#' @param full_mask description **TO DO: Avi, fill this in.**
 #' @param n_wells Integer scalar. Number of wells to search for.
 #' @param wells_pre_allocated Numeric vector. Indices of wells that are excluded from allocation.
 #' @param plate_size Numeric scalar. Size of plate. Note that currently `easyplater` is currently only implemented for 96-well plates.
