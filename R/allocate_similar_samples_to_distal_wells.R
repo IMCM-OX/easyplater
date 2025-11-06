@@ -1,53 +1,115 @@
-# allocate_similar_samples_to_distal_wells <- function(plate_df_list, columns_for_scoring, column_weights, imbalance_fixer,
-#                                                      plate_num_rows, plate_num_cols, plate_size,
-#                                                      full_mask, splitting_ss_thresh,
-#                                                      internal_control_ids, internal_control_well_indices,
-#                                                      pds_local_weight=1, patch_weight=NULL){
-#
-#   plate_df <- plate_df_list[[1]]
-#   plate_df_aux <- plate_df_list[[2]]
-#
-#   ss_matrices_list <- make_ss_matrices(plate_df, column_weights, imbalance_fixer, plate_size)
-#
-#   sample_similarities_matrix <- ss_matrices_list[[1]]
-#   sample_similarities_si_names <- ss_matrices_list[[2]]
-#   sample_similarities_sj_names <- ss_matrices_list[[3]]
-#
-#   sample_communities <- find_sample_communities(sample_similarities_matrix, splitting_ss_thresh)
-#
-#   best_score <- calc_pds(plate_df,columns_for_scoring, column_weights,
-#                          scoring_mask,
-#                          plate_num_rows, plate_num_cols,internal_control_well_indices,
-#                          pds_local_weight, patch_weight)
-#
-#   samples_reordered <- plate_df$SampleID
-#   sample_similarities_matrix_reordered <- sample_similarities_matrix
-#
-#   for(s in 1:initial_perms) {
-#
-#     samples_reordered_list_starter <- reorder_samples_in_plate(sample_similarities_matrix, sample_communities, full_mask,
-#                                                                internal_control_ids, internal_control_well_indices, plate_size)
-#
-#     samples_reordered_starter <- samples_reordered_list_starter[[1]]
-#     sample_similarities_matrix_reordered_starter <- samples_reordered_list_starter[[2]]
-#
-#
-#     temp_plate_df <- plate_df  %>% slice(match(rownames(sample_similarities_matrix_reordered_starter), SampleID))
-#
-#     starter_pds_score <- calc_pds(temp_plate_df,columns_for_scoring, column_weights,
-#                                   scoring_mask,
-#                                   plate_num_rows, plate_num_cols,internal_control_well_indices,
-#                                   pds_local_weight, patch_weight)
-#
-#     if(starter_pds_score > best_score){
-#       samples_reordered <- samples_reordered_starter
-#       sample_similarities_matrix_reordered <- sample_similarities_matrix_reordered_starter
-#       best_score <- starter_pds_score
-#     }
-#   }
-#
-#   return(list(sample_communities, samples_reordered, sample_similarities_matrix_reordered, best_score))
-# }
+#' Allocate similar samples to distal wells
+#'
+#' @description
+#' A short description... **TO DO: Avi, describe this.**
+#'
+#' @param plate_df_list List of length 2. Output of [easyplater::get_and_format_plate_df_from_manifest]
+#' @param columns_for_scoring Character vector. Names of columns to use for calculating plate design score.
+#' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
+#' @param imbalance_fixer List. **TO DO: Avi to explain / refactor**
+#' @param plate_num_rows Numeric scalar. Default 8.
+#' @param plate_num_cols Numeric scalar. Default 12.
+#' @param plate_size Numeric scalar. Size of plate. Note that currently `easyplater` is currently only implemented for 96-well plates.
+#' @param full_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
+#' @param scoring_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
+#' @param splitting_ss_thresh Numeric scalar. Similarity threshold for generating adjacency matrix.
+#' @param internal_control_ids Character vector. Names of internal control wells.
+#' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
+#' @param pds_local_weight Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.
+#' @param patch_weight down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. **TO DO: Avi, check this description**
+#' @param initial_perms Numeric scalar. Initial number of permutations to use.
+#'
+#' @returns List of length 4.
+#'  - First entry is sample communities found using sample similarity matrix and [`igraph::cluster_edge_betweenness()`]
+#'  - Second entry is a character vector of SampleIDs in the order from the best scoring plate randomization
+#'  - Third entry is sample similarity matrix output by first element of [`easyplater::make_ss_matrices()`]
+#'  - Fourth entry is the PDS score for the returned highest-scoring plate design
+#'
+#' @export
+#'
+#' @examples
+#' example_manifest
+#'
+#' cols_for_scoring <- names(example_plate_df)[2:5]
+#' cols_to_categorize <- list(c("Age", 10, NULL, "AgeGroup"))
+#' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
+#' plate_wells <- paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8))
+#' ic_well_idcs <- c(86:95)
+#' ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
+#'
+#' # Getting and formatting plate data from from manifest.
+#' plate_df_list <- get_and_format_plate_df_from_manifest(
+#'   example_manifest, "plate 1", cols_for_scoring, cols_to_categorize,
+#'   imbalance_fixer, 96, plate_wells, ic_well_idcs, ic_ids
+#'   )
+#'
+#' # Allocating similar samples to distal wells.
+#' col_weights <- c(5, 5, 10, 4)
+#' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
+#' plate_size <- 96
+#' full_mask <- plate_size |>
+#'   easyplater:::make_well_distances_matrix() |>
+#'   easyplater:::make_full_mask()
+#'
+#' scoring_mask <- plate_size |>
+#'   easyplater:::make_well_distances_matrix() |>
+#'   easyplater:::make_scoring_mask()
+#'
+#' allocate_similar_samples_to_distal_wells(
+#'   plate_df_list, cols_for_scoring, col_weights, imbalance_fixer,
+#'   full_mask, scoring_mask, splitting_ss_thresh = 0.5,
+#'   ic_ids, ic_well_idcs)
+#'
+allocate_similar_samples_to_distal_wells <- function(
+    plate_df_list, columns_for_scoring, column_weights, imbalance_fixer,
+    full_mask, scoring_mask, splitting_ss_thresh,
+    internal_control_ids, internal_control_well_indices,
+    plate_num_rows = 8, plate_num_cols = 12, plate_size = 96,
+    pds_local_weight=1, patch_weight=NULL, initial_perms = 20
+    ){
+
+  plate_df <- plate_df_list[[1]]
+  plate_df_aux <- plate_df_list[[2]]
+
+  ss_matrices_list <- make_ss_matrices(plate_df, column_weights, imbalance_fixer)
+
+  sample_similarities_matrix <- ss_matrices_list[[1]]
+  sample_similarities_si_names <- ss_matrices_list[[2]]
+  sample_similarities_sj_names <- ss_matrices_list[[3]]
+
+  sample_communities <- find_sample_communities(sample_similarities_matrix, splitting_ss_thresh)
+
+  best_score <- calc_pds(plate_df,columns_for_scoring, column_weights,
+                         scoring_mask, internal_control_well_indices,
+                         pds_local_weight, patch_weight)
+
+  samples_reordered <- plate_df$SampleID
+  sample_similarities_matrix_reordered <- sample_similarities_matrix
+
+  for(s in 1:initial_perms) {
+
+    samples_reordered_list_starter <- reorder_samples_in_plate(sample_similarities_matrix, sample_communities, full_mask,
+                                                               internal_control_ids, internal_control_well_indices, plate_size)
+
+    samples_reordered_starter <- samples_reordered_list_starter[[1]]
+    sample_similarities_matrix_reordered_starter <- samples_reordered_list_starter[[2]]
+
+
+    temp_plate_df <- plate_df |> dplyr::slice(match(rownames(sample_similarities_matrix_reordered_starter), .data$SampleID))
+
+    starter_pds_score <- calc_pds(temp_plate_df,columns_for_scoring, column_weights,
+                                  scoring_mask, internal_control_well_indices,
+                                  pds_local_weight, patch_weight)
+
+    if(starter_pds_score > best_score){
+      samples_reordered <- samples_reordered_starter
+      sample_similarities_matrix_reordered <- sample_similarities_matrix_reordered_starter
+      best_score <- starter_pds_score
+    }
+  }
+
+  return(list(sample_communities, samples_reordered, sample_similarities_matrix_reordered, best_score))
+}
 
 
 #' Make sample similarity matrices
@@ -57,6 +119,7 @@
 #'
 #'
 #' @inheritParams calc_pds
+#'
 #' @param imbalance_fixer Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. **TO DO: Avi, explain this.**
 #'
 #' @returns Length 3 list, containing three (plate size) x (plate size) matrices. First element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. **TO DO: Avi, explain this.**

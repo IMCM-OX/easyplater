@@ -12,10 +12,16 @@ test_that("sas edge range calculation works", {
 
 test_that("calc_pds_global() calculation works when given valid input", {
   expect_equal(
-    calc_pds_global(example_plate_df,
-                    names(example_plate_df)[2:5],
-                    c(5, 5, 10, 4),
-                    c(86:95)),
+    object = {
+      scoring_mask <- nrow(example_plate_df) |>
+        make_well_distances_matrix() |>
+        make_scoring_mask()
+      calc_pds_global(example_plate_df,
+                      names(example_plate_df)[2:5],
+                      c(5, 5, 10, 4),
+                      scoring_mask,
+                      c(86:95))
+      },
     expected = 20.1845486)
 })
 
@@ -62,18 +68,29 @@ test_that("calc_pds_local() calculation works", {
 
 test_that("PDS calculation works when given valid input", {
   expect_equal(
-    calc_pds(example_plate_df,
-             names(example_plate_df)[2:5],
-             c(5, 5, 10, 4),
-             c(86:95)),
+    object = {
+      scoring_mask <- nrow(example_plate_df) |>
+        make_well_distances_matrix() |>
+        make_scoring_mask()
+      calc_pds(example_plate_df,
+               names(example_plate_df)[2:5],
+               c(5, 5, 10, 4),
+               scoring_mask,
+               c(86:95))
+      },
     expected = 729.351215)
 })
 
 test_that("calc_pds() errors when given non-96-well plate", {
   expect_error(
-    calc_pds(example_plate_df[49:96,],
+    object = {
+      scoring_mask <- nrow(example_plate_df) |>
+        make_well_distances_matrix() |>
+        make_scoring_mask()
+      calc_pds(example_plate_df[49:96,],
              names(example_plate_df)[2:5],
              c(5, 5, 10, 4),
-             c(86:95)),
+             c(86:95))
+      },
     class = "simpleError")
 })

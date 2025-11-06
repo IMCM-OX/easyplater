@@ -8,6 +8,7 @@ calc_pds(
   plate_df,
   columns_for_scoring,
   column_weights,
+  scoring_mask,
   internal_control_well_indices,
   pds_local_weight = 1,
   patch_weight = NULL
@@ -19,6 +20,8 @@ calc_pds(
 \item{columns_for_scoring}{Character vector of column names to use for scoring.}
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
+
+\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
 
 \item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
 
@@ -41,6 +44,9 @@ str(example_plate_df)
 
 cols_for_scoring <- names(example_plate_df)[2:5]
 col_weights <- c(5, 5, 10, 4)
+scoring_mask <- nrow(example_plate_df) |>
+  easyplater:::make_well_distances_matrix() |>
+  easyplater:::make_scoring_mask()
 ic_well_idcs <- c(86:95)
-calc_pds(example_plate_df, cols_for_scoring, col_weights, ic_well_idcs)
+calc_pds(example_plate_df, cols_for_scoring, col_weights, scoring_mask, ic_well_idcs)
 }

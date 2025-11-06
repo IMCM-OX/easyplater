@@ -19,14 +19,17 @@
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
+#' scoring_mask <- nrow(example_plate_df) |>
+#'   easyplater:::make_well_distances_matrix() |>
+#'   easyplater:::make_scoring_mask()
 #' ic_well_idcs <- c(86:95)
-#' calc_pds(example_plate_df, cols_for_scoring, col_weights, ic_well_idcs)
+#' calc_pds(example_plate_df, cols_for_scoring, col_weights, scoring_mask, ic_well_idcs)
 calc_pds <- function(plate_df, columns_for_scoring, column_weights,
-                     internal_control_well_indices,
+                     scoring_mask, internal_control_well_indices,
                      pds_local_weight=1, patch_weight=NULL){
 
   pds_global <- calc_pds_global(plate_df, columns_for_scoring, column_weights,
-                                internal_control_well_indices)
+                                scoring_mask, internal_control_well_indices)
 
   pds_local <- calc_pds_local(plate_df, columns_for_scoring, column_weights,
                               patch_weight)
@@ -198,6 +201,7 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights)
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
 #' @param columns_for_scoring Character vector of column names to use for scoring.
 #' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
+#' @param scoring_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
 #' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
 #'
 #' @returns A numeric scalar.
@@ -209,11 +213,15 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights)
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
+#' scoring_mask <- nrow(example_plate_df) |>
+#'   easyplater:::make_well_distances_matrix() |>
+#'   easyplater:::make_scoring_mask()
 #' ic_well_idcs <- c(86:95)
-#' calc_pds_global(example_plate_df, cols_for_scoring, col_weights, ic_well_idcs)
+#' calc_pds_global(example_plate_df, cols_for_scoring, col_weights, scoring_mask, ic_well_idcs)
 calc_pds_global <- function(plate_df,
                             columns_for_scoring,
                             column_weights,
+                            scoring_mask,
                             internal_control_well_indices)
 {
   # This bit of code assumes that internal controls are pre-placed in the last column.
@@ -231,10 +239,6 @@ calc_pds_global <- function(plate_df,
   } else {
     stop("nrow(plate_df) != 96: easyplater is currently only implemented for 96-well plates")
   }
-
-  mask <- nrow(plate_df) |>
-    make_well_distances_matrix() |>
-    make_scoring_mask()
 
   num_samples <- (plate_n_rows * plate_n_cols) - length(internal_control_well_indices)
   min_dim <- min(c(plate_n_rows, plate_n_cols))
@@ -258,7 +262,7 @@ calc_pds_global <- function(plate_df,
         min(
           (
             (
-              sum(gdata::lowerTriangle(mask[which(column_data==val), which(column_data==val)])) -
+              sum(gdata::lowerTriangle(scoring_mask[which(column_data==val), which(column_data==val)])) -
                 calc_sas_edge_min(sum(stats::na.omit(column_data==val)), min_dim, max_dim_floor)
              )/
               calc_sas_edge_range(sum(stats::na.omit(column_data==val)), min_dim, max_dim_floor)
