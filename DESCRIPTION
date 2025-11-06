@@ -25,7 +25,9 @@ LazyData: true
 URL: https://github.com/micahpf/easyplater
 BugReports: https://github.com/micahpf/easyplater/issues
 Imports: 
+    dplyr,
     gdata,
     ggplot2,
     igraph,
+    rlang,
     stats

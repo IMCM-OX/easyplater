@@ -49,3 +49,11 @@ make_scoring_mask <- function(well_distances_matrix, scoring_mask_edge_thresh=1)
 
   return(scoring_mask)
 }
+
+get_column_from_well_coords <- function(well_coords){
+  return(paste("Column", substr(well_coords,2,3), sep=" "))
+}
+
+get_row_from_well_coords <- function(well_coords){
+  return(substr(well_coords,1,1))
+}
