@@ -7,7 +7,7 @@
 find_n_wells(full_mask, n_wells, wells_pre_allocated, plate_size = 96)
 }
 \arguments{
-\item{full_mask}{description \strong{TO DO: Avi, fill this in.}}
+\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
 
 \item{n_wells}{Integer scalar. Number of wells to search for.}
 

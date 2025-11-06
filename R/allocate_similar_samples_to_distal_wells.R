@@ -6,7 +6,7 @@
 #' @param plate_df_list List of length 2. Output of [easyplater::get_and_format_plate_df_from_manifest]
 #' @param columns_for_scoring Character vector. Names of columns to use for calculating plate design score.
 #' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
-#' @param imbalance_fixer List. **TO DO: Avi to explain / refactor**
+#' @param imbalance_fixer Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. **TO DO: Avi, explain this.**
 #' @param plate_num_rows Numeric scalar. Default 8.
 #' @param plate_num_cols Numeric scalar. Default 12.
 #' @param plate_size Numeric scalar. Size of plate. Note that currently `easyplater` is currently only implemented for 96-well plates.
@@ -117,10 +117,8 @@ allocate_similar_samples_to_distal_wells <- function(
 #' @description
 #' A short description... **TO DO: Avi, explain this.**
 #'
-#'
-#' @inheritParams calc_pds
-#'
-#' @param imbalance_fixer Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. **TO DO: Avi, explain this.**
+#' @inheritParams allocate_similar_samples_to_distal_wells
+#' @param plate_df Data frame of samples and associated clinical metadata variables.
 #'
 #' @returns Length 3 list, containing three (plate size) x (plate size) matrices. First element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. **TO DO: Avi, explain this.**
 #' @export
@@ -172,8 +170,8 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
 #' @description
 #' Find sample communities using sample similarity matrix and [`igraph::cluster_edge_betweenness()`].
 #'
+#' @inheritParams allocate_similar_samples_to_distal_wells
 #' @param sample_similarities_matrix (plate size) x (plate size) numeric matrix. First element of list output by [make_ss_matrices()].
-#' @param splitting_ss_thresh Numeric scalar. Similarity threshold for generating adjacency matrix.
 #'
 #' @returns An [igraph::communities()] object.
 #' @export
@@ -204,11 +202,9 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
 #' @description
 #' A short description... **TO DO: Avi, explain this.**
 #'
+#' @inheritParams allocate_similar_samples_to_distal_wells
 #' @inheritParams find_sample_communities
-#' @inheritParams find_n_wells
-#' @inheritParams calc_pds
 #' @param sample_communities An [igraph::communities()] object.
-#' @param internal_control_ids Character vector. Names of internal control wells.
 #'
 #' @returns A list. First entry is a character vector of length (plate size), with reordered samples on plate. Second entry is a (plate size) x (plate size) numeric similarity matrix of the reordered plate.
 #' @export
@@ -291,10 +287,9 @@ reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communit
 #' @description
 #' **TO DO: Avi, fill this in.**
 #'
-#' @param full_mask description **TO DO: Avi, fill this in.**
+#' @inheritParams allocate_similar_samples_to_distal_wells
 #' @param n_wells Integer scalar. Number of wells to search for.
 #' @param wells_pre_allocated Numeric vector. Indices of wells that are excluded from allocation.
-#' @param plate_size Numeric scalar. Size of plate. Note that currently `easyplater` is currently only implemented for 96-well plates.
 #'
 #' @returns Numeric vector with length `n_wells`
 #' @export

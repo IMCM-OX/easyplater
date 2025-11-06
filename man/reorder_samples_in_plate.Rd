@@ -18,7 +18,7 @@ reorder_samples_in_plate(
 
 \item{sample_communities}{An \code{\link[igraph:communities]{igraph::communities()}} object.}
 
-\item{full_mask}{description \strong{TO DO: Avi, fill this in.}}
+\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
 
 \item{internal_control_ids}{Character vector. Names of internal control wells.}
 

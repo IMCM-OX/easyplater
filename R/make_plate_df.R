@@ -2,15 +2,11 @@
 
 #' Make Plate dataframe from manifest
 #'
+#' @inheritParams allocate_similar_samples_to_distal_wells
 #' @param manifest_df Data frame or tibble with a `SampleID` column, a `plateID` column, and additional columns for each variable to be used for plate design score. See [easyplater::example_manifest] for an example.
 #' @param plateID String. Value from `plateID` column to generate a plate for.
-#' @param columns_for_scoring Character vector. Names of columns to use for calculating plate design score.
 #' @param cols_to_categorize List of character vectors. **TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.**
-#' @param imbalance_fixer List. **TO DO: Avi to explain / refactor**
-#' @param plate_size Numeric scalar. Size of plate. Note that currently `easyplater` is currently only implemented for 96-well plates.
 #' @param plate_wells Character vector of length `plate_size`. Well names.
-#' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
-#' @param internal_control_ids Character vector. Names of internal control wells.
 #'
 #' @returns List of length 2.
 #'  - First entry is a data frame for the specified plate with categorized columns specified from `cols_to_categorize`, and additional column `imbalanceFix_vec`

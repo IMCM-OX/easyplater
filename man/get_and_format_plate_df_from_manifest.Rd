@@ -25,7 +25,7 @@ get_and_format_plate_df_from_manifest(
 
 \item{cols_to_categorize}{List of character vectors. \strong{TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.}}
 
-\item{imbalance_fixer}{List. \strong{TO DO: Avi to explain / refactor}}
+\item{imbalance_fixer}{Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 
 \item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
 
