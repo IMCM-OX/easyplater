@@ -120,7 +120,7 @@ allocate_similar_samples_to_distal_wells <- function(
 #' @inheritParams allocate_similar_samples_to_distal_wells
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
 #'
-#' @returns Length 3 list, containing three (plate size) x (plate size) matrices. First element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. **TO DO: Avi, explain this.**
+#' @returns Length 3 list, containing three (plate size) x (plate size) matrices. The first element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. **TO DO: Avi, explain this.**
 #' @export
 #'
 #' @examples
