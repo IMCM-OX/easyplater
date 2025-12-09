@@ -65,39 +65,30 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
 
 #' Find independent switches using PDS
 #'
+#' This function is run within perform_sample_switch_search(). **TO DO: Avi elaborate**
 #'
-#'
-#' @param depth
+#' @param depth **TO DO: Avi explain**
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
 #' @param ss_matrix Sample similarity matrix output by make_ss_matrices()[[3]]
 #' @param well_distances Output of make_well_distance_df()
 #' @param jiggled_matrix_indices **TO DO: Avi explain**
-#' @param splitting_ss_thresh
-#' @param splitting_wd_thresh
-#' @param replacing_ss_thresh
-#' @param replacing_wd_thresh
-#' @param columns_for_scoring
-#' @param column_weights
-#' @param plate_n_rows
-#' @param plate_n_cols
-#' @param plate_size
-#' @param internal_control_well_indices
-#' @param sample_communities
-#' @param mask
-#' @param pds_local_weight
-#' @param patch_weight
+#' @param splitting_ss_thresh Numeric scalar. Similarity threshold for generating adjacency matrix.
+#' @param splitting_wd_thresh **TO DO: Avi explain**
+#' @param replacing_ss_thresh **TO DO: Avi explain**
+#' @param replacing_wd_thresh **TO DO: Avi explain**
+#' @param sample_communities **TO DO: Avi explain**
+#' @inheritParams allocate_similar_samples_to_distal_wells
 #'
 #' @returns
-#' @export
+#' **TO DO: Avi explain**
 #'
-#' @examples
 find_independent_switches_using_pds <- function(depth, plate_df,
                                                 ss_matrix, well_distances,jiggled_matrix_indices,
                                                 splitting_ss_thresh, splitting_wd_thresh,
                                                 replacing_ss_thresh, replacing_wd_thresh,
-                                                columns_for_scoring, column_weights, plate_n_rows, plate_n_cols,
-                                                plate_size, internal_control_well_indices, sample_communities, mask,
-                                                pds_local_weight=1, patch_weight=NULL){
+                                                columns_for_scoring, column_weights, plate_num_rows, plate_num_cols,
+                                                plate_size, internal_control_well_indices, sample_communities, scoring_mask,
+                                                pds_local_weight=1, patch_weight = NULL){
 
   internal_control_well_inidices_one_indexed <- internal_control_well_indices + 1
 
@@ -105,16 +96,15 @@ find_independent_switches_using_pds <- function(depth, plate_df,
 
   ss_vec=lowerTriangle(ss_matrix_jiggled)
 
-
   pairs_for_splitting_indicator_vec_aux <- rep(0,length(ss_vec))
-  pairs_for_splitting_indicator_vec_aux[which((ss_vec>splitting_ss_thresh) & (well_distances<splitting_wd_thresh))] <- 1
-  pairs_for_splitting_inidicator_matrix <- matrix(0, nrow=plate_size, ncol=plate_size)
+  pairs_for_splitting_indicator_vec_aux[which((ss_vec > splitting_ss_thresh) & (well_distances < splitting_wd_thresh))] <- 1
+  pairs_for_splitting_inidicator_matrix <- matrix(0, nrow = plate_size, ncol=plate_size)
   lowerTriangle(pairs_for_splitting_inidicator_matrix) <- pairs_for_splitting_indicator_vec_aux
   upperTriangle(pairs_for_splitting_inidicator_matrix) <- upperTriangle(t(pairs_for_splitting_inidicator_matrix))
   pairs_for_splitting <- sample(which(pairs_for_splitting_inidicator_matrix==1))
 
-  pairs_available_for_switching_indicator_vec_aux <- rep(0,length(ss_vec))
-  pairs_available_for_switching_indicator_vec_aux[which((ss_vec<=replacing_ss_thresh) & (well_distances>replacing_wd_thresh))] <- 1
+  pairs_available_for_switching_indicator_vec_aux <- rep(0, length(ss_vec))
+  pairs_available_for_switching_indicator_vec_aux[which((ss_vec <= replacing_ss_thresh) & (well_distances>replacing_wd_thresh))] <- 1
   pairs_available_for_switching_inidicator_matrix <- matrix(0, nrow=plate_size, ncol=plate_size)
   lowerTriangle(pairs_available_for_switching_inidicator_matrix) <- pairs_available_for_switching_indicator_vec_aux
   upperTriangle(pairs_available_for_switching_inidicator_matrix) <- upperTriangle(t(pairs_available_for_switching_inidicator_matrix))
@@ -124,58 +114,56 @@ find_independent_switches_using_pds <- function(depth, plate_df,
 
   moved_samples <- c()
 
-  for(pair_for_splitting in pairs_for_splitting){
-    anchor_sample <- ((pair_for_splitting-1) %% plate_size) + 1
-    moveable_sample <- ((pair_for_splitting-1) %/% plate_size) + 1
+  for (pair_for_splitting in pairs_for_splitting){
+    anchor_sample <- ((pair_for_splitting - 1) %% plate_size) + 1
+    moveable_sample <- ((pair_for_splitting - 1) %/% plate_size) + 1
 
-    if(!(moveable_sample %in% internal_control_well_inidices_one_indexed) & !(anchor_sample %in% moved_samples) & !(moveable_sample %in% moved_samples)){
+    if (!(moveable_sample %in% internal_control_well_inidices_one_indexed) & !(anchor_sample %in% moved_samples) & !(moveable_sample %in% moved_samples)){
 
-      SANITY_CHECK_PRINTING = FALSE
-
-      if(SANITY_CHECK_PRINTING){
-        print("TRYING TO FIND SOME MOVABLE SAMPLE PAIRS")
-        print(anchor_sample)
-        print(moveable_sample)
-      }
+      # SANITY_CHECK_PRINTING = FALSE
+      #
+      # if(SANITY_CHECK_PRINTING){
+      #   print("TRYING TO FIND SOME MOVABLE SAMPLE PAIRS")
+      #   print(anchor_sample)
+      #   print(moveable_sample)
+      # }
 
       moveable_sample_2_options_vec <- pairs_available_for_switching_inidicator_matrix[anchor_sample,]
 
-      if(SANITY_CHECK_PRINTING){
-        print("moveable_sample_2_options_vec before filtering:")
-        print(moveable_sample_2_options_vec)
-        print("****")
-        print("Filters:")
-        print("moveable_sample")
-        print(moveable_sample)
-        print("moved_samples")
-        print(moved_samples)
-        print("internal_control_well_inidices_one_indexed")
-        print(internal_control_well_inidices_one_indexed)
-      }
+      # if(SANITY_CHECK_PRINTING){
+      #   print("moveable_sample_2_options_vec before filtering:")
+      #   print(moveable_sample_2_options_vec)
+      #   print("****")
+      #   print("Filters:")
+      #   print("moveable_sample")
+      #   print(moveable_sample)
+      #   print("moved_samples")
+      #   print(moved_samples)
+      #   print("internal_control_well_inidices_one_indexed")
+      #   print(internal_control_well_inidices_one_indexed)
+      # }
 
       moveable_sample_2_options_vec[moveable_sample] <- 0  ## SHOULD ALREADY BE ZERO,I think (splitting pair cannot be switching pair if thresholds set properly)... but just in case
       moveable_sample_2_options_vec[moved_samples] <- 0
       moveable_sample_2_options_vec[internal_control_well_inidices_one_indexed] <- 0
 
-      if(SANITY_CHECK_PRINTING){
-        print("moveable_sample_2_options_vec after filtering:")
-        print(moveable_sample_2_options_vec)
-        print("***************")
-      }
+      # if(SANITY_CHECK_PRINTING){
+      #   print("moveable_sample_2_options_vec after filtering:")
+      #   print(moveable_sample_2_options_vec)
+      #   print("***************")
+      # }
 
-      if(any(moveable_sample_2_options_vec>0)){
-        if(length(which(moveable_sample_2_options_vec>0))==1){
-          moveable_sample_2 <- which(moveable_sample_2_options_vec>0)
-        }else{
-          moveable_sample_2 <- sample(which(moveable_sample_2_options_vec>0))[1]
+      if (any(moveable_sample_2_options_vec > 0)){
+        if (length(which(moveable_sample_2_options_vec>0)) == 1){
+          moveable_sample_2 <- which(moveable_sample_2_options_vec > 0)
+        } else {
+          moveable_sample_2 <- sample(which(moveable_sample_2_options_vec > 0))[1]
         }
 
         switches_df <- rbind(switches_df, sort(c(moveable_sample, moveable_sample_2)))
         moved_samples <- c(moved_samples,  sort(c(moveable_sample, moveable_sample_2)))
       }
-
     }
-
   }
 
   switches_df <- unique(switches_df)
@@ -190,8 +178,8 @@ find_independent_switches_using_pds <- function(depth, plate_df,
   temp_plate_df <- plate_df  %>% slice(match(rownames(ss_matrix_rejiggled), SampleID))
 
   plate_design_score <- calc_pds(temp_plate_df, columns_for_scoring, column_weights,
-                                 mask,
-                                 plate_n_rows, plate_n_cols,
+                                 scoring_mask,
+                                 plate_num_rows, plate_num_cols,
                                  internal_control_well_indices,
                                  pds_local_weight, patch_weight)
 

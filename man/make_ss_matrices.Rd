@@ -14,7 +14,7 @@ make_ss_matrices(plate_df, column_weights, imbalance_fixer)
 \item{imbalance_fixer}{Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 }
 \value{
-Length 3 list, containing three (plate size) x (plate size) matrices. First element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. \strong{TO DO: Avi, explain this.}
+Length 3 list, containing three (plate size) x (plate size) matrices. The first element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. \strong{TO DO: Avi, explain this.}
 }
 \description{
 A short description... \strong{TO DO: Avi, explain this.}
