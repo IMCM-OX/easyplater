@@ -1,4 +1,20 @@
-
+#' Perform sample switch search
+#'
+#' @param max_depth **TO DO: Avi explain**
+#' @param wins_required **TO DO: Avi explain**
+#' @param max_attempts **TO DO: Avi explain**
+#' @param sample_allocation_outputs Output of allocate_similar_samples_to_distal_wells()
+#' @param well_pair_distances_df **TO DO: Avi explain**
+#' @param splitting_ss_thresh Numeric scalar. Similarity threshold for generating adjacency matrix.
+#' @param splitting_wd_thresh **TO DO: Avi explain**
+#' @param replacing_ss_thresh **TO DO: Avi explain**
+#' @param replacing_wd_thresh **TO DO: Avi explain**
+#' @inheritParams allocate_similar_samples_to_distal_wells
+#' @inheritParams calc_pds
+#'
+#' @returns
+#' **TO DO: Avi explain**
+#'
 perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
                                          plate_df_list, sample_allocation_outputs,
                                          well_pair_distances_df,
@@ -7,8 +23,6 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
                                          columns_for_scoring, column_weights, plate_num_rows, plate_num_cols,
                                          plate_size, internal_control_well_indices, scoring_mask,
                                          pds_local_weight=1, patch_weight=NULL){
-
-
 
   sample_communities <- sample_allocation_outputs[[1]]
   samples_reordered <- sample_allocation_outputs[[2]]
@@ -57,7 +71,7 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
     current_depth <- current_depth + 1
   }
 
-  top_switch_df <- head(jiggled_indices_df[which(jiggled_indices_df$pds == max(jiggled_indices_df$pds)),], n=1)
+  top_switch_df <- utils::head(jiggled_indices_df[which(jiggled_indices_df$pds == max(jiggled_indices_df$pds)),], n=1)
   samples_final_order  <- samples_reordered[unlist(top_switch_df[1,]$jiggled_matrix_indices)]
   return(samples_final_order)
 }
@@ -69,21 +83,18 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
 #'
 #' @param depth **TO DO: Avi explain**
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
-#' @param ss_matrix Sample similarity matrix output by make_ss_matrices()[[3]]
+#' @param ss_matrix Sample similarity matrix output by make_ss_matrices()\[\[3\]\]
 #' @param well_distances Output of make_well_distance_df()
 #' @param jiggled_matrix_indices **TO DO: Avi explain**
-#' @param splitting_ss_thresh Numeric scalar. Similarity threshold for generating adjacency matrix.
-#' @param splitting_wd_thresh **TO DO: Avi explain**
-#' @param replacing_ss_thresh **TO DO: Avi explain**
-#' @param replacing_wd_thresh **TO DO: Avi explain**
 #' @param sample_communities **TO DO: Avi explain**
+#' @inheritParams perform_sample_switch_search
 #' @inheritParams allocate_similar_samples_to_distal_wells
 #'
 #' @returns
 #' **TO DO: Avi explain**
 #'
 find_independent_switches_using_pds <- function(depth, plate_df,
-                                                ss_matrix, well_distances,jiggled_matrix_indices,
+                                                ss_matrix, well_distances, jiggled_matrix_indices,
                                                 splitting_ss_thresh, splitting_wd_thresh,
                                                 replacing_ss_thresh, replacing_wd_thresh,
                                                 columns_for_scoring, column_weights, plate_num_rows, plate_num_cols,
@@ -94,20 +105,20 @@ find_independent_switches_using_pds <- function(depth, plate_df,
 
   ss_matrix_jiggled <- ss_matrix[jiggled_matrix_indices, jiggled_matrix_indices]
 
-  ss_vec=lowerTriangle(ss_matrix_jiggled)
+  ss_vec=gdata::lowerTriangle(ss_matrix_jiggled)
 
   pairs_for_splitting_indicator_vec_aux <- rep(0,length(ss_vec))
   pairs_for_splitting_indicator_vec_aux[which((ss_vec > splitting_ss_thresh) & (well_distances < splitting_wd_thresh))] <- 1
   pairs_for_splitting_inidicator_matrix <- matrix(0, nrow = plate_size, ncol=plate_size)
-  lowerTriangle(pairs_for_splitting_inidicator_matrix) <- pairs_for_splitting_indicator_vec_aux
-  upperTriangle(pairs_for_splitting_inidicator_matrix) <- upperTriangle(t(pairs_for_splitting_inidicator_matrix))
+  gdata::lowerTriangle(pairs_for_splitting_inidicator_matrix) <- pairs_for_splitting_indicator_vec_aux
+  gdata::upperTriangle(pairs_for_splitting_inidicator_matrix) <- gdata::upperTriangle(t(pairs_for_splitting_inidicator_matrix))
   pairs_for_splitting <- sample(which(pairs_for_splitting_inidicator_matrix==1))
 
   pairs_available_for_switching_indicator_vec_aux <- rep(0, length(ss_vec))
   pairs_available_for_switching_indicator_vec_aux[which((ss_vec <= replacing_ss_thresh) & (well_distances>replacing_wd_thresh))] <- 1
-  pairs_available_for_switching_inidicator_matrix <- matrix(0, nrow=plate_size, ncol=plate_size)
-  lowerTriangle(pairs_available_for_switching_inidicator_matrix) <- pairs_available_for_switching_indicator_vec_aux
-  upperTriangle(pairs_available_for_switching_inidicator_matrix) <- upperTriangle(t(pairs_available_for_switching_inidicator_matrix))
+  pairs_available_for_switching_inidicator_matrix <- matrix(0, nrow = plate_size, ncol=plate_size)
+  gdata::lowerTriangle(pairs_available_for_switching_inidicator_matrix) <- pairs_available_for_switching_indicator_vec_aux
+  gdata::upperTriangle(pairs_available_for_switching_inidicator_matrix) <- gdata::upperTriangle(t(pairs_available_for_switching_inidicator_matrix))
   #pairs_for_switching <- sample(which(pairs_available_for_switching_inidicator_matrix==1))
 
   switches_df <- data.frame(matrix(ncol = 2, nrow = 0))
@@ -175,7 +186,7 @@ find_independent_switches_using_pds <- function(depth, plate_df,
 
   ss_matrix_rejiggled <- ss_matrix[new_jiggled_matrix_indices, new_jiggled_matrix_indices]
 
-  temp_plate_df <- plate_df  %>% slice(match(rownames(ss_matrix_rejiggled), SampleID))
+  temp_plate_df <- plate_df |> dplyr::slice(match(rownames(ss_matrix_rejiggled), .data$SampleID))
 
   plate_design_score <- calc_pds(temp_plate_df, columns_for_scoring, column_weights,
                                  scoring_mask,
