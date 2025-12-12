@@ -8,6 +8,8 @@ calc_patch_score(
   plate_df,
   columns_for_scoring,
   column_weights,
+  plate_n_rows,
+  plate_n_cols,
   patch_weight = NULL
 )
 }
@@ -17,6 +19,10 @@ calc_patch_score(
 \item{columns_for_scoring}{Character vector of column names to use for scoring.}
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
+
+\item{plate_n_rows}{Numeric scalar. Default 8.}
+
+\item{plate_n_cols}{Numeric scalar. Default 12.}
 
 \item{patch_weight}{down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
 }
@@ -32,5 +38,5 @@ str(example_plate_df)
 
 cols_for_scoring <- names(example_plate_df)[2:5]
 col_weights <- c(5, 5, 10, 4)
-calc_patch_score(example_plate_df, cols_for_scoring, col_weights)
+calc_patch_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
 }

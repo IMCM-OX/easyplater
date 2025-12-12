@@ -80,7 +80,8 @@ allocate_similar_samples_to_distal_wells <- function(
   sample_communities <- find_sample_communities(sample_similarities_matrix, splitting_ss_thresh)
 
   best_score <- calc_pds(plate_df,columns_for_scoring, column_weights,
-                         scoring_mask, internal_control_well_indices,
+                         scoring_mask, plate_num_rows, plate_num_cols,
+                         internal_control_well_indices,
                          pds_local_weight, patch_weight)
 
   samples_reordered <- plate_df$SampleID
@@ -98,7 +99,8 @@ allocate_similar_samples_to_distal_wells <- function(
     temp_plate_df <- plate_df |> dplyr::slice(match(rownames(sample_similarities_matrix_reordered_starter), .data$SampleID))
 
     starter_pds_score <- calc_pds(temp_plate_df,columns_for_scoring, column_weights,
-                                  scoring_mask, internal_control_well_indices,
+                                  scoring_mask, plate_num_rows, plate_num_cols,
+                                  internal_control_well_indices,
                                   pds_local_weight, patch_weight)
 
     if(starter_pds_score > best_score){

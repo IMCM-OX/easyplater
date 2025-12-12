@@ -20,6 +20,7 @@ test_that("calc_pds_global() calculation works when given valid input", {
                       names(example_plate_df)[2:5],
                       c(5, 5, 10, 4),
                       scoring_mask,
+                      8, 12,
                       c(86:95))
       },
     expected = 20.1845486)
@@ -30,6 +31,7 @@ test_that("calc_pds_global() errors when given non-96-well plate", {
     calc_pds_global(example_plate_df[49:96,],
                     names(example_plate_df)[2:5],
                     c(5, 5, 10, 4),
+                    8, 12,
                     c(86:95)),
     class = "simpleError")
 })
@@ -38,7 +40,8 @@ test_that("calc_row_column_score() calculation works", {
   expect_equal(
     calc_row_column_score(example_plate_df,
                     names(example_plate_df)[2:5],
-                    c(5, 5, 10, 4)),
+                    c(5, 5, 10, 4),
+                    8, 12),
     expected = 470)
 })
 
@@ -46,23 +49,19 @@ test_that("calc_patch_score() calculation works", {
   expect_equal(
     calc_patch_score(example_plate_df,
                      names(example_plate_df)[2:5],
-                     c(5, 5, 10, 4)),
+                     c(5, 5, 10, 4),
+                     8, 12,
+                     NULL),
     expected = 239.166667)
-})
-
-test_that("calc_patch_score() errors when given non-96-well plate", {
-  expect_error(
-    calc_patch_score(example_plate_df[49:96,],
-                    names(example_plate_df)[2:5],
-                    c(5, 5, 10, 4)),
-    class = "simpleError")
 })
 
 test_that("calc_pds_local() calculation works", {
   expect_equal(
     calc_pds_local(example_plate_df,
-                     names(example_plate_df)[2:5],
-                     c(5, 5, 10, 4)),
+                   names(example_plate_df)[2:5],
+                   c(5, 5, 10, 4),
+                   8, 12,
+                   NULL),
     expected = 709.166667)
 })
 
@@ -76,21 +75,9 @@ test_that("PDS calculation works when given valid input", {
                names(example_plate_df)[2:5],
                c(5, 5, 10, 4),
                scoring_mask,
+               8, 12,
                c(86:95))
       },
     expected = 729.351215)
 })
 
-test_that("calc_pds() errors when given non-96-well plate", {
-  expect_error(
-    object = {
-      scoring_mask <- nrow(example_plate_df) |>
-        make_well_distances_matrix() |>
-        make_scoring_mask()
-      calc_pds(example_plate_df[49:96,],
-             names(example_plate_df)[2:5],
-             c(5, 5, 10, 4),
-             c(86:95))
-      },
-    class = "simpleError")
-})

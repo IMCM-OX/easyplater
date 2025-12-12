@@ -4,7 +4,13 @@
 \alias{calc_row_column_score}
 \title{Calculate row column score}
 \usage{
-calc_row_column_score(plate_df, columns_for_scoring, column_weights)
+calc_row_column_score(
+  plate_df,
+  columns_for_scoring,
+  column_weights,
+  plate_n_rows,
+  plate_n_cols
+)
 }
 \arguments{
 \item{plate_df}{Data frame of samples and associated clinical metadata variables.}
@@ -12,6 +18,10 @@ calc_row_column_score(plate_df, columns_for_scoring, column_weights)
 \item{columns_for_scoring}{Character vector of column names to use for scoring.}
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
+
+\item{plate_n_rows}{Numeric scalar. Default 8.}
+
+\item{plate_n_cols}{Numeric scalar. Default 12.}
 }
 \value{
 A numeric scalar.
@@ -25,5 +35,5 @@ str(example_plate_df)
 
 cols_for_scoring <- names(example_plate_df)[2:5]
 col_weights <- c(5, 5, 10, 4)
-calc_row_column_score(example_plate_df, cols_for_scoring, col_weights)
+calc_row_column_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
 }

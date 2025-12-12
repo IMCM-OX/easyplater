@@ -6,8 +6,14 @@
 #' @details
 #' Additional details of nuances, limitations, potential pitfalls... **TO DO: Avi, fill this in**
 #'
-#' @inheritParams calc_pds_global
-#' @inheritParams calc_pds_local
+#' @param plate_df Data frame of samples and associated clinical metadata variables.
+#' @param columns_for_scoring Character vector of column names to use for scoring.
+#' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
+#' @param scoring_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
+#' @param plate_n_rows Numeric scalar. Default 8.
+#' @param plate_n_cols Numeric scalar. Default 12.
+#' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
+#' @param patch_weight down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. **TO DO: Avi, check this description**
 #' @param pds_local_weight Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.
 #'
 #' @returns A numeric scalar.
@@ -23,15 +29,18 @@
 #'   easyplater:::make_well_distances_matrix() |>
 #'   easyplater:::make_scoring_mask()
 #' ic_well_idcs <- c(86:95)
-#' calc_pds(example_plate_df, cols_for_scoring, col_weights, scoring_mask, ic_well_idcs)
+#' calc_pds(example_plate_df, cols_for_scoring, col_weights, scoring_mask, 8, 12, ic_well_idcs)
 calc_pds <- function(plate_df, columns_for_scoring, column_weights,
-                     scoring_mask, internal_control_well_indices,
+                     scoring_mask, plate_n_rows=8, plate_n_cols=12,
+                     internal_control_well_indices,
                      pds_local_weight=1, patch_weight=NULL){
 
   pds_global <- calc_pds_global(plate_df, columns_for_scoring, column_weights,
-                                scoring_mask, internal_control_well_indices)
+                                scoring_mask, plate_n_rows, plate_n_cols,
+                                internal_control_well_indices)
 
   pds_local <- calc_pds_local(plate_df, columns_for_scoring, column_weights,
+                              plate_n_rows, plate_n_cols,
                               patch_weight)
 
   return(pds_global + (pds_local_weight*pds_local))
@@ -42,7 +51,7 @@ calc_pds <- function(plate_df, columns_for_scoring, column_weights,
 #' @description
 #' The condition that variable-wise homogeneous rows, columns and patches should be avoided in a plate design is captured by the sub-score \eqn{PDS_{local}}. We define \eqn{PDS_{local}} to be an inverse-penalty based score such that plate designs that have a non-homogeneous distribution of values for every variable in every row, column and patch score maximally, while deviations from this are penalized.
 #'
-#' @inheritParams calc_patch_score
+#' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
 #' @export
@@ -53,12 +62,13 @@ calc_pds <- function(plate_df, columns_for_scoring, column_weights,
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
-#' calc_pds_local(example_plate_df, cols_for_scoring, col_weights)
+#' calc_pds_local(example_plate_df, cols_for_scoring, col_weights, 8, 12)
 calc_pds_local <- function(plate_df, columns_for_scoring, column_weights,
+                           plate_n_rows, plate_n_cols,
                            patch_weight=NULL){
 
-  row_column_score <- calc_row_column_score(plate_df, columns_for_scoring, column_weights)
-  patch_score <- calc_patch_score(plate_df, columns_for_scoring, column_weights, patch_weight)
+  row_column_score <- calc_row_column_score(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols)
+  patch_score <- calc_patch_score(plate_df, columns_for_scoring, column_weights, plate_n_rows, plate_n_cols, patch_weight)
 
   return(row_column_score + patch_score)
 }
@@ -68,8 +78,7 @@ calc_pds_local <- function(plate_df, columns_for_scoring, column_weights,
 #' @description
 #' `calc_patch_score()` calculates **TO DO: Avi fill this in**
 #'
-#' @inheritParams calc_pds_global
-#' @param patch_weight down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. **TO DO: Avi, check this description**
+#' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
 #' @export
@@ -80,15 +89,9 @@ calc_pds_local <- function(plate_df, columns_for_scoring, column_weights,
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
-#' calc_patch_score(example_plate_df, cols_for_scoring, col_weights)
-calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, patch_weight=NULL) {
-
-  if (nrow(plate_df) == 96) {
-    plate_n_rows <- 8
-    plate_n_cols <- 12
-  } else {
-    stop("nrow(plate_df) != 96: easyplater is currently only implemented for 96-well plates")
-  }
+#' calc_patch_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
+calc_patch_score <- function(plate_df, columns_for_scoring, column_weights,
+                             plate_n_rows, plate_n_cols, patch_weight=NULL) {
 
   sub_plate_n_cols <- plate_n_cols - 2
   sub_plate_n_rows <- plate_n_rows - 2
@@ -141,7 +144,7 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, patc
 #' @description
 #' `calc_row_column_score()` calculates **TO DO: Avi fill this in**
 #'
-#' @inheritParams calc_pds_global
+#' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
 #' @export
@@ -152,8 +155,9 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights, patc
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
-#' calc_row_column_score(example_plate_df, cols_for_scoring, col_weights)
-calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights) {
+#' calc_row_column_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
+calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights,
+                                  plate_n_rows, plate_n_cols) {
 
   if (nrow(plate_df) == 96) {
     plate_n_rows <- 8
@@ -198,11 +202,7 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights)
 #' @description
 #' `calc_pds_global()` calculates \eqn{PDS_{v_x}}, the sub-score of \eqn{PDS_v} where \eqn{v} is a clinical metadata variable and \eqn{x} is a unique value of \eqn{v}, accounting for the randomization of value \eqn{x} of \eqn{v} across a plate design.
 #'
-#' @param plate_df Data frame of samples and associated clinical metadata variables.
-#' @param columns_for_scoring Character vector of column names to use for scoring.
-#' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
-#' @param scoring_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
-#' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
+#' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
 #' @export
@@ -217,11 +217,13 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights)
 #'   easyplater:::make_well_distances_matrix() |>
 #'   easyplater:::make_scoring_mask()
 #' ic_well_idcs <- c(86:95)
-#' calc_pds_global(example_plate_df, cols_for_scoring, col_weights, scoring_mask, ic_well_idcs)
+#' calc_pds_global(example_plate_df, cols_for_scoring, col_weights, scoring_mask, 8, 12, ic_well_idcs)
 calc_pds_global <- function(plate_df,
                             columns_for_scoring,
                             column_weights,
                             scoring_mask,
+                            plate_n_rows,
+                            plate_n_cols,
                             internal_control_well_indices)
 {
   # This bit of code assumes that internal controls are pre-placed in the last column.
@@ -233,12 +235,6 @@ calc_pds_global <- function(plate_df,
   # larger dimension will be its columns... This just aligns with the usual "8x12" implied layout of 96 well plates, which
   # (for the moment) is a primary assumption of this library.
 
-  if (nrow(plate_df) == 96) {
-    plate_n_rows <- 8
-    plate_n_cols <- 12
-  } else {
-    stop("nrow(plate_df) != 96: easyplater is currently only implemented for 96-well plates")
-  }
 
   num_samples <- (plate_n_rows * plate_n_cols) - length(internal_control_well_indices)
   min_dim <- min(c(plate_n_rows, plate_n_cols))
