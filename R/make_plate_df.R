@@ -1,6 +1,6 @@
-
-
-#' Make Plate dataframe from manifest
+#' Prepare plate data frame from full manifest
+#'
+#' This function subsets a single plate from the input manifest and wrangles the data for downstream processing. **TO DO: Micah, elaborate on this.**
 #'
 #' @inheritParams allocate_similar_samples_to_distal_wells
 #' @param manifest_df Data frame or tibble with a `SampleID` column, a `plateID` column, and additional columns for each variable to be used for plate design score. See [easyplater::example_manifest] for an example.
@@ -8,27 +8,27 @@
 #' @param cols_to_categorize List of character vectors. **TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.**
 #' @param plate_wells Character vector of length `plate_size`. Well names.
 #'
-#' @returns List of length 2.
-#'  - First entry is a data frame for the specified plate with categorized columns specified from `cols_to_categorize`, and additional column `imbalanceFix_vec`
-#'  - Second entry is a data frame with additional columns specifying randomly sampled initial plate locations: `column`, `row`, `well`.
+#' @returns List of length two.
+#'
+#'  - The first element is data.frame for the specified plate with categorized columns specified in`cols_to_categorize` argument, and an additional column `imbalanceFix_vec`.
+#'  - The second element is a tibble with columns "SampleID", "plate", "column", "row", "well", plus columns specified in `columns_for_scoring` argument.
 #'
 #' @export
 #'
 #' @examples
-#' # Built in example manifest:
-#' example_manifest
-#'
-#' cols_for_scoring <- names(example_plate_df)[2:5]
-#' cols_to_categorize <- list(c("Age", 10, NULL, "AgeGroup"))
-#' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-#' plate_wells <- paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8))
-#' ic_well_idcs <- c(86:95)
-#' ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
-#'
+#' # We can use easyplater's built-in example manifest
+#' str(example_manifest)
 #' get_and_format_plate_df_from_manifest(
-#'   example_manifest, "plate 1", cols_for_scoring, cols_to_categorize,
-#'   imbalance_fixer, 96, plate_wells, ic_well_idcs, ic_ids
-#'   )
+#'   manifest_df = example_manifest,
+#'   plateID = "plate 1",
+#'   columns_for_scoring = c("Cohort", "Group", "Sex", "AgeGroup"),
+#'   cols_to_categorize = list(c("Age", "10", "AgeGroup")),
+#'   imbalance_fixer = list(TRUE,"Group",list("D1","HC1","D7","D8"),3),
+#'   plate_size = 96,
+#'   plate_wells = paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8)),
+#'   internal_control_well_indices = 86:95,
+#'   internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
+#' )
 get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_for_scoring, cols_to_categorize, imbalance_fixer,
                                                   plate_size, plate_wells, internal_control_well_indices, internal_control_ids){
 
@@ -83,13 +83,13 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
     }
   }
 
-  plate_df <- dplyr::select(plate_df_aux, cols_for_analysis)
-  plate_df_aux <- dplyr::select(plate_df_aux, c(cols_for_analysis, c("plate","column","row","well")))
+  plate_df <- dplyr::select(plate_df_aux, dplyr::all_of(cols_for_analysis))
+  plate_df_aux <- dplyr::select(plate_df_aux, dplyr::all_of(c(cols_for_analysis, c("plate","column","row","well"))))
 
   # Now account for imbalance in samples, as required
   imbalanceFix_vec <- c()
   if(imbalance_fixer[[1]]){
-    plate_df_column_for_fixing <- dplyr::select(plate_df,imbalance_fixer[[2]])
+    plate_df_column_for_fixing <- dplyr::select(plate_df, dplyr::all_of(imbalance_fixer[[2]]))
     imbalanceFix_vec <- rep(1,length(plate_df$SampleID))
     for(imbalance_val in imbalance_fixer[[3]]){
       imbalanceFix_vec <- replace(imbalanceFix_vec,which(plate_df_column_for_fixing == imbalance_val),unlist(plate_df[which(plate_df_column_for_fixing == imbalance_val),'SampleID']))
@@ -160,22 +160,10 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
   return(list(plate_df, plate_df_aux))
 }
 
-# Take plate_df_list and return the same with samples reordered by samples_final_order
-# Micah: A clearer name may be apply_final_well_locations()
-make_easyplater_design_aux <- function(plate_df_list, samples_final_order){
+get_column_from_well_coords <- function(well_coords){
+  return(paste("Column", substr(well_coords,2,3), sep=" "))
+}
 
-  plate_df_aux <- plate_df_list[[2]]
-
-  # Need to reset rows and columns (otherwise nothing changes!)
-  plate_rows <- plate_df_aux$row
-  plate_columns <- plate_df_aux$column
-  plate_wells <- plate_df_aux$well
-
-  plate_design_df <- plate_df_aux |> dplyr::slice(match(samples_final_order, .data$SampleID))
-
-  plate_design_df$row <- plate_rows
-  plate_design_df$column <- plate_columns
-  plate_design_df$well <- plate_wells
-
-  return(plate_design_df)
+get_row_from_well_coords <- function(well_coords){
+  return(substr(well_coords,1,1))
 }
