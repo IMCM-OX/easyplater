@@ -2,11 +2,7 @@
 #'
 #' This function subsets a single plate from the input manifest and wrangles the data for downstream processing. **TO DO: Micah, elaborate on this.**
 #'
-#' @inheritParams allocate_similar_samples_to_distal_wells
-#' @param manifest_df Data frame or tibble with a `SampleID` column, a `plateID` column, and additional columns for each variable to be used for plate design score. See [easyplater::example_manifest] for an example.
-#' @param plateID String. Value from `plateID` column to generate a plate for.
-#' @param cols_to_categorize List of character vectors. **TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.**
-#' @param plate_wells Character vector of length `plate_size`. Well names.
+#' @inheritParams make_easyplater_design
 #'
 #' @returns List of length two.
 #'

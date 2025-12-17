@@ -6,15 +6,10 @@
 #' @details
 #' Additional details of nuances, limitations, potential pitfalls... **TO DO: Avi, fill this in**
 #'
+#' @inheritParams make_easyplater_design
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
-#' @param columns_for_scoring Character vector of column names to use for scoring.
-#' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
-#' @param scoring_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
 #' @param plate_n_rows Numeric scalar. Default 8.
 #' @param plate_n_cols Numeric scalar. Default 12.
-#' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
-#' @param patch_weight down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. **TO DO: Avi, check this description**
-#' @param pds_local_weight Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.
 #'
 #' @returns A numeric scalar.
 #' @export

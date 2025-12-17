@@ -1,16 +1,8 @@
 #' Perform sample switch search
 #'
-#' @param max_depth **TO DO: Avi explain**
-#' @param wins_required **TO DO: Avi explain**
-#' @param max_attempts **TO DO: Avi explain**
-#' @param sample_allocation_outputs Output of allocate_similar_samples_to_distal_wells()
-#' @param well_pair_distances_df **TO DO: Avi explain**
-#' @param splitting_ss_thresh Numeric scalar. Similarity threshold for generating adjacency matrix.
-#' @param splitting_wd_thresh **TO DO: Avi explain**
-#' @param replacing_ss_thresh **TO DO: Avi explain**
-#' @param replacing_wd_thresh **TO DO: Avi explain**
+#' @inheritParams make_easyplater_design
 #' @inheritParams allocate_similar_samples_to_distal_wells
-#' @inheritParams calc_pds
+#' @param sample_allocation_outputs Output of allocate_similar_samples_to_distal_wells()
 #'
 #' @returns
 #' **TO DO: Avi explain**

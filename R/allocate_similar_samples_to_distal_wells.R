@@ -3,20 +3,8 @@
 #' @description
 #' A short description... **TO DO: Avi, describe this.**
 #'
+#' @inheritParams make_easyplater_design
 #' @param plate_df_list List of length 2. Output of [easyplater::get_and_format_plate_df_from_manifest]
-#' @param columns_for_scoring Character vector. Names of columns to use for calculating plate design score.
-#' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
-#' @param imbalance_fixer Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. **TO DO: Avi, explain this.**
-#' @param plate_num_rows Numeric scalar. Default 8.
-#' @param plate_num_cols Numeric scalar. Default 12.
-#' @param plate_size Numeric scalar. Size of plate. Note that currently `easyplater` is currently only implemented for 96-well plates.
-#' @param full_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
-#' @param scoring_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
-#' @param splitting_ss_thresh Numeric scalar. Similarity threshold for generating adjacency matrix.
-#' @param internal_control_ids Character vector. Names of internal control wells.
-#' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
-#' @param pds_local_weight Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.
-#' @param patch_weight down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. **TO DO: Avi, check this description**
 #' @param initial_perms Numeric scalar. Initial number of permutations to use.
 #'
 #' @returns List of length 4.
