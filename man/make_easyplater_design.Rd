@@ -11,22 +11,19 @@ make_easyplater_design(
   column_weights,
   cols_to_categorize,
   imbalance_fixer,
-  plate_num_rows,
-  plate_num_cols,
-  plate_size,
-  plate_wells,
-  internal_control_well_indices,
-  internal_control_ids,
-  full_mask,
-  scoring_mask,
-  well_pair_distances_df,
-  splitting_ss_thresh,
-  splitting_wd_thresh,
-  replacing_ss_thresh,
-  replacing_wd_thresh,
-  max_depth,
-  wins_required,
-  max_attempts,
+  plate_size = 96,
+  internal_control_well_indices = 86:95,
+  internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
+  full_mask = NULL,
+  scoring_mask = NULL,
+  well_pair_distances_df = NULL,
+  splitting_ss_thresh = 0.5,
+  splitting_wd_thresh = 1,
+  replacing_ss_thresh = 0.5,
+  replacing_wd_thresh = 6,
+  max_depth = 2,
+  wins_required = 10,
+  max_attempts = 100,
   pds_local_weight = 1,
   patch_weight = NULL
 )
@@ -44,13 +41,7 @@ make_easyplater_design(
 
 \item{imbalance_fixer}{Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 
-\item{plate_num_rows}{Numeric scalar. Default 8.}
-
-\item{plate_num_cols}{Numeric scalar. Default 12.}
-
 \item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
-
-\item{plate_wells}{Character vector of length \code{plate_size}. Well names.}
 
 \item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
 
@@ -79,6 +70,12 @@ make_easyplater_design(
 \item{pds_local_weight}{Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.}
 
 \item{patch_weight}{down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
+
+\item{plate_num_rows}{Numeric scalar. Default 8.}
+
+\item{plate_num_cols}{Numeric scalar. Default 12.}
+
+\item{plate_wells}{Character vector of length \code{plate_size}. Well names.}
 }
 \value{
 \strong{TO DO: Micah, fill this in.}

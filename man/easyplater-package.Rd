@@ -4,15 +4,15 @@
 \name{easyplater-package}
 \alias{easyplater}
 \alias{easyplater-package}
-\title{easyplater: Decoupling Clinical Data From Plate Location Effects, Made Easy!}
+\title{easyplater: Decoupling clinical data from plate location effects, made easy!}
 \description{
 An easy to use algorithm for generating 96-well plate designs without confounding clinical variables with plate location effects. Simply input clinical data and user-assigned clinical variable weights, and easyplater outputs the most deconvolved plate design it finds in plain text and R Markdown formats.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/micahpf/easyplater}
-  \item Report bugs at \url{https://github.com/micahpf/easyplater/issues}
+  \item \url{https://github.com/IMCM-OX/easyplater}
+  \item Report bugs at \url{https://github.com/IMCM-OX/easyplater/issues}
 }
 
 }

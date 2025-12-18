@@ -99,10 +99,8 @@ test_that("make_easy_plater_design() exits with error if plate_size != 96", {
   expect_error(
     object = {
       manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
-      p_num <- 1
       # Make a list of the plates:
       plates <- stringr::str_sort(unique(manifest_df$plate), numeric = TRUE)
-      # Prep masks
       make_easyplater_design(
         manifest_df = manifest_df,
         plateID = plates[1],
