@@ -1,5 +1,5 @@
 Package: easyplater
-Title: Decoupling Clinical Data From Plate Location Effects, Made Easy!
+Title: Decoupling clinical data from plate location effects, made easy!
 Version: 0.0.0.9000
 Authors@R: c(
   person("Micah", "Fletcher",
