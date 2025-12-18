@@ -29,7 +29,22 @@
 #' @export
 #'
 #' @examples
-#' ## TO DO: Micah, fill this in.
+#' easyplater comes with a built-in example plate manifest
+#' example_manifest
+#'
+#' # Run easyplater in one step
+#' easyplater_design <- make_easyplater_design(
+#'   manifest_df = example_manifest,
+#'   plateID = "plate 1",
+#'   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+#'   column_weights = c(5, 5, 10, 4),
+#'   cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
+#'   imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
+#'   plate_size = 96
+#' )
+#'
+#' # Use a function exported from the OlinkAnalyze package to display plate layout
+#' olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = T)
 make_easyplater_design <- function(manifest_df, plateID,
                                    columns_for_scoring, column_weights, cols_to_categorize, imbalance_fixer,
                                    plate_size = 96,
@@ -99,3 +114,4 @@ make_easyplater_design <- function(manifest_df, plateID,
 #' @export
 #' @importFrom OlinkAnalyze olink_displayPlateLayout
 OlinkAnalyze::olink_displayPlateLayout
+

@@ -26,7 +26,7 @@ You can install the development version of `easyplater` from
 pak::pak("IMCM-OX/easyplater")
 ```
 
-## Example
+## Example usage
 
 ``` r
 library(easyplater)

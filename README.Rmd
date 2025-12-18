@@ -31,7 +31,7 @@ You can install the development version of `easyplater` from [GitHub](https://gi
 pak::pak("IMCM-OX/easyplater")
 ```
 
-## Example
+## Example usage
 
 ```{r example, warnings=FALSE}
 library(easyplater)
