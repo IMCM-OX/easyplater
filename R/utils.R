@@ -1,3 +1,27 @@
+make_well_distance_df <- function(plate_size){
+
+  well_distances_df = data.frame()
+
+  for (i in 0:(plate_size-2)){
+    for (j in (i+1):(plate_size-1)){
+      irow <- i %% 8
+      icol <- i %/% 8
+      jrow <- j %% 8
+      jcol <- j %/% 8
+
+      if((irow==jrow) || (icol==jcol)){
+        d <- 0
+      }else{
+        d <- sqrt((irow-jrow)^2 + (icol-jcol)^2)
+      }
+      row <- c(i,j,d)
+      well_distances_df <- rbind(well_distances_df,row)
+    }
+  }
+  names(well_distances_df) <- c("i","j","d")
+  return(well_distances_df)
+}
+
 make_well_distances_matrix <- function(plate_size){
 
   if (plate_size == 96) {

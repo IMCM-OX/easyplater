@@ -58,9 +58,9 @@ make_easyplater_design <- function(manifest_df, plateID,
   print("Allocating similar samples to distal wells.")
   sample_allocation_outputs <- allocate_similar_samples_to_distal_wells(
     plate_df_list, columns_for_scoring, column_weights, imbalance_fixer,
-    plate_num_rows, plate_num_cols, plate_size,
-    full_mask, splitting_ss_thresh,
+    full_mask, scoring_mask, splitting_ss_thresh,
     internal_control_ids, internal_control_well_indices,
+    plate_num_rows, plate_num_cols, plate_size,
     pds_local_weight, patch_weight)
 
   print("Performing sample switching search.")
