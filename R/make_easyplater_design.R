@@ -98,3 +98,7 @@ make_easyplater_design <- function(manifest_df, plateID,
   print("Store the easyPlateR plate design in a data frame.")
   easy_plate_df <- make_easyplater_design_aux(plate_df_list, samples_final_order, columns_for_scoring)
 }
+
+#' @export
+#' @importFrom OlinkAnalyze olink_displayPlateLayout
+OlinkAnalyze::olink_displayPlateLayout

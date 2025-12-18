@@ -32,5 +32,6 @@ Imports:
     gdata,
     ggplot2,
     igraph,
+    OlinkAnalyze,
     rlang,
     stats
