@@ -70,12 +70,6 @@ make_easyplater_design(
 \item{pds_local_weight}{Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.}
 
 \item{patch_weight}{down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
-
-\item{plate_num_rows}{Numeric scalar. Default 8.}
-
-\item{plate_num_cols}{Numeric scalar. Default 12.}
-
-\item{plate_wells}{Character vector of length \code{plate_size}. Well names.}
 }
 \value{
 \strong{TO DO: Micah, fill this in.}
@@ -84,5 +78,17 @@ make_easyplater_design(
 Given a manifest, run the easyplater algorithm on a single plate. \strong{TO DO: Avi and/or Micah, elaborate on this.}
 }
 \examples{
-## TO DO: Micah, fill this in.
+# Run easyplater in one step
+easyplater_design <- make_easyplater_design(
+  manifest_df = example_manifest,
+  plateID = "plate 1",
+  columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+  column_weights = c(5, 5, 10, 4),
+  cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
+  imbalance_fixer = list(TRUE, "Group", list("D1", "HC1", "D7", "D8"), 3),
+  plate_size = 96
+)
+
+# Use a function exported from the OlinkAnalyze package to display plate layout
+olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = TRUE)
 }

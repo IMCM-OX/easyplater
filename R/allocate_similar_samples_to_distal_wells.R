@@ -5,6 +5,8 @@
 #'
 #' @inheritParams make_easyplater_design
 #' @param plate_df_list List of length 2. Output of [easyplater::get_and_format_plate_df_from_manifest]
+#' @param plate_num_rows Numeric scalar. Default 8.
+#' @param plate_num_cols Numeric scalar. Default 12.
 #' @param initial_perms Numeric scalar. Initial number of permutations to use.
 #'
 #' @returns List of length 4.

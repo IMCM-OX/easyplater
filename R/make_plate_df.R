@@ -3,6 +3,7 @@
 #' This function subsets a single plate from the input manifest and wrangles the data for downstream processing. **TO DO: Micah, elaborate on this.**
 #'
 #' @inheritParams make_easyplater_design
+#' @param plate_wells Character vector of length `plate_size`. Well names.
 #'
 #' @returns List of length two.
 #'

@@ -55,7 +55,7 @@ easyplater_design <- make_easyplater_design(
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),
   cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
-  imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
+  imbalance_fixer = list(TRUE, "Group", list("D1", "HC1", "D7", "D8"), 3),
   plate_size = 96
 )
 #> [1] "Getting and formatting plate data fram from manifest."
@@ -64,7 +64,7 @@ easyplater_design <- make_easyplater_design(
 #> [1] "Store the easyPlateR plate design in a data frame."
 
 # Use a function exported from the OlinkAnalyze package to display plate layout
-olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = T)
+olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = TRUE)
 #> Warning: Removed 16 rows containing missing values or values outside the scale range
 #> (`geom_text()`).
 ```
