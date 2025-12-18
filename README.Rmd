@@ -1,0 +1,57 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# easyplater
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+easyplater is a tool for generating microplate manifests while decoupling clinical data from plate location effects.
+
+In short, easyplater is an easy to use algorithm for generating 96-well plate designs without confounding clinical variables with plate location effects. Simply input clinical data and user-assigned clinical variable weights, and easyplater outputs the most deconvolved plate design it finds in plain text and R Markdown formats.
+
+## Installation
+
+You can install the development version of `easyplater` from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("IMCM-OX/easyplater")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example, warnings=FALSE}
+library(easyplater)
+
+# easyplater comes with a built-in example plate manifest
+example_manifest
+
+# Run easyplater in one step
+easyplater_design <- make_easyplater_design(
+  manifest_df = example_manifest,
+  plateID = "plate 1",
+  columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+  column_weights = c(5, 5, 10, 4),
+  cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
+  imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
+  plate_size = 96
+)
+
+# Use a function exported from the OlinkAnalyze package to display plate layout
+olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = T)
+```
