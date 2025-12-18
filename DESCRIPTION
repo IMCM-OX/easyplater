@@ -25,8 +25,8 @@ Config/testthat/edition: 3
 Depends: 
     R (>= 3.5)
 LazyData: true
-URL: https://github.com/micahpf/easyplater
-BugReports: https://github.com/micahpf/easyplater/issues
+URL: https://github.com/IMCM-OX/easyplater
+BugReports: https://github.com/IMCM-OX/easyplater/issues
 Imports: 
     dplyr,
     gdata,
