@@ -49,10 +49,7 @@ test_that("make_easy_plater_design() returns the same final plate as the origina
           column_weights = c(5, 5, 10, 4),
           cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
           imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
-          plate_num_rows = 8,
-          plate_num_cols = 12,
           plate_size = 96,
-          plate_wells = paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8)),
           internal_control_well_indices = 86:95,
           internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
           full_mask = make_full_mask(well_distances_matrix),
@@ -67,8 +64,55 @@ test_that("make_easy_plater_design() returns the same final plate as the origina
           max_attempts = 100
         )
       })
-
     },
     expected = readRDS(test_path("fixtures", "easy_plate_df.rds"))
+  )
+})
+
+test_that("make_easy_plater_design() returns the same final plate as the original example with minimal params", {
+  expect_identical(
+    object = {
+      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
+      p_num <- 1
+      # Make a list of the plates:
+      plates <- stringr::str_sort(unique(manifest_df$plate), numeric = TRUE)
+      # Set seeds (must set within a temporarily altered environment, to avoid changing dev's/user's global environment)
+      withr::with_seed(1, {
+        plate_seeds <- sample(1000000,length(plates))
+        set.seed(plate_seeds[p_num])
+        make_easyplater_design(
+          manifest_df = manifest_df,
+          plateID = plates[1],
+          columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+          column_weights = c(5, 5, 10, 4),
+          cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
+          imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
+          plate_size = 96
+        )
+      })
+    },
+    expected = readRDS(test_path("fixtures", "easy_plate_df.rds"))
+  )
+})
+
+test_that("make_easy_plater_design() exits with error if plate_size != 96", {
+  expect_error(
+    object = {
+      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
+      p_num <- 1
+      # Make a list of the plates:
+      plates <- stringr::str_sort(unique(manifest_df$plate), numeric = TRUE)
+      # Prep masks
+      make_easyplater_design(
+        manifest_df = manifest_df,
+        plateID = plates[1],
+        columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+        column_weights = c(5, 5, 10, 4),
+        cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
+        imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
+        plate_size = 48
+      )
+    },
+    class = "simpleError"
   )
 })

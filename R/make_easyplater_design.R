@@ -35,25 +35,47 @@
 #' ## TO DO: Micah, fill this in.
 make_easyplater_design <- function(manifest_df, plateID,
                                    columns_for_scoring, column_weights, cols_to_categorize, imbalance_fixer,
-                                   plate_num_rows, plate_num_cols, plate_size, plate_wells,
-                                   internal_control_well_indices, internal_control_ids,
-                                   full_mask, scoring_mask,
-                                   well_pair_distances_df,
-                                   splitting_ss_thresh, splitting_wd_thresh,
-                                   replacing_ss_thresh, replacing_wd_thresh,
-                                   max_depth, wins_required, max_attempts,
-                                   pds_local_weight=1, patch_weight=NULL){
+                                   plate_size = 96,
+                                   internal_control_well_indices = 86:95,
+                                   internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
+                                   full_mask = NULL, scoring_mask = NULL,
+                                   well_pair_distances_df = NULL,
+                                   splitting_ss_thresh = 0.5, splitting_wd_thresh = 1,
+                                   replacing_ss_thresh = 0.5, replacing_wd_thresh = 6,
+                                   max_depth = 2, wins_required = 10, max_attempts = 100,
+                                   pds_local_weight=1, patch_weight = NULL){
+
+  # Note: Re-write this to surface a more useful message to the user
+  stopifnot(plate_size == 96)
+
+  if (plate_size == 96) {
+    plate_num_rows <- 8
+    plate_num_cols <- 12
+  }
+
+  plate_wells <- paste0(rep(LETTERS[1:plate_num_rows], times = plate_num_cols),
+                        rep(1:plate_num_cols, each = plate_num_rows))
+
+  well_distances_matrix <- make_well_distances_matrix(plate_size)
+
+  if (is.null(full_mask)) {
+    full_mask <- make_full_mask(well_distances_matrix)
+  }
+
+  if (is.null(scoring_mask)) {
+    scoring_mask <- make_scoring_mask(well_distances_matrix)
+  }
+
+  if (is.null(well_pair_distances_df)) {
+    well_pair_distances_df <- make_well_distance_df(plate_size)
+  }
+
 
   print("Getting and formatting plate data fram from manifest.")
   plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, plateID, columns_for_scoring, cols_to_categorize, imbalance_fixer,
                                                          plate_size, plate_wells, internal_control_well_indices, internal_control_ids)
 
-  # if(is.null(patch_weight)){
-  #   sub_plate_num_cols <- plate_num_cols - 2
-  #   sub_plate_num_rows <- plate_num_rows - 2
-  #   sub_plate_size <- sub_plate_num_cols * sub_plate_num_rows
-  #   patch_weight <- min(c(1, (plate_num_rows + plate_num_cols)/sub_plate_size))
-  # }
+  # Note: We may want to move the patch_weight calculation from calc_patch_score() up to here, so that this computation isn't repeated with each iteration
 
   print("Allocating similar samples to distal wells.")
   sample_allocation_outputs <- allocate_similar_samples_to_distal_wells(
