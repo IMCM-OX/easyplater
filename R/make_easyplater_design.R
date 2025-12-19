@@ -138,3 +138,38 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
 #' @importFrom OlinkAnalyze olink_displayPlateLayout
 OlinkAnalyze::olink_displayPlateLayout
 
+#' Write plate manifest to Excel spreadsheet
+#'
+#' @param manifest_df
+#' @param output_path
+#' @param output_filename
+#' @param plate_col
+#' @param plateID
+#' @param display_col
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+write_manifest_excel <- function(manifest_df, output_path, output_filename,
+                                 plate_col = "plate", plateID = NULL,
+                                 display_col = "SampleID") {
+  plate_layouts <- split(manifest_df, manifest_df[[plate_col]]) |>
+    lapply(function(plate_df) {
+      plate_layout <- matrix(plate_df[[display_col]], nrow = 8, ncol = 12, byrow = FALSE)
+      colnames(plate_layout) <- 1:12
+      rownames(plate_layout) <- LETTERS[1:8]
+
+      plate_layout <- plate_layout |> as_tibble(rownames = ".")
+      return(plate_layout)
+    })
+
+  c(
+    list(Manifest = manifest_df),
+    plate_layouts
+  ) |>
+    writexl::write_xlsx(path = file.path(output_path, output_filename))
+}
+
+
+
