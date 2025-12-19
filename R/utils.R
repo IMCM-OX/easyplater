@@ -1,9 +1,3 @@
-# R: version 4.2.1
-
-################################################################################
-# easyplater Init Functions
-################################################################################
-
 make_well_distance_df <- function(plate_size){
 
   well_distances_df = data.frame()
@@ -28,9 +22,13 @@ make_well_distance_df <- function(plate_size){
   return(well_distances_df)
 }
 
-#*******************************************************************************
+make_well_distances_matrix <- function(plate_size){
 
-make_well_distances_matrix <- function(plate_size, plate_n_rows=8){
+  if (plate_size == 96) {
+    plate_n_rows <- 8
+  } else {
+    stop("plate_size != 96: easyplater is currently only implemented for 96-well plates")
+  }
 
   well_distances_matrix <- matrix(0, nrow=plate_size, ncol=plate_size)
   rownames(well_distances_matrix) <- 0:(plate_size-1)
@@ -46,16 +44,15 @@ make_well_distances_matrix <- function(plate_size, plate_n_rows=8){
       if((irow==jrow) || (icol==jcol)){
         d <- 0
       }else{
-	d <- sqrt((irow-jrow)^2 + (icol-jcol)^2)
+        d <- sqrt((irow-jrow)^2 + (icol-jcol)^2)
       }
-      well_distances_matrix[as.character(i), as.character(j)] <- d 
-      well_distances_matrix[as.character(j), as.character(i)] <- d 
+      well_distances_matrix[as.character(i), as.character(j)] <- d
+      well_distances_matrix[as.character(j), as.character(i)] <- d
     }
   }
   return(well_distances_matrix)
 }
 
-#*******************************************************************************
 make_full_mask <- function(well_distances_matrix, mask_edge_thresh=3){
   if(mask_edge_thresh < 3){
     stop("mask_edge_thresh in make_full_mask cannot be < 3.")
@@ -68,7 +65,6 @@ make_full_mask <- function(well_distances_matrix, mask_edge_thresh=3){
   return(full_mask)
 }
 
-#*******************************************************************************
 make_scoring_mask <- function(well_distances_matrix, scoring_mask_edge_thresh=1){
 
   scoring_mask <- well_distances_matrix
@@ -78,4 +74,10 @@ make_scoring_mask <- function(well_distances_matrix, scoring_mask_edge_thresh=1)
   return(scoring_mask)
 }
 
-#*******************************************************************************
+get_column_from_well_coords <- function(well_coords){
+  return(paste("Column", substr(well_coords,2,3), sep=" "))
+}
+
+get_row_from_well_coords <- function(well_coords){
+  return(substr(well_coords,1,1))
+}
