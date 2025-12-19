@@ -2,8 +2,8 @@
 #'
 #' Given a manifest, run the easyplater algorithm on a single plate. **TO DO: Avi and/or Micah, elaborate on this.**
 #'
-#' @param manifest_df Data frame or tibble with a `SampleID` column, a `plateID` column, and additional columns for each variable to be used for plate design score. See [easyplater::example_manifest] for an example.
-#' @param plateID String. Value from `plateID` column to generate a plate for.
+#' @param manifest_df Data frame or tibble with a `SampleID` column, a plate column (default: "plate", but this can be changed with `plate_col` argument), and additional columns for each variable to be used for plate design score. See [easyplater::example_manifest] for an example.
+#' @param plateID Character vector. Value from column specified by `plate_col` to generate a  deconvolved plate for. If NULL (default), every plate in the manifest will be deconvolved.
 #' @param columns_for_scoring Character vector. Names of columns to use for calculating plate design score.
 #' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
 #' @param cols_to_categorize List of character vectors. **TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.**
@@ -22,9 +22,11 @@
 #' @param wins_required **TO DO: Avi explain**
 #' @param max_attempts **TO DO: Avi explain**
 #' @param pds_local_weight Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.
-#' @param patch_weight down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. **TO DO: Avi, check this description**
+#' @param patch_weight Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. **TO DO: Avi, check this description**
+#' @param plate_col String. Name of the column specifying which plate each sample belongs to. Default: "plate".
+#' @param seed Numeric scalar. Seed to set for reproducibility. Default: 1.
 #'
-#' @returns **TO DO: Micah, fill this in.**
+#' @returns A data.frame (of class tibble) with the same contents as the input, but with sample locations deconvolved from the clinical variables specified in `columns_for_scoring` argument, and with columns in `cols_to_categorize` converted into bins.
 #'
 #' @export
 #'
@@ -42,7 +44,7 @@
 #'
 #' # Use a function exported from the OlinkAnalyze package to display plate layout
 #' olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = TRUE)
-make_easyplater_design <- function(manifest_df, plateID,
+make_easyplater_design <- function(manifest_df, plateID = NULL,
                                    columns_for_scoring, column_weights, cols_to_categorize, imbalance_fixer,
                                    plate_size = 96,
                                    internal_control_well_indices = 86:95,
@@ -52,7 +54,15 @@ make_easyplater_design <- function(manifest_df, plateID,
                                    splitting_ss_thresh = 0.5, splitting_wd_thresh = 1,
                                    replacing_ss_thresh = 0.5, replacing_wd_thresh = 6,
                                    max_depth = 2, wins_required = 10, max_attempts = 100,
-                                   pds_local_weight=1, patch_weight = NULL){
+                                   pds_local_weight=1, patch_weight = NULL,
+                                   plate_col = "plate",
+                                   seed = 1){
+
+  plateIDs <- manifest_df[[plate_col]] |> unique() |> stringr::str_sort()
+  # If no subset of plates is given, run easyplater on all plates
+  if (is.null(plateID)) {
+    plateID <- plateIDs
+  }
 
   # Note: Re-write this to surface a more useful message to the user
   stopifnot(plate_size == 96)
@@ -79,33 +89,49 @@ make_easyplater_design <- function(manifest_df, plateID,
     well_pair_distances_df <- make_well_distance_df(plate_size)
   }
 
+  # Create a temporarily modified environment with seed set to `seed` input, without changing user's RNG
+  withr::with_seed(seed, {
+    plate_seeds <- sample(1000000, length(plateIDs))
+    names(plate_seeds) <- plateIDs
 
-  print("Getting and formatting plate data fram from manifest.")
-  plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, plateID, columns_for_scoring, cols_to_categorize, imbalance_fixer,
-                                                         plate_size, plate_wells, internal_control_well_indices, internal_control_ids)
+    easy_plates_list <- list()
+    for (p in plateID) {
+      # Set seed for reproducibility
+      set.seed(plate_seeds[[p]])
 
-  # Note: We may want to move the patch_weight calculation from calc_patch_score() up to here, so that this computation isn't repeated with each iteration
+      print(paste0("[:::] ", p, " [:::]"))
+      print("Getting and formatting plate data fram from manifest.")
+      plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, p, columns_for_scoring, cols_to_categorize, imbalance_fixer,
+                                                             plate_size, plate_wells, internal_control_well_indices, internal_control_ids)
 
-  print("Allocating similar samples to distal wells.")
-  sample_allocation_outputs <- allocate_similar_samples_to_distal_wells(
-    plate_df_list, columns_for_scoring, column_weights, imbalance_fixer,
-    full_mask, scoring_mask, splitting_ss_thresh,
-    internal_control_ids, internal_control_well_indices,
-    plate_num_rows, plate_num_cols, plate_size,
-    pds_local_weight, patch_weight)
+      # Note: We may want to move the patch_weight calculation from calc_patch_score() up to here, so that this computation isn't repeated with each iteration
 
-  print("Performing sample switching search.")
-  samples_final_order <- perform_sample_switch_search(max_depth, wins_required, max_attempts,
-                                                      plate_df_list, sample_allocation_outputs,
-                                                      well_pair_distances_df,
-                                                      splitting_ss_thresh, splitting_wd_thresh,
-                                                      replacing_ss_thresh, replacing_wd_thresh,
-                                                      columns_for_scoring, column_weights, plate_num_rows, plate_num_cols,
-                                                      plate_size, internal_control_well_indices,scoring_mask,
-                                                      pds_local_weight, patch_weight)
+      print("Allocating similar samples to distal wells.")
+      sample_allocation_outputs <- allocate_similar_samples_to_distal_wells(
+        plate_df_list, columns_for_scoring, column_weights, imbalance_fixer,
+        full_mask, scoring_mask, splitting_ss_thresh,
+        internal_control_ids, internal_control_well_indices,
+        plate_num_rows, plate_num_cols, plate_size,
+        pds_local_weight, patch_weight)
 
-  print("Store the easyPlateR plate design in a data frame.")
-  easy_plate_df <- make_easyplater_design_aux(plate_df_list, samples_final_order, columns_for_scoring)
+      print("Performing sample switching search.")
+      samples_final_order <- perform_sample_switch_search(max_depth, wins_required, max_attempts,
+                                                          plate_df_list, sample_allocation_outputs,
+                                                          well_pair_distances_df,
+                                                          splitting_ss_thresh, splitting_wd_thresh,
+                                                          replacing_ss_thresh, replacing_wd_thresh,
+                                                          columns_for_scoring, column_weights, plate_num_rows, plate_num_cols,
+                                                          plate_size, internal_control_well_indices,scoring_mask,
+                                                          pds_local_weight, patch_weight)
+
+      print("Store the easyPlateR plate design in a data frame.")
+      easy_plates_list[[p]] <- make_easyplater_design_aux(plate_df_list, samples_final_order, columns_for_scoring)
+    }
+  })
+
+  easy_plate_df <- easy_plates_list |> dplyr::bind_rows(.id = plate_col)
+
+  return(easy_plate_df)
 }
 
 #' @export
