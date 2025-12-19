@@ -58,6 +58,7 @@ easyplater_design <- make_easyplater_design(
   imbalance_fixer = list(TRUE, "Group", list("D1", "HC1", "D7", "D8"), 3),
   plate_size = 96
 )
+#> [1] "[:::] plate 1 [:::]"
 #> [1] "Getting and formatting plate data fram from manifest."
 #> [1] "Allocating similar samples to distal wells."
 #> [1] "Performing sample switching search."
