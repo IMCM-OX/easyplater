@@ -31,7 +31,7 @@ make_easyplater_design(
 )
 }
 \arguments{
-\item{manifest_df}{Data frame or tibble with a \code{SampleID} column, a plate column (default: "plate", but this can be changed with \code{plate_col} argument), and additional columns for each variable to be used for plate design score. See \link{example_manifest} for an example.}
+\item{manifest_df}{Data frame or tibble with a \code{SampleID} column, a plate column (default: "plate", but this can be changed with \code{plate_col} argument), and additional columns for each variable to be used for plate design score. See \link{input_manifest} for an example.}
 
 \item{plateID}{Character vector. Value from column specified by \code{plate_col} to generate a  deconvolved plate for. If NULL (default), every plate in the manifest will be deconvolved.}
 
@@ -86,7 +86,7 @@ Given a manifest, run the easyplater algorithm on a single plate. \strong{TO DO:
 \examples{
 # Run easyplater in one step
 easyplater_design <- make_easyplater_design(
-  manifest_df = example_manifest,
+  manifest_df = input_manifest,
   plateID = "plate 1",
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),

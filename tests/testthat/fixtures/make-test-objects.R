@@ -433,7 +433,7 @@ manifest_df <- tibble::tribble(
 )
 saveRDS(manifest_df, test_path("fixtures", "manifest_df.rds"))
 
-#### easy_plate_df
+#### easy_multiplate_df
 # run `easy_plate_df <- make_easyplater_design(...)` in the original easyplater example script, but with the following changes:
 # ## Before the for loop
 # easy_plate_list <- list()

@@ -18,7 +18,7 @@
 #' @export
 #'
 #' @examples
-#' example_manifest
+#' input_manifest
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' cols_to_categorize <- list(c("Age", 10, NULL, "AgeGroup"))
@@ -29,7 +29,7 @@
 #'
 #' # Getting and formatting plate data from from manifest.
 #' plate_df_list <- get_and_format_plate_df_from_manifest(
-#'   example_manifest, "plate 1", cols_for_scoring, cols_to_categorize,
+#'   input_manifest, "plate 1", cols_for_scoring, cols_to_categorize,
 #'   imbalance_fixer, 96, plate_wells, ic_well_idcs, ic_ids
 #'   )
 #'

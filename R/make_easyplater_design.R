@@ -2,7 +2,7 @@
 #'
 #' Given a manifest, run the easyplater algorithm on a single plate. **TO DO: Avi and/or Micah, elaborate on this.**
 #'
-#' @param manifest_df Data frame or tibble with a `SampleID` column, a plate column (default: "plate", but this can be changed with `plate_col` argument), and additional columns for each variable to be used for plate design score. See [easyplater::example_manifest] for an example.
+#' @param manifest_df Data frame or tibble with a `SampleID` column, a plate column (default: "plate", but this can be changed with `plate_col` argument), and additional columns for each variable to be used for plate design score. See [easyplater::input_manifest] for an example.
 #' @param plateID Character vector. Value from column specified by `plate_col` to generate a  deconvolved plate for. If NULL (default), every plate in the manifest will be deconvolved.
 #' @param columns_for_scoring Character vector. Names of columns to use for calculating plate design score.
 #' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
@@ -33,7 +33,7 @@
 #' @examples
 #' # Run easyplater in one step
 #' easyplater_design <- make_easyplater_design(
-#'   manifest_df = example_manifest,
+#'   manifest_df = input_manifest,
 #'   plateID = "plate 1",
 #'   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
 #'   column_weights = c(5, 5, 10, 4),
@@ -140,35 +140,56 @@ OlinkAnalyze::olink_displayPlateLayout
 
 #' Write plate manifest to Excel spreadsheet
 #'
-#' @param manifest_df
-#' @param output_path
-#' @param output_filename
-#' @param plate_col
-#' @param plateID
-#' @param display_col
+#' Write the plate manifest output by [easyplater::make_easyplater_design] to an excel spreadsheet.
 #'
-#' @returns
+#' @param x A data frame or tibble to write to disk.
+#' @param file String. File to write to.
+#' @param plate_col String. Name of column indicating the plate that samples belong to.
+#' @param display_col String. Column to draw labels for plate layout from.
+#'
+#' @returns Returns input `x` invisibly.
+#'
+#' @section Output:
+#' The first sheet in the output is a tabular manifest with the same contents as x. Additional sheets contain a plate layout matrix for each plate specified by the column controlled by the `plate_col` argument.
+#'
 #' @export
 #'
 #' @examples
-write_manifest_excel <- function(manifest_df, output_path, output_filename,
-                                 plate_col = "plate", plateID = NULL,
+#' \dontshow{
+#' .old_wd <- setwd(tempdir())
+#' }
+#' # This is an example output multi-plate manifest loaded with the easyplater package.
+#' str(output_manifest)
+#'
+#' # If a filename is given without a path, write_manifest_excel() will write
+#' # the file to the current working directory.
+#' write_manifest_excel(input_manifest, "input_manifest.xlsx")
+#'
+#' \dontshow{
+#' file.remove("input_manifest.xlsx")
+#' setwd(.old_wd)
+#' }
+write_manifest_excel <- function(x, file,
+                                 plate_col = "plate",
                                  display_col = "SampleID") {
-  plate_layouts <- split(manifest_df, manifest_df[[plate_col]]) |>
-    lapply(function(plate_df) {
+  plate_layouts <- split(x, x[[plate_col]]) |>
+    lapply(\(plate_df) {
       plate_layout <- matrix(plate_df[[display_col]], nrow = 8, ncol = 12, byrow = FALSE)
       colnames(plate_layout) <- 1:12
-      rownames(plate_layout) <- LETTERS[1:8]
+      plate_layout <- data.frame("." = LETTERS[1:8]) |> cbind(plate_layout)
+      # rownames(plate_layout) <- LETTERS[1:8]
 
-      plate_layout <- plate_layout |> as_tibble(rownames = ".")
+      # plate_layout <- plate_layout |> as_tibble(rownames = ".")
       return(plate_layout)
     })
 
   c(
-    list(Manifest = manifest_df),
+    list(Manifest = x),
     plate_layouts
   ) |>
-    writexl::write_xlsx(path = file.path(output_path, output_filename))
+    writexl::write_xlsx(path = file.path(file))
+
+  invisible(x)
 }
 
 
