@@ -142,12 +142,12 @@ OlinkAnalyze::olink_displayPlateLayout
 #'
 #' Write the plate manifest output by [easyplater::make_easyplater_design] to an excel spreadsheet.
 #'
-#' @param x A data frame or tibble to write to disk.
+#' @param manifest_df A data frame or tibble to write to disk.
 #' @param file String. File to write to.
 #' @param plate_col String. Name of column indicating the plate that samples belong to.
 #' @param display_col String. Column to draw labels for plate layout from.
 #'
-#' @returns Returns input `x` invisibly.
+#' @returns Returns input `manifest_df` invisibly.
 #'
 #' @section Output:
 #' The first sheet in the output is a tabular manifest with the same contents as x. Additional sheets contain a plate layout matrix for each plate specified by the column controlled by the `plate_col` argument.
@@ -163,16 +163,16 @@ OlinkAnalyze::olink_displayPlateLayout
 #'
 #' # If a filename is given without a path, write_manifest_excel() will write
 #' # the file to the current working directory.
-#' write_manifest_excel(input_manifest, "input_manifest.xlsx")
+#' write_manifest_excel(output_manifest, "output_manifest.xlsx")
 #'
 #' \dontshow{
-#' file.remove("input_manifest.xlsx")
+#' file.remove("output_manifest.xlsx")
 #' setwd(.old_wd)
 #' }
-write_manifest_excel <- function(x, file,
+write_manifest_excel <- function(manifest_df, file,
                                  plate_col = "plate",
                                  display_col = "SampleID") {
-  plate_layouts <- split(x, x[[plate_col]]) |>
+  plate_layouts <- split(manifest_df, manifest_df[[plate_col]]) |>
     lapply(\(plate_df) {
       plate_layout <- matrix(plate_df[[display_col]], nrow = 8, ncol = 12, byrow = FALSE)
       colnames(plate_layout) <- 1:12
@@ -184,13 +184,10 @@ write_manifest_excel <- function(x, file,
     })
 
   c(
-    list(Manifest = x),
+    list(Manifest = manifest_df),
     plate_layouts
   ) |>
     writexl::write_xlsx(path = file.path(file))
 
-  invisible(x)
+  invisible(manifest_df)
 }
-
-
-
