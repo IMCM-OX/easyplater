@@ -3,7 +3,7 @@ test_that("example_manifest.csv can be read with readr::read_csv() and is identi
     object = {
       readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
     },
-    expected = example_manifest
+    expected = input_manifest
   )
 })
 
@@ -21,7 +21,7 @@ test_that("example_manifest.csv can be read with utils::read.csv() and the conte
     object = {
       readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
     },
-    expected = example_manifest,
+    expected = input_manifest,
     ignore_attr = TRUE
   )
 })

@@ -1259,3 +1259,4 @@ plate_df_aux <- tibble::tribble(
   "PC5",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "H", "H12"
 )
 saveRDS(plate_df_aux, test_path("fixtures", "plate_df_aux.rds"))
+
