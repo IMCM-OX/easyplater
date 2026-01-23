@@ -99,3 +99,24 @@ write_manifest_excel <- function(manifest_df, file,
 
   invisible(manifest_df)
 }
+
+write_plate_layout_html <- function(manifest_df, html_filepath = "plate_layouts.html",
+                                    plate_col = "plate",
+                                    display_cols = NULL,
+                                    plate_size = 96,
+                                    include_label = TRUE,
+                                    html_title = "Plate layouts") {
+
+  if (is.null(display_cols)) {
+    display_cols <- setdiff(colnames(output_manifest), c("plate", "column", "row", "well"))
+  }
+
+  plate_list <- split(manifest_df, manifest_df[[plate_col]])
+
+  html_dir <- dirname(html_filepath)
+  html_file <- basename(html_filepath)
+
+  rmarkdown::render(input = fs::path_package("rmd", "plate_layouts-format.Rmd", package = "easyplater"),
+                    output_dir = html_dir,
+                    output_file = html_file)
+}
