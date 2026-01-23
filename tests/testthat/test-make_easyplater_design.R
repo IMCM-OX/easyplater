@@ -1,7 +1,8 @@
 test_that("example_manifest.csv can be read with readr::read_csv() and is identical to the builtin example_manifest", {
   expect_identical(
     object = {
-      readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
+      readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
+                      show_col_types = FALSE)
     },
     expected = input_manifest
   )
@@ -10,7 +11,8 @@ test_that("example_manifest.csv can be read with readr::read_csv() and is identi
 test_that("example_manifest.csv can be read with readr::read_csv() and is identical to the manifest_df test fixture", {
   expect_identical(
     object = {
-      readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
+      readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
+                      show_col_types = FALSE)
     },
     expected = readRDS(test_path("fixtures", "manifest_df.rds"))
   )
@@ -19,7 +21,8 @@ test_that("example_manifest.csv can be read with readr::read_csv() and is identi
 test_that("example_manifest.csv can be read with utils::read.csv() and the contents are identical to the builtin example_manifest (except for attributes)", {
   expect_identical(
     object = {
-      readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
+      readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
+                      show_col_types = FALSE)
     },
     expected = input_manifest,
     ignore_attr = TRUE
@@ -29,7 +32,8 @@ test_that("example_manifest.csv can be read with utils::read.csv() and the conte
 test_that("make_easyplater_design() returns the same single plate as the original example", {
   expect_identical(
     object = {
-      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
+      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
+                                     show_col_types = FALSE)
       # Prep masks
       well_pair_distances_df <- easyplater:::make_well_distance_df(96)
       well_distances_matrix <- easyplater:::make_well_distances_matrix(96)
@@ -65,7 +69,8 @@ test_that("make_easyplater_design() returns the same single plate as the origina
 test_that("make_easyplater_design() returns the same single plate as the original example with minimal params", {
   expect_identical(
     object = {
-      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
+      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
+                                     show_col_types = FALSE)
       make_easyplater_design(
         manifest_df = manifest_df,
         plateID = "plate 1",
@@ -83,7 +88,8 @@ test_that("make_easyplater_design() returns the same single plate as the origina
 test_that("make_easyplater_design() exits with error if plate_size != 96", {
   expect_error(
     object = {
-      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
+      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
+                                     show_col_types = FALSE)
       # Make a list of the plates:
       plates <- stringr::str_sort(unique(manifest_df$plate), numeric = TRUE)
       make_easyplater_design(
@@ -103,7 +109,8 @@ test_that("make_easyplater_design() exits with error if plate_size != 96", {
 test_that("make_easyplater_design() returns the same multi-plate manifest as the original example", {
   expect_identical(
     object = {
-      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"))
+      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
+                                     show_col_types = FALSE)
       make_easyplater_design(
         manifest_df = manifest_df,
         plateID = NULL,
@@ -115,5 +122,34 @@ test_that("make_easyplater_design() returns the same multi-plate manifest as the
       )
     },
     expected = readRDS(test_path("fixtures", "easy_multiplate_df.rds"))
+  )
+})
+
+test_that("write_manifest_excel() errors when each plate doesn't have exactly 96 samples", {
+  expect_error(
+    object = {
+      output_manifest_missing_row <- output_manifest[2:nrow(output_manfest),]
+      write_dir = tempdir()
+      write_manifest_excel(output_manifest_missing_row, file.path(write_dir, "output_manifest.xlsx"))
+      file.remove(file.path(write_dir, "output_manifest.xlsx"))
+    },
+    class = "simpleError"
+  )
+})
+
+# test_that("write_manifest_excel() reorders rows into the correct order for mapping to layout matrix", {
+#
+# })
+
+test_that("write_manifest_excel() errors when given well ids that deviate from the complete 96-well complete set", {
+  expect_error(
+    object = {
+      output_manifest_well_ids_deviate <- output_manifest
+      output_manifest_well_ids_deviate$well[1] <- "a1"
+      write_dir = tempdir()
+      write_manifest_excel(output_manifest_well_ids_deviate, file.path(write_dir, "output_manifest.xlsx"))
+      file.remove(file.path(write_dir, "output_manifest.xlsx"))
+    },
+    class = "simpleError"
   )
 })

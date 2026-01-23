@@ -34,5 +34,6 @@ Imports:
     OlinkAnalyze,
     rlang,
     stats,
+    tidyr,
     withr,
     writexl

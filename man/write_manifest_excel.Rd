@@ -4,19 +4,27 @@
 \alias{write_manifest_excel}
 \title{Write plate manifest to Excel spreadsheet}
 \usage{
-write_manifest_excel(x, file, plate_col = "plate", display_col = "SampleID")
+write_manifest_excel(
+  manifest_df,
+  file,
+  plate_col = "plate",
+  display_col = "SampleID",
+  plate_size = 96
+)
 }
 \arguments{
-\item{x}{A data frame or tibble to write to disk.}
+\item{manifest_df}{A data frame or tibble to write to disk.}
 
 \item{file}{String. File to write to.}
 
 \item{plate_col}{String. Name of column indicating the plate that samples belong to.}
 
 \item{display_col}{String. Column to draw labels for plate layout from.}
+
+\item{plate_size}{Numeric. Size of plate. Currently, anything other than 96 will return error.}
 }
 \value{
-Returns input \code{x} invisibly.
+Returns input \code{manifest_df} invisibly.
 }
 \description{
 Write the plate manifest output by \link{make_easyplater_design} to an excel spreadsheet.
@@ -30,15 +38,12 @@ The first sheet in the output is a tabular manifest with the same contents as x.
 \dontshow{
 .old_wd <- setwd(tempdir())
 }
-# This is an example output multi-plate manifest loaded with the easyplater package.
-str(output_manifest)
-
 # If a filename is given without a path, write_manifest_excel() will write
 # the file to the current working directory.
-write_manifest_excel(input_manifest, "input_manifest.xlsx")
+write_manifest_excel(output_manifest, "output_manifest.xlsx")
 
 \dontshow{
-file.remove("input_manifest.xlsx")
+file.remove("output_manifest.xlsx")
 setwd(.old_wd)
 }
 }

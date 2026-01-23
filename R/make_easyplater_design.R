@@ -1,3 +1,6 @@
+# Avoid “no visible binding” R CMD CHECK note:
+well <- let <- num <- NULL
+
 #' Design a plate using the easyplater algorithm
 #'
 #' Given a manifest, run the easyplater algorithm on a single plate. **TO DO: Avi and/or Micah, elaborate on this.**
@@ -100,7 +103,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
       set.seed(plate_seeds[[p]])
 
       print(paste0("[:::] ", p, " [:::]"))
-      print("Getting and formatting plate data fram from manifest.")
+      print("Getting and formatting plate data from manifest.")
       plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, p, columns_for_scoring, cols_to_categorize, imbalance_fixer,
                                                              plate_size, plate_wells, internal_control_well_indices, internal_control_ids)
 
@@ -124,7 +127,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
                                                           plate_size, internal_control_well_indices,scoring_mask,
                                                           pds_local_weight, patch_weight)
 
-      print("Store the easyPlateR plate design in a data frame.")
+      print("Storing the easyplater plate design in a data frame.")
       easy_plates_list[[p]] <- make_easyplater_design_aux(plate_df_list, samples_final_order, columns_for_scoring)
     }
   })
@@ -146,6 +149,7 @@ OlinkAnalyze::olink_displayPlateLayout
 #' @param file String. File to write to.
 #' @param plate_col String. Name of column indicating the plate that samples belong to.
 #' @param display_col String. Column to draw labels for plate layout from.
+#' @param plate_size Numeric. Size of plate. Currently, anything other than 96 will return error.
 #'
 #' @returns Returns input `manifest_df` invisibly.
 #'
@@ -158,9 +162,6 @@ OlinkAnalyze::olink_displayPlateLayout
 #' \dontshow{
 #' .old_wd <- setwd(tempdir())
 #' }
-#' # This is an example output multi-plate manifest loaded with the easyplater package.
-#' str(output_manifest)
-#'
 #' # If a filename is given without a path, write_manifest_excel() will write
 #' # the file to the current working directory.
 #' write_manifest_excel(output_manifest, "output_manifest.xlsx")
@@ -171,7 +172,51 @@ OlinkAnalyze::olink_displayPlateLayout
 #' }
 write_manifest_excel <- function(manifest_df, file,
                                  plate_col = "plate",
-                                 display_col = "SampleID") {
+                                 display_col = "SampleID",
+                                 plate_size = 96) {
+  # Check that plate size is 96
+  if (plate_size != 96) {
+    stop("plate_size (", plate_size, ") != 96: write_manifest_excel() is currently only implemented for 96-well plates")
+  }
+
+  # Check that total number of input wells are a multiple of plate size
+  if (nrow(manifest_df) %% plate_size != 0) {
+    stop("nrow(manifest_df) (", nrow(manifest_df),") must be a multiple of plate_size (", plate_size, ")")
+  }
+
+  # Check that well ids are in "A1" or "A01" format
+  if (plate_size == 96) {
+    plate_num_rows <- 8
+    plate_num_cols <- 12
+  }
+
+  expected_wells <- paste0(rep(LETTERS[1:plate_num_rows], times = plate_num_cols),
+                           rep(1:plate_num_cols, each = plate_num_rows))
+
+  padded_wells <- paste0(rep(LETTERS[1:plate_num_rows], times = plate_num_cols),
+                         rep(stringr::str_pad(1:plate_num_cols, 2, pad = "0"), each = plate_num_rows))
+
+  tryCatch({
+    manifest_wells <- manifest_df |> dplyr::distinct(well) |>
+      tidyr::separate_wider_regex(well, patterns = c('let' = '^[A-Z]*', 'num' = '[0-9]*$'), cols_remove = FALSE) |>
+      dplyr::arrange(as.numeric(num), let) |>
+      dplyr::pull(well)
+  }, error = function(msg) {
+    message("Error: `well` does not start with capital A-Z and end with 0-9.")
+  })
+
+
+  wells_are_expected <- sum(manifest_wells %in% expected_wells) == length(expected_wells)
+  wells_are_padded <- sum(manifest_wells %in% padded_wells) == length(padded_wells)
+
+  if (!(wells_are_expected | wells_are_padded)) {
+    stop("'well' column contains unexpected well IDs. Well IDs must be in 'A1' or 'A01' format.")
+  }
+
+  # Reorder well ids so that they fill the plate layout matrix by column (not by row)
+
+
+  # Construct plate layouts
   plate_layouts <- split(manifest_df, manifest_df[[plate_col]]) |>
     lapply(\(plate_df) {
       plate_layout <- matrix(plate_df[[display_col]], nrow = 8, ncol = 12, byrow = FALSE)

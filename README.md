@@ -22,8 +22,8 @@ You can install the development version of `easyplater` from
 [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("pak")
-pak::pak("IMCM-OX/easyplater")
+# install.packages("remotes")
+remotes::install_github("IMCM-OX/easyplater")
 ```
 
 ## Example usage
@@ -31,8 +31,8 @@ pak::pak("IMCM-OX/easyplater")
 ``` r
 library(easyplater)
 
-# easyplater comes with a built-in example plate manifest
-example_manifest
+# An example input manifest data frame comes loaded with easyplater
+input_manifest
 #> # A tibble: 423 × 9
 #>    SampleID Cohort Group   Sex   Age plate   column   row   well 
 #>       <dbl> <chr>  <chr> <dbl> <dbl> <chr>   <chr>    <chr> <chr>
@@ -49,8 +49,8 @@ example_manifest
 #> # ℹ 413 more rows
 
 # Run easyplater in one step
-easyplater_design <- make_easyplater_design(
-  manifest_df = example_manifest,
+easyplater_manifest <- make_easyplater_design(
+  manifest_df = input_manifest,
   plateID = "plate 1",
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),
@@ -59,13 +59,16 @@ easyplater_design <- make_easyplater_design(
   plate_size = 96
 )
 #> [1] "[:::] plate 1 [:::]"
-#> [1] "Getting and formatting plate data fram from manifest."
+#> [1] "Getting and formatting plate data from manifest."
 #> [1] "Allocating similar samples to distal wells."
 #> [1] "Performing sample switching search."
-#> [1] "Store the easyPlateR plate design in a data frame."
+#> [1] "Storing the easyplater plate design in a data frame."
+
+# Write the resulting manifest and plate layouts to an excel spreadsheet
+write_manifest_excel(easyplater_manifest, "easyplater_output.xlsx")
 
 # Use a function exported from the OlinkAnalyze package to display plate layout
-olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = TRUE)
+olink_displayPlateLayout(data = easyplater_manifest, fill.color = "Group", include.label = TRUE)
 #> Warning: Removed 16 rows containing missing values or values outside the scale range
 #> (`geom_text()`).
 ```
