@@ -174,8 +174,12 @@ write_manifest_excel <- function(manifest_df, file,
                                  plate_col = "plate",
                                  display_col = "SampleID",
                                  plate_size = 96) {
+
   # Check that plate size is 96
-  if (plate_size != 96) {
+  if (plate_size == 96) {
+    plate_num_rows <- 8
+    plate_num_cols <- 12
+  } else {
     stop("plate_size (", plate_size, ") != 96: write_manifest_excel() is currently only implemented for 96-well plates")
   }
 
@@ -184,16 +188,11 @@ write_manifest_excel <- function(manifest_df, file,
     stop("nrow(manifest_df) (", nrow(manifest_df),") must be a multiple of plate_size (", plate_size, ")")
   }
 
-  # Check that well ids are in "A1" or "A01" format
-  if (plate_size == 96) {
-    plate_num_rows <- 8
-    plate_num_cols <- 12
-  }
-
-  expected_wells <- paste0(rep(LETTERS[1:plate_num_rows], times = plate_num_cols),
+  # Check that wells are in A1 or A01 format
+  A1_wells <- paste0(rep(LETTERS[1:plate_num_rows], times = plate_num_cols),
                            rep(1:plate_num_cols, each = plate_num_rows))
 
-  padded_wells <- paste0(rep(LETTERS[1:plate_num_rows], times = plate_num_cols),
+  A01_wells <- paste0(rep(LETTERS[1:plate_num_rows], times = plate_num_cols),
                          rep(stringr::str_pad(1:plate_num_cols, 2, pad = "0"), each = plate_num_rows))
 
   tryCatch({
@@ -205,26 +204,26 @@ write_manifest_excel <- function(manifest_df, file,
     message("Error: `well` does not start with capital A-Z and end with 0-9.")
   })
 
+  wells_in_A1 <- sum(manifest_wells %in% A1_wells) == length(A1_wells)
+  wells_in_A01 <- sum(manifest_wells %in% A01_wells) == length(A01_wells)
 
-  wells_are_expected <- sum(manifest_wells %in% expected_wells) == length(expected_wells)
-  wells_are_padded <- sum(manifest_wells %in% padded_wells) == length(padded_wells)
-
-  if (!(wells_are_expected | wells_are_padded)) {
+  if (!(wells_in_A1 | wells_in_A01)) {
     stop("'well' column contains unexpected well IDs. Well IDs must be in 'A1' or 'A01' format.")
   }
-
-  # Reorder well ids so that they fill the plate layout matrix by column (not by row)
-
 
   # Construct plate layouts
   plate_layouts <- split(manifest_df, manifest_df[[plate_col]]) |>
     lapply(\(plate_df) {
+      # Reorder well ids so that they fill the plate layout matrix by column (not by row)
+      if (wells_in_A1) {
+        plate_df <- plate_df[match(A1_wells, plate_df$well),]
+      } else if (wells_in_A01) {
+        plate_df <- plate_df[match(A01_wells, plate_df$well),]
+      }
       plate_layout <- matrix(plate_df[[display_col]], nrow = 8, ncol = 12, byrow = FALSE)
       colnames(plate_layout) <- 1:12
       plate_layout <- data.frame("." = LETTERS[1:8]) |> cbind(plate_layout)
-      # rownames(plate_layout) <- LETTERS[1:8]
 
-      # plate_layout <- plate_layout |> as_tibble(rownames = ".")
       return(plate_layout)
     })
 
