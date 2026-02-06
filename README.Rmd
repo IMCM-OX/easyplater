@@ -35,29 +35,62 @@ remotes::install_github("IMCM-OX/easyplater")
 
 ```{r example, warnings=FALSE}
 library(easyplater)
+```
 
-# An example input manifest data frame comes loaded with easyplater
+An example input manifest data frame comes loaded with easyplater.
+```{r}
 input_manifest
+```
 
-# Run easyplater in one step
+You can run easyplater on a multi-plate manifest data frame in one step.
+```{r}
 easyplater_manifest <- make_easyplater_design(
   manifest_df = input_manifest,
-  plateID = "plate 1",
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),
   cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
   imbalance_fixer = list(TRUE, "Group", list("D1", "HC1", "D7", "D8"), 3),
   plate_size = 96
 )
+```
 
-# Write the resulting manifest and plate layouts to an excel spreadsheet
+The output is a tibble with the plate locations deconvolved from the `columns_for_scoring`.
+```{r}
+easyplater_manifest
+```
+
+We can write the resulting manifest and plate layouts to an excel spreadsheet.
+```{r}
 write_manifest_excel(easyplater_manifest, "easyplater_output.xlsx")
-
-# Use a function exported from the OlinkAnalyze package to display plate layout
-olink_displayPlateLayout(data = easyplater_manifest, fill.color = "Group", include.label = TRUE)
 ```
 
 ```{r, include=FALSE}
 file.remove("easyplater_output.xlsx")
 ```
 
+## Visualizing outputs
+
+We can then use a function exported from the OlinkAnalyze package to display a single plate layout...
+```{r, warning=FALSE}
+## Subset manifest to a single plate.
+plate1_manifest <- easyplater_manifest[easyplater_manifest$plate == "plate 1",]
+## Plot plate layout
+olink_displayPlateLayout(data = plate1_manifest, fill.color = "Group", include.label = TRUE)
+```
+
+or generate an interactive html report of plate layouts colored by deconvolved variables
+```{r, eval=FALSE, fig.width=3, fig.height=6}
+write_plate_layout_html(easyplater_manifest)
+```
+
+![](inst/png/write_plate_layouts_html_screenshot.png)
+
+## Troubleshooting
+
+```{r}
+# An example input manifest data frame comes loaded with easyplater
+input_manifest
+
+# Note also that an output manifest data frame also comes loaded with easyplater, which should be identical to the output from make_easyplater_design() above.
+output_manifest
+```
