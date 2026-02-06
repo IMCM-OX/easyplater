@@ -100,15 +100,68 @@ write_manifest_excel <- function(manifest_df, file,
   invisible(manifest_df)
 }
 
-write_plate_layout_html <- function(manifest_df, html_filepath = "plate_layouts.html",
-                                    plate_col = "plate",
-                                    display_cols = NULL,
-                                    plate_size = 96,
-                                    include_label = TRUE,
-                                    html_title = "Plate layouts") {
 
-  if (is.null(display_cols)) {
-    display_cols <- setdiff(colnames(output_manifest), c("plate", "column", "row", "well"))
+#' Write plate layouts to html report
+#'
+#' Writes plate layouts from an easyplater output manifest to an html report. Each plate is in a separate section, and each variable is organized into tabs.
+#'
+#' ## Customizing the html output
+#' The default RMarkdown template wrapping [OlinkAnalyze::olink_displayPlateLayout()] and specifying how to format the report can be found by running `fs::path_package("rmd", "plate_layouts-format.Rmd", package = "easyplater")`. To customize the output html format, you can copy this file and edit it as desired and pass it to `write_plate_layout_html()` with the `rmd_template` argument.
+#'
+#' @param manifest_df Data frame (or tibble). Output of [easyplater::make_easyplater_design()].
+#' @param html_filepath String. Path to output file.
+#' @param plate_col String. Name of column indicating the plate ID.
+#' @param color_by String. Names of columns containing variables to be displayed in plate wells. Defaults to all columns except "plate", "column", "row", "well", and the one specified by the `plate_col` argument.
+#' @param plate_size Numeric. Note: This function is currently only implemented for 96-well plates.
+#' @param include_label Character vector. Names of variables to be labeled in plate wells. Defaults to be identical to `color_by` argument. It can be handy to leave out columms with variables that are too large to display.
+#' @param include_legend Character vector. Names of variables for which to plot a legend. Defaults to be identical to `color_by` argument, except "SampleID". It can be handy to leave out columms with too many unique values to display in a legend.
+#' @param html_title String. Main title of html report.
+#' @param output_format The R Markdown output format to convert to. This should either be "html_document" (default) or an output format object (e.g. [rmarkdown::html_document()] or [rmdformats::robobook()])
+#' @param fig_height Numeric. Figure height in inches.
+#' @param fig_width Numeric. Figure width in inches.
+#' @param rmd_template The input R Markdown file to be rendered. See `Customizing the html output` below for details.
+#'
+#' @returns The compiled document is written into the output file, and the path of the output file is returned.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' write_plate_layout_html(output_manifest)
+#' }
+write_plate_layout_html <- function(manifest_df,
+                                    html_filepath = "plate_layouts.html",
+                                    plate_col = "plate",
+                                    color_by = NULL,
+                                    plate_size = 96,
+                                    include_label = NULL,
+                                    include_legend = NULL,
+                                    html_title = "Plate layouts",
+                                    output_format = "html_document",
+                                    fig_height = 8,
+                                    fig_width = 10,
+                                    rmd_template = NULL) {
+
+  rlang::check_installed(c("rmarkdown"), reason = "to use `write_plate_layout_html()`")
+
+  # Check that plate size is 96
+  if (plate_size != 96) {
+    stop("plate_size (", plate_size, ") != 96: write_plate_layout_html() is currently only implemented for 96-well plates")
+  }
+
+  if (is.null(rmd_template)) {
+    rmd_template <- fs::path_package("rmd", "plate_layouts-format.Rmd", package = "easyplater")
+  }
+
+  if (is.null(color_by)) {
+    color_by <- setdiff(colnames(manifest_df), c(plate_col, "plate", "column", "row", "well"))
+  }
+
+  if (is.null(include_label)) {
+    include_label <- color_by
+  }
+
+  if (is.null(include_legend)) {
+    include_legend <- color_by[!color_by %in% "SampleID"]
   }
 
   plate_list <- split(manifest_df, manifest_df[[plate_col]])
@@ -116,7 +169,8 @@ write_plate_layout_html <- function(manifest_df, html_filepath = "plate_layouts.
   html_dir <- dirname(html_filepath)
   html_file <- basename(html_filepath)
 
-  rmarkdown::render(input = fs::path_package("rmd", "plate_layouts-format.Rmd", package = "easyplater"),
+  rmarkdown::render(input = rmd_template,
                     output_dir = html_dir,
-                    output_file = html_file)
+                    output_file = html_file,
+                    output_format = output_format)
 }
