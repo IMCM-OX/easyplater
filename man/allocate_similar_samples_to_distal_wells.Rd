@@ -49,7 +49,7 @@ allocate_similar_samples_to_distal_wells(
 
 \item{pds_local_weight}{Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.}
 
-\item{patch_weight}{down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
+\item{patch_weight}{Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
 
 \item{initial_perms}{Numeric scalar. Initial number of permutations to use.}
 }
@@ -66,7 +66,7 @@ List of length 4.
 A short description... \strong{TO DO: Avi, describe this.}
 }
 \examples{
-example_manifest
+input_manifest
 
 cols_for_scoring <- names(example_plate_df)[2:5]
 cols_to_categorize <- list(c("Age", 10, NULL, "AgeGroup"))
@@ -77,7 +77,7 @@ ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5"
 
 # Getting and formatting plate data from from manifest.
 plate_df_list <- get_and_format_plate_df_from_manifest(
-  example_manifest, "plate 1", cols_for_scoring, cols_to_categorize,
+  input_manifest, "plate 1", cols_for_scoring, cols_to_categorize,
   imbalance_fixer, 96, plate_wells, ic_well_idcs, ic_ids
   )
 

@@ -24,7 +24,7 @@ calc_pds_local(
 
 \item{plate_n_cols}{Numeric scalar. Default 12.}
 
-\item{patch_weight}{down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
+\item{patch_weight}{Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
 }
 \value{
 A numeric scalar.

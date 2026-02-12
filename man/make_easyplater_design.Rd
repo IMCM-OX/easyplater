@@ -6,7 +6,7 @@
 \usage{
 make_easyplater_design(
   manifest_df,
-  plateID,
+  plateID = NULL,
   columns_for_scoring,
   column_weights,
   cols_to_categorize,
@@ -25,13 +25,15 @@ make_easyplater_design(
   wins_required = 10,
   max_attempts = 100,
   pds_local_weight = 1,
-  patch_weight = NULL
+  patch_weight = NULL,
+  plate_col = "plate",
+  seed = 1
 )
 }
 \arguments{
-\item{manifest_df}{Data frame or tibble with a \code{SampleID} column, a \code{plateID} column, and additional columns for each variable to be used for plate design score. See \link{example_manifest} for an example.}
+\item{manifest_df}{Data frame or tibble with a \code{SampleID} column, a plate column (default: "plate", but this can be changed with \code{plate_col} argument), and additional columns for each variable to be used for plate design score. See \link{input_manifest} for an example.}
 
-\item{plateID}{String. Value from \code{plateID} column to generate a plate for.}
+\item{plateID}{Character vector. Value from column specified by \code{plate_col} to generate a  deconvolved plate for. If NULL (default), every plate in the manifest will be deconvolved.}
 
 \item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
 
@@ -69,10 +71,14 @@ make_easyplater_design(
 
 \item{pds_local_weight}{Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.}
 
-\item{patch_weight}{down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
+\item{patch_weight}{Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
+
+\item{plate_col}{String. Name of the column specifying which plate each sample belongs to. Default: "plate".}
+
+\item{seed}{Numeric scalar. Seed to set for reproducibility. Default: 1.}
 }
 \value{
-\strong{TO DO: Micah, fill this in.}
+A data.frame (of class tibble) with the same contents as the input, but with sample locations deconvolved from the clinical variables specified in \code{columns_for_scoring} argument, and with columns in \code{cols_to_categorize} converted into bins.
 }
 \description{
 Given a manifest, run the easyplater algorithm on a single plate. \strong{TO DO: Avi and/or Micah, elaborate on this.}
@@ -80,7 +86,7 @@ Given a manifest, run the easyplater algorithm on a single plate. \strong{TO DO:
 \examples{
 # Run easyplater in one step
 easyplater_design <- make_easyplater_design(
-  manifest_df = example_manifest,
+  manifest_df = input_manifest,
   plateID = "plate 1",
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),

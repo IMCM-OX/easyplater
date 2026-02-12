@@ -14,9 +14,9 @@
 #'
 #' @examples
 #' # We can use easyplater's built-in example manifest
-#' str(example_manifest)
+#' str(input_manifest)
 #' get_and_format_plate_df_from_manifest(
-#'   manifest_df = example_manifest,
+#'   manifest_df = input_manifest,
 #'   plateID = "plate 1",
 #'   columns_for_scoring = c("Cohort", "Group", "Sex", "AgeGroup"),
 #'   cols_to_categorize = list(c("Age", "10", "AgeGroup")),

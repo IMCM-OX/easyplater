@@ -1,9 +1,16 @@
-#' Example manifest
+#' Example input manifest
 #'
 #' An example manifest in a format compatible with the `easyplater`'s well randomization algorithm.
 #'
 #' @format A data frame with 423 rows and 8 columns.
-"example_manifest"
+"input_manifest"
+
+#' Example output manifest
+#'
+#' An example manifest created by running `easyplater::make_easyplater_design`.
+#'
+#' @format A data frame with 480 rows and 8 columns.
+"output_manifest"
 
 #' Example pre-processed plate data frame
 #'

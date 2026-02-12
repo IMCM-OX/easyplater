@@ -17,9 +17,9 @@ get_and_format_plate_df_from_manifest(
 )
 }
 \arguments{
-\item{manifest_df}{Data frame or tibble with a \code{SampleID} column, a \code{plateID} column, and additional columns for each variable to be used for plate design score. See \link{example_manifest} for an example.}
+\item{manifest_df}{Data frame or tibble with a \code{SampleID} column, a plate column (default: "plate", but this can be changed with \code{plate_col} argument), and additional columns for each variable to be used for plate design score. See \link{input_manifest} for an example.}
 
-\item{plateID}{String. Value from \code{plateID} column to generate a plate for.}
+\item{plateID}{Character vector. Value from column specified by \code{plate_col} to generate a  deconvolved plate for. If NULL (default), every plate in the manifest will be deconvolved.}
 
 \item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
 
@@ -47,9 +47,9 @@ This function subsets a single plate from the input manifest and wrangles the da
 }
 \examples{
 # We can use easyplater's built-in example manifest
-str(example_manifest)
+str(input_manifest)
 get_and_format_plate_df_from_manifest(
-  manifest_df = example_manifest,
+  manifest_df = input_manifest,
   plateID = "plate 1",
   columns_for_scoring = c("Cohort", "Group", "Sex", "AgeGroup"),
   cols_to_categorize = list(c("Age", "10", "AgeGroup")),
