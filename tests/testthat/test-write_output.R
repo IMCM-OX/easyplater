@@ -53,3 +53,25 @@ test_that("write_manifest_excel() errors when given well ids that deviate from t
     class = "simpleError"
   )
 })
+
+test_that("write_plate_layout_html() works on example output manifest", {
+  expect_message(
+    object = {
+      write_dir = tempdir()
+      write_plate_layout_html(output_manifest, html_filepath = file.path(write_dir, "plate_layouts.html"))
+      file.remove(file.path(write_dir, "plate_layouts.html"))
+    },
+    regexp = "Output created"
+  )
+})
+
+test_that("write_plate_layout_html() errors if asked to render pdf document", {
+  expect_error(
+    object = {
+      write_dir = tempdir()
+      write_plate_layout_html(output_manifest, html_filepath = file.path(write_dir, "plate_layouts.html"), output_format = "pdf_document")
+      file.remove(file.path(write_dir, "plate_layouts.html"))
+    },
+    class = "simpleError"
+  )
+})

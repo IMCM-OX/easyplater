@@ -148,6 +148,16 @@ write_plate_layout_html <- function(manifest_df,
     stop("plate_size (", plate_size, ") != 96: write_plate_layout_html() is currently only implemented for 96-well plates")
   }
 
+  # Error if user asks to render pdf_document or word_document
+  if (identical(output_format, rmarkdown::pdf_document) |
+      identical(output_format, rmarkdown::pdf_document()) |
+      identical(output_format, rmarkdown::word_document) |
+      identical(output_format, rmarkdown::word_document())) {
+    stop("Tabs in the template document cannot be rendered as pdf or word documents. Please use an html-based document format, like `rmarkdown::html_document` (default) or `rmdformats::robobook`.")
+  } else if (output_format %in% c("pdf_document", "word_document")) {
+    stop("Tabs in the template document cannot be rendered as pdf or word documents. Please use an html-based document format, like 'html_document' (default) or `rmdformats::robobook`.")
+  }
+
   if (is.null(rmd_template)) {
     rmd_template <- fs::path_package("rmd", "plate_layouts-format.Rmd", package = "easyplater")
   }
