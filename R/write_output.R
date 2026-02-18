@@ -106,7 +106,7 @@ write_manifest_excel <- function(manifest_df, file,
 #' Writes plate layouts from an easyplater output manifest to an html report. Each plate is in a separate section, and each variable is organized into tabs.
 #'
 #' ## Customizing the html output
-#' The default RMarkdown template wrapping [OlinkAnalyze::olink_displayPlateLayout()] and specifying how to format the report can be found by running `fs::path_package("rmd", "plate_layouts-format.Rmd", package = "easyplater")`. To customize the output html format, you can copy this file and edit it as desired and pass it to `write_plate_layout_html()` with the `rmd_template` argument.
+#' The default R Markdown template wrapping [OlinkAnalyze::olink_displayPlateLayout()] and specifying how to format the report can be found by running `fs::path_package("extdata", "plate_layouts-format.Rmd", package = "easyplater")`. An example output html can be found by running `fs::path_package("extdata", "plate_layouts.html", package = "easyplater")`. To customize the output html format, you can copy this file and edit it as desired and pass it to `write_plate_layout_html()` with the `rmd_template` argument.
 #'
 #' @param manifest_df Data frame (or tibble). Output of [easyplater::make_easyplater_design()].
 #' @param html_filepath String. Path to output file.
