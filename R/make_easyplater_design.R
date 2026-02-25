@@ -7,7 +7,7 @@
 #' @param columns_for_scoring Character vector. Names of columns to use for calculating plate design score.
 #' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
 #' @param cols_to_categorize List of character vectors. **TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.**
-#' @param imbalance_fixer Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. **TO DO: Avi, explain this.**
+#' @param imbalance_fixer FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. **TO DO: Avi, explain this.**
 #' @param plate_size Numeric scalar. Size of plate. Note that currently `easyplater` is currently only implemented for 96-well plates.
 #' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
 #' @param internal_control_ids Character vector. Names of internal control wells.
@@ -38,14 +38,13 @@
 #'   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
 #'   column_weights = c(5, 5, 10, 4),
 #'   cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
-#'   imbalance_fixer = list(TRUE, "Group", list("D1", "HC1", "D7", "D8"), 3),
 #'   plate_size = 96
 #' )
 #'
 #' # Use a function exported from the OlinkAnalyze package to display plate layout
 #' olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = TRUE)
 make_easyplater_design <- function(manifest_df, plateID = NULL,
-                                   columns_for_scoring, column_weights, cols_to_categorize, imbalance_fixer,
+                                   columns_for_scoring, column_weights, cols_to_categorize, imbalance_fixer=FALSE,
                                    plate_size = 96,
                                    internal_control_well_indices = 86:95,
                                    internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),

@@ -9,7 +9,7 @@ get_and_format_plate_df_from_manifest(
   plateID,
   columns_for_scoring,
   cols_to_categorize,
-  imbalance_fixer,
+  imbalance_fixer = FALSE,
   plate_size,
   plate_wells,
   internal_control_well_indices,
@@ -25,7 +25,7 @@ get_and_format_plate_df_from_manifest(
 
 \item{cols_to_categorize}{List of character vectors. \strong{TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.}}
 
-\item{imbalance_fixer}{Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
+\item{imbalance_fixer}{FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 
 \item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
 
@@ -53,7 +53,6 @@ get_and_format_plate_df_from_manifest(
   plateID = "plate 1",
   columns_for_scoring = c("Cohort", "Group", "Sex", "AgeGroup"),
   cols_to_categorize = list(c("Age", "10", "AgeGroup")),
-  imbalance_fixer = list(TRUE,"Group",list("D1","HC1","D7","D8"),3),
   plate_size = 96,
   plate_wells = paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8)),
   internal_control_well_indices = 86:95,

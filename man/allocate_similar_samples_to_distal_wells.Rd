@@ -29,7 +29,7 @@ allocate_similar_samples_to_distal_wells(
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
-\item{imbalance_fixer}{Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
+\item{imbalance_fixer}{FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 
 \item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
 
@@ -83,7 +83,6 @@ plate_df_list <- get_and_format_plate_df_from_manifest(
 
 # Allocating similar samples to distal wells.
 col_weights <- c(5, 5, 10, 4)
-imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
 plate_size <- 96
 full_mask <- plate_size |>
   easyplater:::make_well_distances_matrix() |>

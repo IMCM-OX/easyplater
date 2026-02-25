@@ -35,7 +35,6 @@
 #'
 #' # Allocating similar samples to distal wells.
 #' col_weights <- c(5, 5, 10, 4)
-#' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
 #' plate_size <- 96
 #' full_mask <- plate_size |>
 #'   easyplater:::make_well_distances_matrix() |>

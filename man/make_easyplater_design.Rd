@@ -10,7 +10,7 @@ make_easyplater_design(
   columns_for_scoring,
   column_weights,
   cols_to_categorize,
-  imbalance_fixer,
+  imbalance_fixer = FALSE,
   plate_size = 96,
   internal_control_well_indices = 86:95,
   internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
@@ -41,7 +41,7 @@ make_easyplater_design(
 
 \item{cols_to_categorize}{List of character vectors. \strong{TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.}}
 
-\item{imbalance_fixer}{Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
+\item{imbalance_fixer}{FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 
 \item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
 
@@ -91,7 +91,6 @@ easyplater_design <- make_easyplater_design(
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),
   cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
-  imbalance_fixer = list(TRUE, "Group", list("D1", "HC1", "D7", "D8"), 3),
   plate_size = 96
 )
 
