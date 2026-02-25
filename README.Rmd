@@ -49,7 +49,6 @@ easyplater_manifest <- make_easyplater_design(
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),
   cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
-  imbalance_fixer = list(TRUE, "Group", list("D1", "HC1", "D7", "D8"), 3),
   plate_size = 96
 )
 ```

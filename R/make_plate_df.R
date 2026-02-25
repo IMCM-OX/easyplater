@@ -10,23 +10,20 @@
 #'  - The first element is data.frame for the specified plate with categorized columns specified in`cols_to_categorize` argument, and an additional column `imbalanceFix_vec`.
 #'  - The second element is a tibble with columns "SampleID", "plate", "column", "row", "well", plus columns specified in `columns_for_scoring` argument.
 #'
-#' @export
-#'
 #' @examples
 #' # We can use easyplater's built-in example manifest
 #' str(input_manifest)
-#' get_and_format_plate_df_from_manifest(
+#' easyplater:::get_and_format_plate_df_from_manifest(
 #'   manifest_df = input_manifest,
 #'   plateID = "plate 1",
 #'   columns_for_scoring = c("Cohort", "Group", "Sex", "AgeGroup"),
 #'   cols_to_categorize = list(c("Age", "10", "AgeGroup")),
-#'   imbalance_fixer = list(TRUE,"Group",list("D1","HC1","D7","D8"),3),
 #'   plate_size = 96,
 #'   plate_wells = paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8)),
 #'   internal_control_well_indices = 86:95,
 #'   internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
 #' )
-get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_for_scoring, cols_to_categorize, imbalance_fixer,
+get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_for_scoring, cols_to_categorize, imbalance_fixer=FALSE,
                                                   plate_size, plate_wells, internal_control_well_indices, internal_control_ids){
 
   # There are so many assumptions here that need to be checked! (Off the top of my head... Not an exhaustive list...):

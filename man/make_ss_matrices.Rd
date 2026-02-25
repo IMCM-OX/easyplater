@@ -11,7 +11,7 @@ make_ss_matrices(plate_df, column_weights, imbalance_fixer)
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
-\item{imbalance_fixer}{Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
+\item{imbalance_fixer}{FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 }
 \value{
 Length 3 list, containing three (plate size) x (plate size) matrices. The first element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. \strong{TO DO: Avi, explain this.}
@@ -25,5 +25,5 @@ str(example_plate_df)
 
 col_weights <- c(5, 5, 10, 4)
 imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)
+easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)
 }

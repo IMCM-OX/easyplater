@@ -35,5 +35,5 @@ str(example_plate_df)
 
 cols_for_scoring <- names(example_plate_df)[2:5]
 col_weights <- c(5, 5, 10, 4)
-calc_row_column_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
+easyplater:::calc_row_column_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
 }

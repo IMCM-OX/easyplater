@@ -29,7 +29,7 @@ allocate_similar_samples_to_distal_wells(
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
-\item{imbalance_fixer}{Length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
+\item{imbalance_fixer}{FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 
 \item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
 
@@ -76,14 +76,13 @@ ic_well_idcs <- c(86:95)
 ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
 
 # Getting and formatting plate data from from manifest.
-plate_df_list <- get_and_format_plate_df_from_manifest(
+plate_df_list <- easyplater:::get_and_format_plate_df_from_manifest(
   input_manifest, "plate 1", cols_for_scoring, cols_to_categorize,
   imbalance_fixer, 96, plate_wells, ic_well_idcs, ic_ids
   )
 
 # Allocating similar samples to distal wells.
 col_weights <- c(5, 5, 10, 4)
-imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
 plate_size <- 96
 full_mask <- plate_size |>
   easyplater:::make_well_distances_matrix() |>
@@ -93,7 +92,7 @@ scoring_mask <- plate_size |>
   easyplater:::make_well_distances_matrix() |>
   easyplater:::make_scoring_mask()
 
-allocate_similar_samples_to_distal_wells(
+easyplater:::allocate_similar_samples_to_distal_wells(
   plate_df_list, cols_for_scoring, col_weights, imbalance_fixer,
   full_mask, scoring_mask, splitting_ss_thresh = 0.5,
   ic_ids, ic_well_idcs)

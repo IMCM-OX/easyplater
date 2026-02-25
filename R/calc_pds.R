@@ -12,7 +12,6 @@
 #' @param plate_n_cols Numeric scalar. Default 12.
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
@@ -24,7 +23,8 @@
 #'   easyplater:::make_well_distances_matrix() |>
 #'   easyplater:::make_scoring_mask()
 #' ic_well_idcs <- c(86:95)
-#' calc_pds(example_plate_df, cols_for_scoring, col_weights, scoring_mask, 8, 12, ic_well_idcs)
+#' easyplater:::calc_pds(example_plate_df, cols_for_scoring, col_weights,
+#'                       scoring_mask, 8, 12, ic_well_idcs)
 calc_pds <- function(plate_df, columns_for_scoring, column_weights,
                      scoring_mask, plate_n_rows=8, plate_n_cols=12,
                      internal_control_well_indices,
@@ -49,7 +49,6 @@ calc_pds <- function(plate_df, columns_for_scoring, column_weights,
 #' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
@@ -57,7 +56,7 @@ calc_pds <- function(plate_df, columns_for_scoring, column_weights,
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
-#' calc_pds_local(example_plate_df, cols_for_scoring, col_weights, 8, 12)
+#' easyplater:::calc_pds_local(example_plate_df, cols_for_scoring, col_weights, 8, 12)
 calc_pds_local <- function(plate_df, columns_for_scoring, column_weights,
                            plate_n_rows, plate_n_cols,
                            patch_weight=NULL){
@@ -76,7 +75,6 @@ calc_pds_local <- function(plate_df, columns_for_scoring, column_weights,
 #' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
@@ -84,7 +82,7 @@ calc_pds_local <- function(plate_df, columns_for_scoring, column_weights,
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
-#' calc_patch_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
+#' easyplater:::calc_patch_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
 calc_patch_score <- function(plate_df, columns_for_scoring, column_weights,
                              plate_n_rows, plate_n_cols, patch_weight=NULL) {
 
@@ -142,7 +140,6 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights,
 #' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
@@ -150,7 +147,7 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights,
 #'
 #' cols_for_scoring <- names(example_plate_df)[2:5]
 #' col_weights <- c(5, 5, 10, 4)
-#' calc_row_column_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
+#' easyplater:::calc_row_column_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
 calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights,
                                   plate_n_rows, plate_n_cols) {
 
@@ -200,7 +197,6 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights,
 #' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
@@ -212,7 +208,8 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights,
 #'   easyplater:::make_well_distances_matrix() |>
 #'   easyplater:::make_scoring_mask()
 #' ic_well_idcs <- c(86:95)
-#' calc_pds_global(example_plate_df, cols_for_scoring, col_weights, scoring_mask, 8, 12, ic_well_idcs)
+#' easyplater:::calc_pds_global(example_plate_df, cols_for_scoring, col_weights,
+#'                              scoring_mask, 8, 12, ic_well_idcs)
 calc_pds_global <- function(plate_df,
                             columns_for_scoring,
                             column_weights,
@@ -273,7 +270,6 @@ calc_pds_global <- function(plate_df,
 }
 
 
-#' @export
 #' @rdname calc_sas_edge_min
 calc_sas_edge_range <- function(n, nrow, ncol){
   edge_max <- calc_sas_edge_max(n, nrow, ncol)
@@ -281,7 +277,6 @@ calc_sas_edge_range <- function(n, nrow, ncol){
   return(edge_max - edge_min)
 }
 
-#' @export
 #' @rdname calc_sas_edge_min
 calc_sas_edge_max <- function(n, nrow, ncol){
   edge_max_temp <- (n*(n-1))/2
@@ -306,17 +301,16 @@ calc_sas_edge_max <- function(n, nrow, ncol){
 #' @param ncol Numeric. Number of columns available on plate.
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # Minimum samples that could be assigned to row and column exclusive wells
-#' calc_sas_edge_min(33L, 10, 8)
+#' easyplater:::calc_sas_edge_min(33L, 10, 8)
 #'
 #' # Maximum samples that could be assigned to row and column exclusive wells
-#' calc_sas_edge_max(33L, 10, 8)
+#' easyplater:::calc_sas_edge_max(33L, 10, 8)
 #'
 #' # Range of samples that could be assigned to row and column exclusive wells
-#' calc_sas_edge_range(33L, 10, 8)
+#' easyplater:::calc_sas_edge_range(33L, 10, 8)
 calc_sas_edge_min <- function(n, nrow, ncol){
   max_dim <- max(c(nrow,ncol))
 
