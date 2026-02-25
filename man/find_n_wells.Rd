@@ -26,5 +26,5 @@ plate_size <- 96
 full_mask <- plate_size |>
   easyplater:::make_well_distances_matrix() |>
   easyplater:::make_full_mask()
-find_n_wells(full_mask, 17L, 86:95, plate_size)
+easyplater:::find_n_wells(full_mask, 17L, 86:95, plate_size)
 }

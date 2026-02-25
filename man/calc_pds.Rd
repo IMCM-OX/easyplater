@@ -54,5 +54,6 @@ scoring_mask <- nrow(example_plate_df) |>
   easyplater:::make_well_distances_matrix() |>
   easyplater:::make_scoring_mask()
 ic_well_idcs <- c(86:95)
-calc_pds(example_plate_df, cols_for_scoring, col_weights, scoring_mask, 8, 12, ic_well_idcs)
+easyplater:::calc_pds(example_plate_df, cols_for_scoring, col_weights,
+                      scoring_mask, 8, 12, ic_well_idcs)
 }

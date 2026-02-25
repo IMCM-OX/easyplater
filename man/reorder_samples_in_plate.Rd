@@ -38,8 +38,8 @@ str(example_plate_df)
 
 col_weights <- c(5, 5, 10, 4)
 imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-ss_mat <- make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
-s_coms <- find_sample_communities(ss_mat)
+ss_mat <- easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+s_coms <- easyplater:::find_sample_communities(ss_mat)
 
 # These functions are internal to easyplater and needn't ever be called by user
 # Using these here simply for the sake of a self-contained example.
@@ -49,5 +49,5 @@ mask <- nrow(example_plate_df) |>
 
 ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
 
-reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
+easyplater:::reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
 }

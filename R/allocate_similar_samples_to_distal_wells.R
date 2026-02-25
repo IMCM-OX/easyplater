@@ -26,7 +26,7 @@
 #' ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
 #'
 #' # Getting and formatting plate data from from manifest.
-#' plate_df_list <- get_and_format_plate_df_from_manifest(
+#' plate_df_list <- easyplater:::get_and_format_plate_df_from_manifest(
 #'   input_manifest, "plate 1", cols_for_scoring, cols_to_categorize,
 #'   imbalance_fixer, 96, plate_wells, ic_well_idcs, ic_ids
 #'   )
@@ -42,7 +42,7 @@
 #'   easyplater:::make_well_distances_matrix() |>
 #'   easyplater:::make_scoring_mask()
 #'
-#' allocate_similar_samples_to_distal_wells(
+#' easyplater:::allocate_similar_samples_to_distal_wells(
 #'   plate_df_list, cols_for_scoring, col_weights, imbalance_fixer,
 #'   full_mask, scoring_mask, splitting_ss_thresh = 0.5,
 #'   ic_ids, ic_well_idcs)
@@ -117,7 +117,7 @@ allocate_similar_samples_to_distal_wells <- function(
 #'
 #' col_weights <- c(5, 5, 10, 4)
 #' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-#' make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)
+#' easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)
 make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
 
   plate_size <- nrow(plate_df)
@@ -169,8 +169,8 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
 #'
 #' col_weights <- c(5, 5, 10, 4)
 #' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-#' ss_mat <- make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
-#' find_sample_communities(ss_mat)
+#' ss_mat <- easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+#' easyplater:::find_sample_communities(ss_mat)
 find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thresh = 0.5){
   sample_similarities_matrix_mask <- sample_similarities_matrix
   sample_similarities_matrix_mask[which(is.na(sample_similarities_matrix))] <- 0
@@ -200,8 +200,8 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
 #'
 #' col_weights <- c(5, 5, 10, 4)
 #' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-#' ss_mat <- make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
-#' s_coms <- find_sample_communities(ss_mat)
+#' ss_mat <- easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+#' s_coms <- easyplater:::find_sample_communities(ss_mat)
 #'
 #' # These functions are internal to easyplater and needn't ever be called by user
 #' # Using these here simply for the sake of a self-contained example.
@@ -211,7 +211,7 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
 #'
 #' ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
 #'
-#' reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
+#' easyplater:::reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
 reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communities, full_mask,
                                      internal_control_ids, internal_control_well_indices, plate_size=96){
 
@@ -284,7 +284,7 @@ reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communit
 #' full_mask <- plate_size |>
 #'   easyplater:::make_well_distances_matrix() |>
 #'   easyplater:::make_full_mask()
-#' find_n_wells(full_mask, 17L, 86:95, plate_size)
+#' easyplater:::find_n_wells(full_mask, 17L, 86:95, plate_size)
 find_n_wells <- function(full_mask, n_wells, wells_pre_allocated, plate_size=96){
 
   if((length(wells_pre_allocated) + n_wells) > plate_size){

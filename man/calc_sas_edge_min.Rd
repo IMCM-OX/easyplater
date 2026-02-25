@@ -31,11 +31,11 @@ A numeric scalar.
 }
 \examples{
 # Minimum samples that could be assigned to row and column exclusive wells
-calc_sas_edge_min(33L, 10, 8)
+easyplater:::calc_sas_edge_min(33L, 10, 8)
 
 # Maximum samples that could be assigned to row and column exclusive wells
-calc_sas_edge_max(33L, 10, 8)
+easyplater:::calc_sas_edge_max(33L, 10, 8)
 
 # Range of samples that could be assigned to row and column exclusive wells
-calc_sas_edge_range(33L, 10, 8)
+easyplater:::calc_sas_edge_range(33L, 10, 8)
 }

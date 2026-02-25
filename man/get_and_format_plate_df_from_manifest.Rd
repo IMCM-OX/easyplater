@@ -48,7 +48,7 @@ This function subsets a single plate from the input manifest and wrangles the da
 \examples{
 # We can use easyplater's built-in example manifest
 str(input_manifest)
-get_and_format_plate_df_from_manifest(
+easyplater:::get_and_format_plate_df_from_manifest(
   manifest_df = input_manifest,
   plateID = "plate 1",
   columns_for_scoring = c("Cohort", "Group", "Sex", "AgeGroup"),

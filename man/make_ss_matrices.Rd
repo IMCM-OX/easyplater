@@ -25,5 +25,5 @@ str(example_plate_df)
 
 col_weights <- c(5, 5, 10, 4)
 imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)
+easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)
 }
