@@ -12,7 +12,6 @@
 #' @param plate_n_cols Numeric scalar. Default 12.
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
@@ -49,7 +48,6 @@ calc_pds <- function(plate_df, columns_for_scoring, column_weights,
 #' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
@@ -76,7 +74,6 @@ calc_pds_local <- function(plate_df, columns_for_scoring, column_weights,
 #' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
@@ -142,7 +139,6 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights,
 #' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
@@ -200,7 +196,6 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights,
 #' @inheritParams calc_pds
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # An example of a preprocessed plate dataframe
@@ -273,7 +268,6 @@ calc_pds_global <- function(plate_df,
 }
 
 
-#' @export
 #' @rdname calc_sas_edge_min
 calc_sas_edge_range <- function(n, nrow, ncol){
   edge_max <- calc_sas_edge_max(n, nrow, ncol)
@@ -281,7 +275,6 @@ calc_sas_edge_range <- function(n, nrow, ncol){
   return(edge_max - edge_min)
 }
 
-#' @export
 #' @rdname calc_sas_edge_min
 calc_sas_edge_max <- function(n, nrow, ncol){
   edge_max_temp <- (n*(n-1))/2
@@ -306,7 +299,6 @@ calc_sas_edge_max <- function(n, nrow, ncol){
 #' @param ncol Numeric. Number of columns available on plate.
 #'
 #' @returns A numeric scalar.
-#' @export
 #'
 #' @examples
 #' # Minimum samples that could be assigned to row and column exclusive wells

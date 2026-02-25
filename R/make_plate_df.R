@@ -10,8 +10,6 @@
 #'  - The first element is data.frame for the specified plate with categorized columns specified in`cols_to_categorize` argument, and an additional column `imbalanceFix_vec`.
 #'  - The second element is a tibble with columns "SampleID", "plate", "column", "row", "well", plus columns specified in `columns_for_scoring` argument.
 #'
-#' @export
-#'
 #' @examples
 #' # We can use easyplater's built-in example manifest
 #' str(input_manifest)

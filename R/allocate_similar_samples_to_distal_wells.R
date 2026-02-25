@@ -15,8 +15,6 @@
 #'  - Third entry is sample similarity matrix output by first element of [`easyplater::make_ss_matrices()`]
 #'  - Fourth entry is the PDS score for the returned highest-scoring plate design
 #'
-#' @export
-#'
 #' @examples
 #' input_manifest
 #'
@@ -112,7 +110,6 @@ allocate_similar_samples_to_distal_wells <- function(
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
 #'
 #' @returns Length 3 list, containing three (plate size) x (plate size) matrices. The first element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. **TO DO: Avi, explain this.**
-#' @export
 #'
 #' @examples
 #' # Example of a pre-processed plate data frame
@@ -165,7 +162,6 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
 #' @param sample_similarities_matrix (plate size) x (plate size) numeric matrix. First element of list output by [make_ss_matrices()].
 #'
 #' @returns An [igraph::communities()] object.
-#' @export
 #'
 #' @examples
 #' # Example of a pre-processed plate data frame
@@ -198,7 +194,6 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
 #' @param sample_communities An [igraph::communities()] object.
 #'
 #' @returns A list. First entry is a character vector of length (plate size), with reordered samples on plate. Second entry is a (plate size) x (plate size) numeric similarity matrix of the reordered plate.
-#' @export
 #' @examples
 #' # Example of a pre-processed plate data frame
 #' str(example_plate_df)
@@ -283,7 +278,6 @@ reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communit
 #' @param wells_pre_allocated Numeric vector. Indices of wells that are excluded from allocation.
 #'
 #' @returns Numeric vector with length `n_wells`
-#' @export
 #'
 #' @examples
 #' plate_size <- 96
