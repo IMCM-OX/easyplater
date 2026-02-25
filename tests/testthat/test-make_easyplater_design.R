@@ -46,7 +46,6 @@ test_that("make_easyplater_design() returns the same single plate as the origina
         columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
         column_weights = c(5, 5, 10, 4),
         cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
-        imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
         plate_size = 96,
         internal_control_well_indices = 86:95,
         internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
@@ -77,11 +76,29 @@ test_that("make_easyplater_design() returns the same single plate as the origina
         columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
         column_weights = c(5, 5, 10, 4),
         cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
-        imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
         plate_size = 96
       )
     },
     expected = readRDS(test_path("fixtures", "easy_plate_df.rds"))
+  )
+})
+
+test_that("make_easyplater_design() returns the same single plate as the original example with imbalance_fixer", {
+  expect_identical(
+    object = {
+      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
+                                     show_col_types = FALSE)
+      make_easyplater_design(
+        manifest_df = manifest_df,
+        plateID = "plate 1",
+        columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+        column_weights = c(5, 5, 10, 4),
+        cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
+        imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
+        plate_size = 96
+      )
+    },
+    expected = readRDS(test_path("fixtures", "easy_plate_df_imbalance_fixer.rds"))
   )
 })
 
@@ -117,7 +134,6 @@ test_that("make_easyplater_design() returns the same multi-plate manifest as the
         columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
         column_weights = c(5, 5, 10, 4),
         cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
-        imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
         plate_size = 96
       )
     },

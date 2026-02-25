@@ -434,7 +434,8 @@ manifest_df <- tibble::tribble(
 saveRDS(manifest_df, test_path("fixtures", "manifest_df.rds"))
 
 #### easy_multiplate_df
-# run `easy_plate_df <- make_easyplater_design(...)` in the original easyplater example script, but with the following changes:
+# run `easy_plate_df <- make_easyplater_design(... imbalance_fixer=FALSE, ...)`
+# in the original easyplater example script, but with the following changes:
 # ## Before the for loop
 # easy_plate_list <- list()
 # ## Replace easy_plate_df <- make_easyplater_design(...) with
@@ -934,14 +935,18 @@ saveRDS(easy_multiplate_df, test_path("fixtures", "easy_multiplate_df.rds"))
 
 
 #### easy_plate_df
-# To get an easy-to-copy-and-paste format of easy_plate_df to test against,
-# run `easy_plate_df <- make_easyplater_design(...)` in the original easyplater example script
-# easy_plate_df |>
+easy_plate_df <- easy_multiplate_df |> dplyr::filter(plate == "plate 1")
+saveRDS(easy_plate_df, test_path("fixtures", "easy_plate_df.rds"))
+
+#### easy_plate_df_imbalance_fixer
+# To get an easy-to-copy-and-paste format of easy_plate_df_imbalance_fixer to test against,
+# run `easy_plate_df_imbalance_fixer <- make_easyplater_design(...)` in the original easyplater example script
+# easy_plate_df_imbalance_fixer |>
 #   mutate(across(everything(), ~ifelse(!is.na(.x), paste0("\"", .x, "\""), .x))) |>
 #   mutate(across(everything(), ~ paste0(.x, ","))) |>
 #   as.data.frame() |>
 #   print(row.names = FALSE)
-easy_plate_df <- tibble::tribble(
+easy_plate_df_imbalance_fixer <- tibble::tribble(
   ~SampleID, ~Cohort, ~Group, ~Sex, ~AgeGroup, ~plate, ~column, ~row, ~well,
   "13",  "C1",  "D1", "2",     "9", "plate 1",  "Column 1", "A",  "A1",
   "36",  "C1",  "D8", "1",     "9", "plate 1",  "Column 1", "B",  "B1",
@@ -1040,121 +1045,121 @@ easy_plate_df <- tibble::tribble(
   "PC4",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "G", "G12",
   "PC5",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "H", "H12"
 )
-saveRDS(easy_plate_df, test_path("fixtures", "easy_plate_df.rds"))
+saveRDS(easy_plate_df_imbalance_fixer, test_path("fixtures", "easy_plate_df_imbalance_fixer.rds"))
 
 ## plate_df
 # To get an easy-to-copy-and-paste format of plate_df to test against,
-# run get_and_format_plate_df_from_manifest() in the original easyplater example branch in debug mode, then:
-# plate_df |>
+# run debug(make_easyplater_design) in the original easyplater example
+# branch then run make_easyplater_design(... imbalance_fixer=FALSE, ...). Stop after running get_and_format_plate_df_from_manifest(), then run:
+# plate_df_list[[1]] |>
 #   mutate(across(everything(), ~ifelse(!is.na(.x), paste0("\"", .x, "\""), .x))) |>
 #   mutate(across(everything(), ~ paste0(.x, ","))) |>
+#   as.data.frame() |>
 #   print(row.names = FALSE)
 plate_df <- tibble::tribble(
-  ~SampleID, ~Cohort, ~Group, ~Sex, ~AgeGroup, ~imbalanceFix_vec,
-  "0",  "C2",  "D5", "2",     "3",             "1",
-  "1",  "C1",  "D7", "1",     "7",             "1",
-  "2",  "C1",  "D7", "1",     "8",             "2",
-  "3",  "C2",  "D7", "2",     "9",             "3",
-  "4",  "C1",  "D1", "2",     "5",             "4",
-  "5",  "C1",  "D7", "2",     "9",             "5",
-  "6",  "C2",  "D1", "2",     "7",             "6",
-  "7",  "C2",  "D7", "1",     "6",             "7",
-  "8",  "C2",  "D1", "2",     "7",             "8",
-  "9",  "C2",  "D8", "2",     "6",             "9",
-  "10",  "C2",  "D7", "2",      NA,            "10",
-  "11",  "C2",  "D7", "2",     "9",            "11",
-  "12",  "C1",  "D7", "2",     "7",            "12",
-  "13",  "C1",  "D1", "2",     "9",            "13",
-  "14",  "C1",  "D8", "2",     "9",            "14",
-  "15",  "C1", "HC1", "2",    "10",            "15",
-  "16",  "C2",  "D1",  NA,     "5",            "16",
-  "17",  "C1",  "D1", "1",     "8",            "17",
-  "18",  "C2",  "D7", "1",     "8",            "18",
-  "19",  "C1",  "D1", "2",      NA,            "19",
-  "20",  "C2",  "D3", "1",     "4",             "1",
-  "21",  "C1",  "D1", "1",     "8",            "21",
-  "22",  "C1", "HC1", "2",     "9",            "22",
-  "23",  "C2",  "D1", "2",     "8",            "23",
-  "24",  "C2",  "D7", "1",     "1",            "24",
-  "25",  "C2",  "D7", "1",     "5",            "25",
-  "26",  "C1",  "D7", "1",     "6",            "26",
-  "27",  "C1",  "D1", "2",     "7",            "27",
-  "28",  "C1",  "D7", "2",     "4",            "28",
-  "29",  "C1",  "D1", "1",     "7",            "29",
-  "30",  "C1",  "D1", "2",     "5",            "30",
-  "31",  "C1",  "D1", "1",     "9",            "31",
-  "32",  "C1", "HC1", "1",     "6",            "32",
-  "33",  "C1",  "D7", "2",     "4",            "33",
-  "34",  "C2",  "D7", "2",     "8",            "34",
-  "35",  "C1", "HC2", "2",     "8",             "1",
-  "36",  "C1",  "D8", "1",     "9",            "36",
-  "37",  "C1",  "D7", "1",     "8",            "37",
-  "38",  "C1",  "D7", "1",      NA,            "38",
-  "39",  "C1",  "D1", "2",     "7",            "39",
-  "40",  "C1",  "D7", "1",     "8",            "40",
-  "41",  "C1",  "D1", "2",     "9",            "41",
-  "42",  "C2",  "D1", "1",     "5",            "42",
-  "43",  "C2",  "D5",  NA,     "7",             "1",
-  "44",  "C2",  "D7", "1",     "6",            "44",
-  "45",  "C1",  "D7", "2",     "6",            "45",
-  "46",  "C1", "HC1", "1",     "8",            "46",
-  "47",  "C1", "HC1", "1",     "6",            "47",
-  "48",  "C2",  "D3", "2",     "4",             "1",
-  "49",  "C2",  "D8", "2",     "5",            "49",
-  "50",  "C1",  "D7", "2",    "10",            "50",
-  "51",  "C1",  "D1", "2",     "7",            "51",
-  "52",  "C1",  "D3", "1",      NA,             "1",
-  "53",  "C2",  "D7", "2",     "7",            "53",
-  "54",  "C1", "HC1", "2",     "8",            "54",
-  "55",  "C2", "HC1", "1",     "8",            "55",
-  "56",  "C2",  "D7", "2",     "7",            "56",
-  "57",  "C1",  "D7", "2",     "9",            "57",
-  "58",  "C1",  "D7", "2",     "9",            "58",
-  "59",  "C2",  "D8", "1",     "5",            "59",
-  "60",  "C2",  "D1", "1",     "2",            "60",
-  "61",  "C1",  "D7", "2",     "9",            "61",
-  "62",  "C2",  "D8", "1",     "7",            "62",
-  "63",  "C2",  "D7", "2",     "8",            "63",
-  "64",  "C1", "HC2", "1",     "9",             "1",
-  "65",  "C1",  "D1", "2",     "6",            "65",
-  "66",  "C2",  "D8", "2",     "9",            "66",
-  "67",  "C1",  "D8", "1",     "9",            "67",
-  "68",  "C1",    NA, "2",     "8",             "1",
-  "69",  "C1",  "D5", "2",     "6",             "1",
-  "70",  "C1",  "D1", "1",     "6",            "70",
-  "71",  "C1",  "D1", "1",     "5",            "71",
-  "72",  "C1",  "D7", "2",     "4",            "72",
-  "73",  "C1",  "D3", "2",    "10",             "1",
-  "74",  "C1",  "D1", "2",     "7",            "74",
-  "75",  "C2",  "D7", "1",     "3",            "75",
-  "76",  "C1",  "D7", "2",     "4",            "76",
-  "77",  "C2", "HC1", "1",     "3",            "77",
-  "78",  "C2",  "D1", "2",    "10",            "78",
-  "79",  "C2",  "D7", "1",      NA,            "79",
-  "80",  "C2", "HC1", "2",     "6",            "80",
-  "Empty_82",    NA,    NA,  NA,      NA,            "NA",
-  "Empty_83",    NA,    NA,  NA,      NA,            "NA",
-  "Empty_84",    NA,    NA,  NA,      NA,            "NA",
-  "Empty_85",    NA,    NA,  NA,      NA,            "NA",
-  "Empty_86",    NA,    NA,  NA,      NA,            "NA",
-  "SC1",    NA,    NA,  NA,      NA,            "NA",
-  "SC2",    NA,    NA,  NA,      NA,            "NA",
-  "NC1",    NA,    NA,  NA,      NA,            "NA",
-  "NC2",    NA,    NA,  NA,      NA,            "NA",
-  "NC3",    NA,    NA,  NA,      NA,            "NA",
-  "PC1",    NA,    NA,  NA,      NA,            "NA",
-  "PC2",    NA,    NA,  NA,      NA,            "NA",
-  "PC3",    NA,    NA,  NA,      NA,            "NA",
-  "PC4",    NA,    NA,  NA,      NA,            "NA",
-  "PC5",    NA,    NA,  NA,      NA,            "NA"
-) |>
-  as.data.frame()
+  ~SampleID, ~Cohort, ~Group, ~Sex, ~AgeGroup,
+  "0",  "C2",  "D5", "2",     "3",
+  "1",  "C1",  "D7", "1",     "7",
+  "2",  "C1",  "D7", "1",     "8",
+  "3",  "C2",  "D7", "2",     "9",
+  "4",  "C1",  "D1", "2",     "5",
+  "5",  "C1",  "D7", "2",     "9",
+  "6",  "C2",  "D1", "2",     "7",
+  "7",  "C2",  "D7", "1",     "6",
+  "8",  "C2",  "D1", "2",     "7",
+  "9",  "C2",  "D8", "2",     "6",
+  "10",  "C2",  "D7", "2",      NA,
+  "11",  "C2",  "D7", "2",     "9",
+  "12",  "C1",  "D7", "2",     "7",
+  "13",  "C1",  "D1", "2",     "9",
+  "14",  "C1",  "D8", "2",     "9",
+  "15",  "C1", "HC1", "2",    "10",
+  "16",  "C2",  "D1",  NA,     "5",
+  "17",  "C1",  "D1", "1",     "8",
+  "18",  "C2",  "D7", "1",     "8",
+  "19",  "C1",  "D1", "2",      NA,
+  "20",  "C2",  "D3", "1",     "4",
+  "21",  "C1",  "D1", "1",     "8",
+  "22",  "C1", "HC1", "2",     "9",
+  "23",  "C2",  "D1", "2",     "8",
+  "24",  "C2",  "D7", "1",     "1",
+  "25",  "C2",  "D7", "1",     "5",
+  "26",  "C1",  "D7", "1",     "6",
+  "27",  "C1",  "D1", "2",     "7",
+  "28",  "C1",  "D7", "2",     "4",
+  "29",  "C1",  "D1", "1",     "7",
+  "30",  "C1",  "D1", "2",     "5",
+  "31",  "C1",  "D1", "1",     "9",
+  "32",  "C1", "HC1", "1",     "6",
+  "33",  "C1",  "D7", "2",     "4",
+  "34",  "C2",  "D7", "2",     "8",
+  "35",  "C1", "HC2", "2",     "8",
+  "36",  "C1",  "D8", "1",     "9",
+  "37",  "C1",  "D7", "1",     "8",
+  "38",  "C1",  "D7", "1",      NA,
+  "39",  "C1",  "D1", "2",     "7",
+  "40",  "C1",  "D7", "1",     "8",
+  "41",  "C1",  "D1", "2",     "9",
+  "42",  "C2",  "D1", "1",     "5",
+  "43",  "C2",  "D5",  NA,     "7",
+  "44",  "C2",  "D7", "1",     "6",
+  "45",  "C1",  "D7", "2",     "6",
+  "46",  "C1", "HC1", "1",     "8",
+  "47",  "C1", "HC1", "1",     "6",
+  "48",  "C2",  "D3", "2",     "4",
+  "49",  "C2",  "D8", "2",     "5",
+  "50",  "C1",  "D7", "2",    "10",
+  "51",  "C1",  "D1", "2",     "7",
+  "52",  "C1",  "D3", "1",      NA,
+  "53",  "C2",  "D7", "2",     "7",
+  "54",  "C1", "HC1", "2",     "8",
+  "55",  "C2", "HC1", "1",     "8",
+  "56",  "C2",  "D7", "2",     "7",
+  "57",  "C1",  "D7", "2",     "9",
+  "58",  "C1",  "D7", "2",     "9",
+  "59",  "C2",  "D8", "1",     "5",
+  "60",  "C2",  "D1", "1",     "2",
+  "61",  "C1",  "D7", "2",     "9",
+  "62",  "C2",  "D8", "1",     "7",
+  "63",  "C2",  "D7", "2",     "8",
+  "64",  "C1", "HC2", "1",     "9",
+  "65",  "C1",  "D1", "2",     "6",
+  "66",  "C2",  "D8", "2",     "9",
+  "67",  "C1",  "D8", "1",     "9",
+  "68",  "C1",    NA, "2",     "8",
+  "69",  "C1",  "D5", "2",     "6",
+  "70",  "C1",  "D1", "1",     "6",
+  "71",  "C1",  "D1", "1",     "5",
+  "72",  "C1",  "D7", "2",     "4",
+  "73",  "C1",  "D3", "2",    "10",
+  "74",  "C1",  "D1", "2",     "7",
+  "75",  "C2",  "D7", "1",     "3",
+  "76",  "C1",  "D7", "2",     "4",
+  "77",  "C2", "HC1", "1",     "3",
+  "78",  "C2",  "D1", "2",    "10",
+  "79",  "C2",  "D7", "1",      NA,
+  "80",  "C2", "HC1", "2",     "6",
+  "Empty_82",    NA,    NA,  NA,      NA,
+  "Empty_83",    NA,    NA,  NA,      NA,
+  "Empty_84",    NA,    NA,  NA,      NA,
+  "Empty_85",    NA,    NA,  NA,      NA,
+  "Empty_86",    NA,    NA,  NA,      NA,
+  "SC1",    NA,    NA,  NA,      NA,
+  "SC2",    NA,    NA,  NA,      NA,
+  "NC1",    NA,    NA,  NA,      NA,
+  "NC2",    NA,    NA,  NA,      NA,
+  "NC3",    NA,    NA,  NA,      NA,
+  "PC1",    NA,    NA,  NA,      NA,
+  "PC2",    NA,    NA,  NA,      NA,
+  "PC3",    NA,    NA,  NA,      NA,
+  "PC4",    NA,    NA,  NA,      NA,
+  "PC5",    NA,    NA,  NA,      NA
+)
 saveRDS(plate_df, test_path("fixtures", "plate_df.rds"))
 
 ## plate_df_aux
-# To get an easy-to-copy-and-paste format of plate_df_aux to test against,
-# run get_and_format_plate_df_from_manifest() in the original easyplater example branch in debug mode, then:
-# plate_df |>
+# plate_df_aux is the second element of the plate_df_list object generated above.
+# plate_df_list[[2]] |>
 #   mutate(across(everything(), ~ifelse(!is.na(.x), paste0("\"", .x, "\""), .x))) |>
 #   mutate(across(everything(), ~ paste0(.x, ","))) |>
 #   as.data.frame() |>
