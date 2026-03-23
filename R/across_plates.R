@@ -5,16 +5,17 @@
 
 # Wrapper function (i.e. run this)
 # Example:
-# manifest_df <- input_manifest
-# manifest_df$SubjectID <- paste0(manifest_df$SampleID, manifest_df$Cohort)
-# manifest_df$VarToControl <- manifest_df$Group
-# columns_to_test_df <- tibble::tribble(
-# ~ test_column,               ~ column_type,            ~ column_weight,
-# "Group",                    "discrete_noperm",         1,
-# "Sex",                      "discrete_noperm",         0.5,
-# "Age",                      "continuous",              0.5
-# )
-# assign_plates_out <- assign_plates(manifest_df, columns_to_test_df, getwd())
+manifest_df <- input_manifest
+manifest_df$SubjectID <- paste0(manifest_df$SampleID, manifest_df$Cohort)
+manifest_df$Group <- factor(manifest_df$Group)
+manifest_df$VarToControl <- manifest_df$Group
+columns_to_test_df <- tibble::tribble(
+~ test_column,               ~ column_type,            ~ column_weight,
+"Group",                    "discrete_noperm",         1,
+"Sex",                      "discrete_noperm",         0.5,
+"Age",                      "continuous",              0.5
+)
+assign_plates_out <- assign_plates(manifest_df, columns_to_test_df, getwd())
 
 assign_plates <- function(manifest_df,
               columns_to_test_df,
@@ -60,6 +61,14 @@ assign_plates <- function(manifest_df,
       stop("Number of assignment seeds does not match number of testing seeds.")
     }
 
+    # Force any factors to character, as the running table() in `assign_subjects_to_plates()` on factors results in a non-random order
+    if(any(lapply(manifest_df, class) == "factor")) {
+      fcts <- names(which(lapply(manifest_df, class) == "factor"))
+      warning(paste0("Converting the following columns from factor to character: ", paste(fcts, collapse = ", ")))
+      manifest_df <- manifest_df |>
+        dplyr::mutate(dplyr::across(all_of(fcts), as.character))
+    }
+
     ## STEP 1: Generate random manifests, save to list, write to rds
     out_manifests <- genRandoManifests(manifest_df = manifest_df,
                                        assignment_seeds = assignment_seeds,
@@ -87,11 +96,6 @@ assign_plates <- function(manifest_df,
 genRandoManifests <- function(manifest_df, assignment_seeds, PLATESIZE = 96, NUMCTRL = 20,
                               NUMPLATES = NULL,
                               WELLS2SKIP = rep(0, NUMPLATES)) {
-  # Force any factors to character, as the running table() in `assign_subjects_to_plates()` on factors results in a non-random order
-  if(any(lapply(manifest_df, class) == "factor")) {
-    fcts <- names(which(lapply(manifest_df, class) == "factor"))
-    warning(paste0("Converting the following columns from factor to character: ", paste(fcts, collapse = ", ")))
-  }
 
   out_manifests <- list()
   cat("\nGenerating random manifests.\n")
