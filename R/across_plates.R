@@ -49,6 +49,14 @@ assign_plates <- function(manifest_df,
     dir.create(file.path(output_dir), recursive = TRUE, showWarnings = FALSE)
   }
 
+  # Force any factors to character, as the running table() in `assign_subjects_to_plates()` on factors results in a non-random order
+  if(any(lapply(manifest_df, class) == "factor")) {
+    fcts <- names(which(lapply(manifest_df, class) == "factor"))
+    warning(paste0("Converting the following columns from factor to character: ", paste(fcts, collapse = ", ")))
+    manifest_df <- manifest_df |>
+      dplyr::mutate(dplyr::across(all_of(fcts), as.character))
+  }
+
   # withr::with_seed() prevents the user's seed from changing, so each run with
   # the same seed argument will reproduce the same result, without restarting R
   withr::with_seed(seed, {
@@ -59,14 +67,6 @@ assign_plates <- function(manifest_df,
 
     if(length(assignment_seeds)!=length(testing_seeds)){
       stop("Number of assignment seeds does not match number of testing seeds.")
-    }
-
-    # Force any factors to character, as the running table() in `assign_subjects_to_plates()` on factors results in a non-random order
-    if(any(lapply(manifest_df, class) == "factor")) {
-      fcts <- names(which(lapply(manifest_df, class) == "factor"))
-      warning(paste0("Converting the following columns from factor to character: ", paste(fcts, collapse = ", ")))
-      manifest_df <- manifest_df |>
-        dplyr::mutate(dplyr::across(all_of(fcts), as.character))
     }
 
     ## STEP 1: Generate random manifests, save to list, write to rds
