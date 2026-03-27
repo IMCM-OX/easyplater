@@ -1,3 +1,5 @@
+SampleID <- NULL
+
 #' Design a plate using the easyplater algorithm
 #'
 #' Given a manifest, run the easyplater algorithm on a single plate. **TO DO: Avi and/or Micah, elaborate on this.**
@@ -129,6 +131,11 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
   })
 
   easy_plate_df <- easy_plates_list |> dplyr::bind_rows(.id = plate_col)
+
+  # Convert empty wells to NA. Numeric suffix after "Empty_" is meaningless and NAs display better in plate layouts.
+  easy_plate_df <- easy_plate_df |>
+    dplyr::mutate(SampleID = ifelse(grepl("Empty_", SampleID, fixed = TRUE),
+                                    NA, SampleID))
 
   return(easy_plate_df)
 }

@@ -8,6 +8,7 @@
 # output_manifest <- easy_plate_list |> bind_rows(.id = "plate")
 # To get an easy-to-copy-and-paste format of easy_plate_df to test against, run this:
 # output_manifest |>
+#   mutate(SampleID = ifelse(grepl("Empty_", SampleID, fixed = TRUE), NA, SampleID)) |>
 #   mutate(across(everything(), ~ifelse(!is.na(.x), paste0("\"", .x, "\""), .x))) |>
 #   mutate(across(everything(), ~ paste0(.x, ","))) |>
 #   as.data.frame() |>
@@ -48,14 +49,14 @@ output_manifest <- tibble::tribble(
   "72",  "C1",  "D7", "2",     "4", "plate 1",  "Column 4", "H",  "H4",
   "42",  "C2",  "D1", "1",     "5", "plate 1",  "Column 5", "A",  "A5",
   "62",  "C2",  "D8", "1",     "7", "plate 1",  "Column 5", "B",  "B5",
-  "Empty_85",    NA,    NA,  NA,      NA, "plate 1",  "Column 5", "C",  "C5",
+  NA,    NA,    NA,  NA,      NA, "plate 1",  "Column 5", "C",  "C5",
   "37",  "C1",  "D7", "1",     "8", "plate 1",  "Column 5", "D",  "D5",
   "69",  "C1",  "D5", "2",     "6", "plate 1",  "Column 5", "E",  "E5",
   "19",  "C1",  "D1", "2",      NA, "plate 1",  "Column 5", "F",  "F5",
   "60",  "C2",  "D1", "1",     "2", "plate 1",  "Column 5", "G",  "G5",
   "11",  "C2",  "D7", "2",     "9", "plate 1",  "Column 5", "H",  "H5",
   "16",  "C2",  "D1",  NA,     "5", "plate 1",  "Column 6", "A",  "A6",
-  "Empty_82",    NA,    NA,  NA,      NA, "plate 1",  "Column 6", "B",  "B6",
+  NA,    NA,    NA,  NA,      NA, "plate 1",  "Column 6", "B",  "B6",
   "10",  "C2",  "D7", "2",      NA, "plate 1",  "Column 6", "C",  "C6",
   "51",  "C1",  "D1", "2",     "7", "plate 1",  "Column 6", "D",  "D6",
   "70",  "C1",  "D1", "1",     "6", "plate 1",  "Column 6", "E",  "E6",
@@ -66,12 +67,12 @@ output_manifest <- tibble::tribble(
   "5",  "C1",  "D7", "2",     "9", "plate 1",  "Column 7", "B",  "B7",
   "15",  "C1", "HC1", "2",    "10", "plate 1",  "Column 7", "C",  "C7",
   "24",  "C2",  "D7", "1",     "1", "plate 1",  "Column 7", "D",  "D7",
-  "Empty_86",    NA,    NA,  NA,      NA, "plate 1",  "Column 7", "E",  "E7",
+  NA,    NA,    NA,  NA,      NA, "plate 1",  "Column 7", "E",  "E7",
   "23",  "C2",  "D1", "2",     "8", "plate 1",  "Column 7", "F",  "F7",
   "55",  "C2", "HC1", "1",     "8", "plate 1",  "Column 7", "G",  "G7",
   "1",  "C1",  "D7", "1",     "7", "plate 1",  "Column 7", "H",  "H7",
   "18",  "C2",  "D7", "1",     "8", "plate 1",  "Column 8", "A",  "A8",
-  "Empty_83",    NA,    NA,  NA,      NA, "plate 1",  "Column 8", "B",  "B8",
+  NA,    NA,    NA,  NA,      NA, "plate 1",  "Column 8", "B",  "B8",
   "30",  "C1",  "D1", "2",     "5", "plate 1",  "Column 8", "C",  "C8",
   "3",  "C2",  "D7", "2",     "9", "plate 1",  "Column 8", "D",  "D8",
   "44",  "C2",  "D7", "1",     "6", "plate 1",  "Column 8", "E",  "E8",
@@ -83,7 +84,7 @@ output_manifest <- tibble::tribble(
   "77",  "C2", "HC1", "1",     "3", "plate 1",  "Column 9", "C",  "C9",
   "32",  "C1", "HC1", "1",     "6", "plate 1",  "Column 9", "D",  "D9",
   "4",  "C1",  "D1", "2",     "5", "plate 1",  "Column 9", "E",  "E9",
-  "Empty_84",    NA,    NA,  NA,      NA, "plate 1",  "Column 9", "F",  "F9",
+  NA,    NA,    NA,  NA,      NA, "plate 1",  "Column 9", "F",  "F9",
   "49",  "C2",  "D8", "2",     "5", "plate 1",  "Column 9", "G",  "G9",
   "27",  "C1",  "D1", "2",     "7", "plate 1",  "Column 9", "H",  "H9",
   "54",  "C1", "HC1", "2",     "8", "plate 1", "Column 10", "A", "A10",
@@ -408,7 +409,7 @@ output_manifest <- tibble::tribble(
   "2842",  "C1",  "D1", "2",     "8", "plate 5",  "Column 1", "H",  "H1",
   "2837",  "C1",  "D7", "2",     "6", "plate 5",  "Column 2", "A",  "A2",
   "2838",  "C1",  "D1", "2",     "3", "plate 5",  "Column 2", "B",  "B2",
-  "Empty_86",    NA,    NA,  NA,      NA, "plate 5",  "Column 2", "C",  "C2",
+  NA,    NA,    NA,  NA,      NA, "plate 5",  "Column 2", "C",  "C2",
   "2832",  "C1",  "D8", "2",     "8", "plate 5",  "Column 2", "D",  "D2",
   "2883",  "C2",  "D7", "2",     "6", "plate 5",  "Column 2", "E",  "E2",
   "2855",  "C1",  "D7", "2",     "3", "plate 5",  "Column 2", "F",  "F2",
@@ -454,7 +455,7 @@ output_manifest <- tibble::tribble(
   "2861",  "C1", "HC1", "2",     "8", "plate 5",  "Column 7", "F",  "F7",
   "2856",  "C1",  "D4", "2",     "6", "plate 5",  "Column 7", "G",  "G7",
   "2903",  "C2",  "D7", "1",      NA, "plate 5",  "Column 7", "H",  "H7",
-  "Empty_85",    NA,    NA,  NA,      NA, "plate 5",  "Column 8", "A",  "A8",
+  NA,    NA,    NA,  NA,      NA, "plate 5",  "Column 8", "A",  "A8",
   "2849",  "C2",  "D7", "1",     "5", "plate 5",  "Column 8", "B",  "B8",
   "2890",  "C1",  "D1", "2",     "5", "plate 5",  "Column 8", "C",  "C8",
   "2857",  "C1",  "D7", "2",     "5", "plate 5",  "Column 8", "D",  "D8",
