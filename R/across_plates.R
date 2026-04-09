@@ -24,6 +24,7 @@ assign_plates <- function(manifest_df,
               score_output_filename = NULL,
               plate_size = 96,
               num_ctrl = 10,
+              wells_to_skip = NULL, # default rep(0, num_plates), where num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
               min_cell_expected = 5,
               perms = 100,
               perm_p_weight = 0.2,
@@ -42,7 +43,10 @@ assign_plates <- function(manifest_df,
   }
 
   num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
-  wells_to_skip <- rep(0, num_plates)
+
+  if (is.null(wells_to_skip)) {
+    wells_to_skip <- rep(0, num_plates)
+  }
 
   ## Create output dir
   if (create_dir) {
