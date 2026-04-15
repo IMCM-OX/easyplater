@@ -26,6 +26,7 @@ SampleID <- NULL
 #' @param pds_local_weight Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.
 #' @param patch_weight Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. **TO DO: Avi, check this description**
 #' @param plate_col String. Name of the column specifying which plate each sample belongs to. Default: "plate".
+#' @param randomize_empty Logical. Whether to randomize empty wells or constrain them to fill the plate from bottom to top, right to left.
 #' @param seed Numeric scalar. Seed to set for reproducibility. Default: 1.
 #'
 #' @returns A data.frame (of class tibble) with the same contents as the input, but with sample locations deconvolved from the clinical variables specified in `columns_for_scoring` argument, and with columns in `cols_to_categorize` converted into bins.
@@ -57,6 +58,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
                                    max_depth = 2, wins_required = 10, max_attempts = 100,
                                    pds_local_weight=1, patch_weight = NULL,
                                    plate_col = "plate",
+                                   randomize_empty = TRUE,
                                    seed = 1){
 
   plateIDs <- manifest_df[[plate_col]] |> unique() |> stringr::str_sort()
@@ -104,6 +106,14 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
       print("Getting and formatting plate data from manifest.")
       plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, p, columns_for_scoring, cols_to_categorize, imbalance_fixer,
                                                              plate_size, plate_wells, internal_control_well_indices, internal_control_ids)
+
+      if (!randomize_empty) {
+        # Don't randomize empty wells; treat them as internal controls with set locations
+        empty_well_labs <- grep("^Empty_", plate_df_list[[1]]$SampleID, value = TRUE)
+        empty_well_idcs <- substr(empty_well_labs, 7, 8)
+        internal_control_ids <- c(internal_control_ids, empty_well_labs)
+        internal_control_well_indices <- c(internal_control_well_indices, empty_well_idcs)
+      }
 
       # Note: We may want to move the patch_weight calculation from calc_patch_score() up to here, so that this computation isn't repeated with each iteration
 

@@ -27,6 +27,7 @@ make_easyplater_design(
   pds_local_weight = 1,
   patch_weight = NULL,
   plate_col = "plate",
+  randomize_empty = TRUE,
   seed = 1
 )
 }
@@ -74,6 +75,8 @@ make_easyplater_design(
 \item{patch_weight}{Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
 
 \item{plate_col}{String. Name of the column specifying which plate each sample belongs to. Default: "plate".}
+
+\item{randomize_empty}{Logical. Whether to randomize empty wells or constrain them to fill the plate from bottom to top, right to left.}
 
 \item{seed}{Numeric scalar. Seed to set for reproducibility. Default: 1.}
 }
