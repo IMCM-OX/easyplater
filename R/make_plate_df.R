@@ -1,3 +1,5 @@
+NULL <- SampleID <- column
+
 #' Prepare plate data frame from full manifest
 #'
 #' This function subsets a single plate from the input manifest and wrangles the data for downstream processing. **TO DO: Micah, elaborate on this.**
@@ -96,60 +98,111 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
 
   # If num_samples_on_plate < real_plate_size, then we need to add missing samples to the end of plate_df
 
-  if(num_samples_on_plate < real_plate_size){
+  all_wells <- paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8))
+  ic_idcs <- internal_control_well_indices+1
+  ic_wells <- all_wells[ic_idcs]
+  ic_labs <- internal_control_ids
+  nonic_wells <- all_wells[!(all_wells %in% ic_wells)] # non-ic well (i.e. wells available for samples)
+  sample_wells <- nonic_wells[1:nrow(plate_df)] # only put samples in non-ic wells
+  empty_wells <- nonic_wells[!(nonic_wells %in% sample_wells)] # any wells remaining if num samples < plate size - ic wells
 
-    sample_wells <- plate_df_aux[["well"]]
-    available_wells <- plate_wells[which(!(plate_wells %in% c(plate_wells[internal_control_well_indices+1], sample_wells)))]
+  # Add columns locations for sample wells (i.e. the rows already existing in input df)
+  plate_df$well <- sample_wells
+  plate_df$row <- substr(sample_wells, 1, 1)
+  plate_df$column <- paste0("Column ", substr(sample_wells, 2, 3))
 
-    for(ni in (num_samples_on_plate+1):real_plate_size){
-      row<-c(paste("Empty",ni,sep="_"),rep(NA,length(cols_for_analysis)-1))
-      if(imbalance_fixer[[1]]){
-        row<- c(row,"NA")
-      }
-      plate_df <- rbind(plate_df,row)
+  # Create df for internal control wells
+  ic_df <- matrix(ncol = ncol(plate_df), nrow = length(ic_labs)) |>
+    data.frame()
+  colnames(ic_df) <- colnames(plate_df)
+  ic_df$SampleID <- ic_labs
+  ic_df$well <- ic_wells
+  ic_df$row <- substr(ic_wells, 1, 1)
+  ic_df$column <- paste0("Column ", substr(ic_wells, 2, 3))
 
-      assigned_well <- available_wells[ni - num_samples_on_plate]
-      assigned_column <- get_column_from_well_coords(assigned_well)
-      assigned_row <- get_row_from_well_coords(assigned_well)
-      row_aux <- c(paste("Empty",ni,sep="_"),rep(NA,length(cols_for_analysis)-1),c(plateID,assigned_column, assigned_row, assigned_well))
-      plate_df_aux <- rbind(plate_df_aux, row_aux)
+  # Bind rows from internal controls to sample df
+  plate_df <- plate_df |>
+    # ***TO DO: The SampleID class should be checked earlier and forced to character!***
+    dplyr::mutate(SampleID = as.character(SampleID)) |>
+    dplyr::bind_rows(ic_df)
 
-    }
+  # Create df for empty wells and bind rows to plate_df
+  if (length(empty_wells) > 0) {
+    empty_df <- matrix(ncol = ncol(plate_df), nrow = length(empty_wells)) |>
+      data.frame()
+    colnames(empty_df) <- colnames(plate_df)
+    empty_df$SampleID <-  paste0("Empty_", which(all_wells %in% empty_wells))
+    empty_df$well <- empty_wells
+    empty_df$row <- substr(empty_wells, 1, 1)
+    empty_df$column <- paste0("Column ", substr(empty_wells, 2, 3))
+
+    plate_df <- plate_df |>
+      dplyr::bind_rows(empty_df)
   }
+
+  # Arrange plate dfs by well indices
+  plate_df <- plate_df[match(all_wells, plate_df$well),]
+
+  # Create plate_df and plate_df_aux for historical reasons
+  plate_df_aux <- plate_df
+  plate_df <- plate_df |> dplyr::select(-c(well, column, row))
+
+
+
+  # if(num_samples_on_plate < real_plate_size){
+  #
+  #   sample_wells <- plate_df_aux[["well"]]
+  #   available_wells <- plate_wells[which(!(plate_wells %in% c(plate_wells[internal_control_well_indices+1], sample_wells)))]
+  #
+  #   for(ni in (num_samples_on_plate+1):real_plate_size){
+  #     row<-c(paste("Empty",ni,sep="_"),rep(NA,length(cols_for_analysis)-1))
+  #     if(imbalance_fixer[[1]]){
+  #       row<- c(row,"NA")
+  #     }
+  #     plate_df <- rbind(plate_df,row)
+  #
+  #     assigned_well <- available_wells[ni - num_samples_on_plate]
+  #     assigned_column <- get_column_from_well_coords(assigned_well)
+  #     assigned_row <- get_row_from_well_coords(assigned_well)
+  #     row_aux <- c(paste("Empty",ni,sep="_"),rep(NA,length(cols_for_analysis)-1),c(plateID,assigned_column, assigned_row, assigned_well))
+  #     plate_df_aux <- rbind(plate_df_aux, row_aux)
+  #
+  #   }
+  # }
 
   # Now add internal controls to plate_df and plate_df_aux
 
-  if(num_internal_controls>0){
-    for(ici in 1:num_internal_controls){
-      row<-c(internal_control_ids[ici],rep(NA,length(cols_for_analysis)-1))
-      if(imbalance_fixer[[1]]){
-        row<- c(row,"NA")
-      }
-      plate_df <- rbind(plate_df,row)
+  # if(num_internal_controls>0){
+  #   for(ici in 1:num_internal_controls){
+  #     row<-c(internal_control_ids[ici],rep(NA,length(cols_for_analysis)-1))
+  #     if(imbalance_fixer[[1]]){
+  #       row<- c(row,"NA")
+  #     }
+  #     plate_df <- rbind(plate_df,row)
+  #
+  #     assigned_well <- plate_wells[internal_control_well_indices[ici]+1]
+  #     assigned_column <- get_column_from_well_coords(assigned_well)
+  #     assigned_row <- get_row_from_well_coords(assigned_well)
+  #     row_aux <- c(internal_control_ids[ici], rep(NA,length(cols_for_analysis)-1),c(plateID,assigned_column, assigned_row, assigned_well))
+  #     plate_df_aux <- rbind(plate_df_aux, row_aux)
+  #
+  #   }
+  # }
 
-      assigned_well <- plate_wells[internal_control_well_indices[ici]+1]
-      assigned_column <- get_column_from_well_coords(assigned_well)
-      assigned_row <- get_row_from_well_coords(assigned_well)
-      row_aux <- c(internal_control_ids[ici], rep(NA,length(cols_for_analysis)-1),c(plateID,assigned_column, assigned_row, assigned_well))
-      plate_df_aux <- rbind(plate_df_aux, row_aux)
 
-    }
-  }
-
-
-  # Finally, sort plate_df and plate_df_aux by well index
-
-  #well_indices <- unlist(lapply(plate_df_aux$well), function(w) which(plate_wells==w))
-
-  well_indices <- match(plate_df_aux$well, plate_wells)-1
-
-  plate_df$well_indices <- well_indices
-  plate_df <- plate_df |> dplyr::arrange(well_indices)
-  plate_df <- subset(plate_df, select = -c(well_indices))
-
-  plate_df_aux$well_indices <- well_indices
-  plate_df_aux <- plate_df_aux |> dplyr::arrange(well_indices)
-  plate_df_aux <- subset(plate_df_aux, select = -c(well_indices))
+  # # Finally, sort plate_df and plate_df_aux by well index
+  #
+  # #well_indices <- unlist(lapply(plate_df_aux$well), function(w) which(plate_wells==w))
+  #
+  # well_indices <- match(plate_df_aux$well, plate_wells)-1
+  #
+  # plate_df$well_indices <- well_indices
+  # plate_df <- plate_df |> dplyr::arrange(well_indices)
+  # plate_df <- subset(plate_df, select = -c(well_indices))
+  #
+  # plate_df_aux$well_indices <- well_indices
+  # plate_df_aux <- plate_df_aux |> dplyr::arrange(well_indices)
+  # plate_df_aux <- subset(plate_df_aux, select = -c(well_indices))
 
   return(list(plate_df, plate_df_aux))
 }
