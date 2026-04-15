@@ -1,4 +1,4 @@
-NULL <- SampleID <- column
+SampleID <- column <- NULL
 
 #' Prepare plate data frame from full manifest
 #'
