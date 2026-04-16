@@ -31,6 +31,7 @@ test_that("calc_pds_global() errors when given non-96-well plate", {
     calc_pds_global(example_plate_df[49:96,],
                     names(example_plate_df)[2:5],
                     c(5, 5, 10, 4),
+                    scoring_mask,
                     8, 12,
                     c(86:95)),
     class = "simpleError")
