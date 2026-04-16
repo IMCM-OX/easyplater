@@ -11,6 +11,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{OlinkAnalyze}{\code{\link[OlinkAnalyze:olink_display_plate_layout]{olink_displayPlateLayout}}}
+  \item{OlinkAnalyze}{\code{\link[OlinkAnalyze]{olink_displayPlateLayout}}}
 }}
 

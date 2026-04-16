@@ -1,5 +1,4 @@
-SampleID <- column <- NULL
-
+NULL <- SampleID <- column
 
 #' Prepare plate data frame from full manifest
 #'
@@ -39,8 +38,7 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
 
   cols_for_analysis <- c("SampleID", columns_for_scoring)
 
-  plate_df_aux <- manifest_df |>
-    dplyr::filter(.data$plate == plateID)
+  plate_df_aux <- dplyr::filter(manifest_df, .data$plate == plateID)
 
   num_internal_controls <- length(internal_control_well_indices)
   real_plate_size <- plate_size - num_internal_controls
@@ -81,9 +79,7 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
     }
   }
 
-  # Micah: converting every column to character here, as per the plate_df and plate_df_aux outputs in the original implementation
-  plate_df <- dplyr::select(plate_df_aux, dplyr::all_of(cols_for_analysis)) |>
-    dplyr::mutate(dplyr::across(dplyr::everything(), ~as.character(.x)))
+  plate_df <- dplyr::select(plate_df_aux, dplyr::all_of(cols_for_analysis))
   plate_df_aux <- dplyr::select(plate_df_aux, dplyr::all_of(c(cols_for_analysis, c("plate","column","row","well"))))
 
   # Now account for imbalance in samples, as required
@@ -94,13 +90,14 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
     for(imbalance_val in imbalance_fixer[[3]]){
       imbalanceFix_vec <- replace(imbalanceFix_vec,which(plate_df_column_for_fixing == imbalance_val),unlist(plate_df[which(plate_df_column_for_fixing == imbalance_val),'SampleID']))
     }
-    plate_df <- dplyr::bind_cols(plate_df, imbalanceFix_vec)
+    plate_df <- cbind(plate_df, imbalanceFix_vec)
   }
 
   # Find out how many samples there are on the plate.
   num_samples_on_plate <- length(plate_df$SampleID)
 
-  # Allocate wells available for internal controls and samples, and identify empty wells
+  # If num_samples_on_plate < real_plate_size, then we need to add missing samples to the end of plate_df
+
   all_wells <- paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8))
   ic_idcs <- internal_control_well_indices+1
   ic_wells <- all_wells[ic_idcs]
@@ -115,8 +112,9 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
   plate_df$column <- paste0("Column ", substr(sample_wells, 2, 3))
 
   # Create df for internal control wells
-  ic_df <- plate_df[1:length(ic_labs),]
-  ic_df[1:nrow(ic_df), 1:ncol(ic_df)] <- NA
+  ic_df <- matrix(ncol = ncol(plate_df), nrow = length(ic_labs)) |>
+    data.frame()
+  colnames(ic_df) <- colnames(plate_df)
   ic_df$SampleID <- ic_labs
   ic_df$well <- ic_wells
   ic_df$row <- substr(ic_wells, 1, 1)
@@ -124,6 +122,8 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
 
   # Bind rows from internal controls to sample df
   plate_df <- plate_df |>
+    # ***TO DO: The SampleID class should be checked earlier and forced to character!***
+    dplyr::mutate(SampleID = as.character(SampleID)) |>
     dplyr::bind_rows(ic_df)
 
   # Create df for empty wells and bind rows to plate_df
@@ -143,12 +143,11 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
   # Arrange plate dfs by well indices
   plate_df <- plate_df[match(all_wells, plate_df$well),]
 
-  # Create plate_df and plate_df_aux in their expected historical formats
-  plate_df_aux <- plate_df |>
-    dplyr::mutate(plate = plateID) |>
-    dplyr::select(dplyr::all_of(c("SampleID", columns_for_scoring, "plate", "column", "row", "well")))
-
+  # Create plate_df and plate_df_aux for historical reasons
+  plate_df_aux <- plate_df
   plate_df <- plate_df |> dplyr::select(-c(well, column, row))
+
+
 
   # if(num_samples_on_plate < real_plate_size){
   #
