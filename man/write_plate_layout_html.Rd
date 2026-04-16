@@ -53,7 +53,7 @@ Writes plate layouts from an easyplater output manifest to an html report. Each 
 \details{
 \subsection{Customizing the html output}{
 
-The default R Markdown template wrapping \code{\link[OlinkAnalyze:olink_display_plate_layout]{OlinkAnalyze::olink_displayPlateLayout()}} and specifying how to format the report can be found by running \code{fs::path_package("extdata", "plate_layouts-format.Rmd", package = "easyplater")}. To customize the output html format, you can copy this file and edit it as desired and pass it to \code{write_plate_layout_html()} with the \code{rmd_template} argument.
+The default R Markdown template wrapping \code{\link[OlinkAnalyze:olink_displayPlateLayout]{OlinkAnalyze::olink_displayPlateLayout()}} and specifying how to format the report can be found by running \code{fs::path_package("extdata", "plate_layouts-format.Rmd", package = "easyplater")}. To customize the output html format, you can copy this file and edit it as desired and pass it to \code{write_plate_layout_html()} with the \code{rmd_template} argument.
 }
 }
 \examples{
