@@ -96,10 +96,10 @@ write_manifest_excel <- function(manifest_df, file,
   if (rowwise) {
     manifest_df <- split(manifest_df, manifest_df[[plate_col]]) |>
       lapply(\(plate_df) {
-        ordered_wells <- gtools::mixedsort(manifest_df$well)
-        manifest_df <- manifest_df[match(ordered_wells, manifest_df$well),]
+        ordered_wells <- gtools::mixedsort(plate_df$well)
+        plate_df <- plate_df[match(ordered_wells, plate_df$well),]
 
-        return(manifest_df)
+        return(plate_df)
       }) |> dplyr::bind_rows(.id = plate_col)
   }
 
