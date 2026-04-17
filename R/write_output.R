@@ -100,7 +100,7 @@ write_manifest_excel <- function(manifest_df, file,
         manifest_df <- manifest_df[match(ordered_wells, manifest_df$well),]
 
         return(manifest_df)
-      })
+      }) |> dplyr::bind_rows(.id = plate_col)
   }
 
   c(
