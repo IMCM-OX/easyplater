@@ -24,6 +24,7 @@ assign_plates <- function(manifest_df,
               score_output_filename = NULL,
               plate_size = 96,
               num_ctrl = 10,
+              wells_to_skip = NULL, # default rep(0, num_plates), where num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
               min_cell_expected = 5,
               perms = 100,
               perm_p_weight = 0.2,
@@ -42,11 +43,22 @@ assign_plates <- function(manifest_df,
   }
 
   num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
-  wells_to_skip <- rep(0, num_plates)
+
+  if (is.null(wells_to_skip)) {
+    wells_to_skip <- rep(0, num_plates)
+  }
 
   ## Create output dir
   if (create_dir) {
     dir.create(file.path(output_dir), recursive = TRUE, showWarnings = FALSE)
+  }
+
+  # Force any factors to character, as the running table() in `assign_subjects_to_plates()` on factors results in a non-random order
+  if(any(lapply(manifest_df, class) == "factor")) {
+    fcts <- names(which(lapply(manifest_df, class) == "factor"))
+    warning(paste0("Converting the following columns from factor to character: ", paste(fcts, collapse = ", ")))
+    manifest_df <- manifest_df |>
+      dplyr::mutate(dplyr::across(dplyr::all_of(fcts), as.character))
   }
 
   # withr::with_seed() prevents the user's seed from changing, so each run with
@@ -59,14 +71,6 @@ assign_plates <- function(manifest_df,
 
     if(length(assignment_seeds)!=length(testing_seeds)){
       stop("Number of assignment seeds does not match number of testing seeds.")
-    }
-
-    # Force any factors to character, as the running table() in `assign_subjects_to_plates()` on factors results in a non-random order
-    if(any(lapply(manifest_df, class) == "factor")) {
-      fcts <- names(which(lapply(manifest_df, class) == "factor"))
-      warning(paste0("Converting the following columns from factor to character: ", paste(fcts, collapse = ", ")))
-      manifest_df <- manifest_df |>
-        dplyr::mutate(dplyr::across(all_of(fcts), as.character))
     }
 
     ## STEP 1: Generate random manifests, save to list, write to rds

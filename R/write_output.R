@@ -14,6 +14,7 @@ OlinkAnalyze::olink_displayPlateLayout
 #' @param plate_col String. Name of column indicating the plate that samples belong to.
 #' @param display_col String. Column to draw labels for plate layout from.
 #' @param plate_size Numeric. Size of plate. Currently, anything other than 96 will return error.
+#' @param rowwise Logical. Arrange manifest as if filling plates rowwise, rather than columnwise.
 #'
 #' @returns Returns input `manifest_df` invisibly.
 #'
@@ -37,7 +38,8 @@ OlinkAnalyze::olink_displayPlateLayout
 write_manifest_excel <- function(manifest_df, file,
                                  plate_col = "plate",
                                  display_col = "SampleID",
-                                 plate_size = 96) {
+                                 plate_size = 96,
+                                 rowwise = FALSE) {
 
   # Check that plate size is 96
   if (plate_size == 96) {
@@ -90,6 +92,17 @@ write_manifest_excel <- function(manifest_df, file,
 
       return(plate_layout)
     })
+
+  # Arrange wells in manifest rowwise for some platforms (e.g. NULISA)
+  if (rowwise) {
+    manifest_df <- split(manifest_df, manifest_df[[plate_col]]) |>
+      lapply(\(plate_df) {
+        ordered_wells <- gtools::mixedsort(plate_df$well)
+        plate_df <- plate_df[match(ordered_wells, plate_df$well),]
+
+        return(plate_df)
+      }) |> dplyr::bind_rows(.id = plate_col)
+  }
 
   c(
     list(Manifest = manifest_df),
