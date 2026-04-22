@@ -14,6 +14,7 @@ OlinkAnalyze::olink_displayPlateLayout
 #' @param plate_col String. Name of column indicating the plate that samples belong to.
 #' @param display_col String. Column to draw labels for plate layout from.
 #' @param plate_size Numeric. Size of plate. Currently, anything other than 96 will return error.
+#' @param rowwise Logical. Arrange manifest as if filling plates rowwise, rather than columnwise.
 #'
 #' @returns Returns input `manifest_df` invisibly.
 #'
