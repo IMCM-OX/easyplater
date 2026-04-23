@@ -1,5 +1,5 @@
-preallocate_wells <- function(plate_df, ic_idcs, ic_labs,
-                              fill_rowwise = FALSE, fill_from_bottom = FALSE) {
+assign_fixed_wells <- function(plate_df, ic_idcs, ic_labs,
+                               fill_rowwise = FALSE, fill_from_bottom = FALSE) {
   all_wells <- paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8))
   ic_wells = all_wells[ic_idcs]
   # Fill available wells with samples
@@ -18,11 +18,6 @@ preallocate_wells <- function(plate_df, ic_idcs, ic_labs,
   }
   sample_wells <- nonic_wells[1:nrow(plate_df)]
 
-  # Add sample well (but not ic well) locations to plate_df to be used as input for easyplater
-  plate_df$well <- sample_wells
-  plate_df$row <- substr(sample_wells, 1, 1)
-  plate_df$column <- paste0("Column ", substr(sample_wells, 2, 3))
-
   # Allocate remaining wells as "empty"
   empty_wells <- nonic_wells[!(nonic_wells %in% sample_wells)]
   if (length(empty_wells > 0)) {
@@ -39,5 +34,18 @@ preallocate_wells <- function(plate_df, ic_idcs, ic_labs,
     labs = c(ic_labs, empty_labs)
   )
 
-  list(plate_df = plate_df, fixed_df = fixed_df)
+  fixed_df
+}
+
+add_sample_wells <- function(plate_df, fixed_wells) {
+  all_wells <- paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8))
+  nonfixed_wells <- all_wells[!(all_wells %in% fixed_wells)]
+  sample_wells <- nonfixed_wells[1:nrow(plate_df)]
+
+  # Add sample well (but not fixed well) locations to plate_df to be used as input for easyplater
+  plate_df$well <- sample_wells
+  plate_df$row <- substr(sample_wells, 1, 1)
+  plate_df$column <- paste0("Column ", substr(sample_wells, 2, 3))
+
+  plate_df
 }
