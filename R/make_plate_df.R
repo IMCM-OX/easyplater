@@ -78,7 +78,34 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
   }
 
   plate_df <- dplyr::select(plate_df_aux, dplyr::all_of(cols_for_analysis))
-  plate_df_aux <- dplyr::select(plate_df_aux, dplyr::all_of(c(cols_for_analysis, c("plate","column","row","well"))))
+  #plate_df_aux <- dplyr::select(plate_df_aux, dplyr::all_of(c(cols_for_analysis, c("plate","column","row","well"))))
+
+  #********************************************************************************************************
+  # Now assign starting wells for samples such that they are not placed in wells set aside for internal controls***
+  plate_df_aux <- dplyr::select(plate_df_aux, dplyr::all_of(c(cols_for_analysis, "plate")))
+  num_samples_on_plate <- length(plate_df$SampleID)
+
+  col_row_plate_df <- data.frame(
+    column = rep("", num_samples_on_plate),
+    row = rep("", num_samples_on_plate),
+    well = rep("", num_samples_on_plate)
+  )
+
+  plate_df_aux <- dplyr::bind_cols(plate_df_aux,col_row_plate_df)
+
+  available_wells <- plate_wells[which(!(plate_wells %in% plate_wells[internal_control_well_indices+1]))]
+
+  for(ni in 1:num_samples_on_plate){
+    SampleID <- plate_df_aux$SampleID[ni]
+    assigned_well <- available_wells[ni]
+    assigned_column <- get_column_from_well_coords(assigned_well)
+    assigned_row <- get_row_from_well_coords(assigned_well)
+
+    plate_df_aux$well[plate_df_aux$SampleID==SampleID] <- assigned_well
+    plate_df_aux$column[plate_df_aux$SampleID==SampleID] <- assigned_column
+    plate_df_aux$row[plate_df_aux$SampleID==SampleID] <- assigned_row
+  }
+  #********************************************************************************************************
 
   # Now account for imbalance in samples, as required
   imbalanceFix_vec <- c()
