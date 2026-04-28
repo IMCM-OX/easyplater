@@ -58,7 +58,7 @@ List of length 4.
 \itemize{
 \item First entry is sample communities found using sample similarity matrix and \code{\link[igraph:cluster_edge_betweenness]{igraph::cluster_edge_betweenness()}}
 \item Second entry is a character vector of SampleIDs in the order from the best scoring plate randomization
-\item Third entry is sample similarity matrix output by first element of \code{\link[=make_ss_matrices]{make_ss_matrices()}}
+\item Third entry is reordered sample similarity matrix, originally output by \code{\link[=make_ss_matrix]{make_ss_matrix()}} and then reordered to match the best scoring plate design found after \code{initial_perms} permutations
 \item Fourth entry is the PDS score for the returned highest-scoring plate design
 }
 }

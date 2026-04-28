@@ -77,7 +77,7 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
 #'
 #' @param depth **TO DO: Avi explain**
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
-#' @param ss_matrix Sample similarity matrix output by make_ss_matrices()\[\[3\]\]
+#' @param ss_matrix Sample similarity matrix output by make_ss_matrix()
 #' @param well_distances Output of make_well_distance_df()
 #' @param jiggled_matrix_indices **TO DO: Avi explain**
 #' @param sample_communities **TO DO: Avi explain**

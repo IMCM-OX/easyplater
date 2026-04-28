@@ -12,7 +12,7 @@
 #' @returns List of length 4.
 #'  - First entry is sample communities found using sample similarity matrix and [`igraph::cluster_edge_betweenness()`]
 #'  - Second entry is a character vector of SampleIDs in the order from the best scoring plate randomization
-#'  - Third entry is sample similarity matrix output by first element of [`easyplater::make_ss_matrices()`]
+#'  - Third entry is reordered sample similarity matrix, originally output by [`easyplater::make_ss_matrix()`] and then reordered to match the best scoring plate design found after `initial_perms` permutations
 #'  - Fourth entry is the PDS score for the returned highest-scoring plate design
 #'
 #' @examples
@@ -58,11 +58,7 @@ allocate_similar_samples_to_distal_wells <- function(
   plate_df <- plate_df_list[[1]]
   plate_df_aux <- plate_df_list[[2]]
 
-  ss_matrices_list <- make_ss_matrices(plate_df, column_weights, imbalance_fixer)
-
-  sample_similarities_matrix <- ss_matrices_list[[1]]
-  sample_similarities_si_names <- ss_matrices_list[[2]]
-  sample_similarities_sj_names <- ss_matrices_list[[3]]
+  sample_similarities_matrix <- make_ss_matrix(plate_df, column_weights, imbalance_fixer)
 
   sample_communities <- find_sample_communities(sample_similarities_matrix, splitting_ss_thresh)
 
@@ -109,7 +105,7 @@ allocate_similar_samples_to_distal_wells <- function(
 #' @inheritParams allocate_similar_samples_to_distal_wells
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
 #'
-#' @returns Length 3 list, containing three (plate size) x (plate size) matrices. The first element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. **TO DO: Avi, explain this.**
+#' @returns Numeric (plate size) x (plate size) sample similarity matrix. **TO DO: Avi, explain this.**
 #'
 #' @examples
 #' # Example of a pre-processed plate data frame
@@ -117,8 +113,8 @@ allocate_similar_samples_to_distal_wells <- function(
 #'
 #' col_weights <- c(5, 5, 10, 4)
 #' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-#' easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)
-make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
+#' easyplater:::make_ss_matrix(example_plate_df, col_weights, imbalance_fixer)
+make_ss_matrix <- function(plate_df, column_weights, imbalance_fixer){
 
   plate_size <- nrow(plate_df)
 
@@ -131,9 +127,6 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
   rownames(sample_similarities_matrix) <- plate_df$SampleID
   colnames(sample_similarities_matrix) <- plate_df$SampleID
 
-  sample_similarities_si_names <- matrix("", nrow = plate_size, ncol = plate_size)
-  sample_similarities_sj_names <- matrix("", nrow = plate_size, ncol = plate_size)
-
   for (si in 1:(plate_size-1)){
     sample_si <- plate_df[si,]
 
@@ -144,12 +137,9 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
       sample_similarities_matrix[si,sj] <- ss
       sample_similarities_matrix[sj,si] <- ss
 
-      sample_similarities_si_names[sj,si] <- sample_si$SampleID
-      sample_similarities_sj_names[sj,si] <- sample_sj$SampleID
-
     }
   }
-  return(list(sample_similarities_matrix, sample_similarities_si_names, sample_similarities_sj_names))
+  return(sample_similarities_matrix)
 }
 
 
@@ -159,7 +149,7 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
 #' Find sample communities using sample similarity matrix and [`igraph::cluster_edge_betweenness()`].
 #'
 #' @inheritParams allocate_similar_samples_to_distal_wells
-#' @param sample_similarities_matrix (plate size) x (plate size) numeric matrix. First element of list output by [make_ss_matrices()].
+#' @param sample_similarities_matrix (plate size) x (plate size) numeric matrix. Output by [make_ss_matrix()].
 #'
 #' @returns An [igraph::communities()] object.
 #'
@@ -169,7 +159,7 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
 #'
 #' col_weights <- c(5, 5, 10, 4)
 #' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-#' ss_mat <- easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+#' ss_mat <- easyplater:::make_ss_matrix(example_plate_df, col_weights, imbalance_fixer)
 #' easyplater:::find_sample_communities(ss_mat)
 find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thresh = 0.5){
   sample_similarities_matrix_mask <- sample_similarities_matrix
@@ -200,7 +190,7 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
 #'
 #' col_weights <- c(5, 5, 10, 4)
 #' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-#' ss_mat <- easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+#' ss_mat <- easyplater:::make_ss_matrix(example_plate_df, col_weights, imbalance_fixer)
 #' s_coms <- easyplater:::find_sample_communities(ss_mat)
 #'
 #' # These functions are internal to easyplater and needn't ever be called by user

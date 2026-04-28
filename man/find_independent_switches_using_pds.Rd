@@ -31,7 +31,7 @@ find_independent_switches_using_pds(
 
 \item{plate_df}{Data frame of samples and associated clinical metadata variables.}
 
-\item{ss_matrix}{Sample similarity matrix output by make_ss_matrices()[[3]]}
+\item{ss_matrix}{Sample similarity matrix output by make_ss_matrix()}
 
 \item{well_distances}{Output of make_well_distance_df()}
 

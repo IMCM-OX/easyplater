@@ -14,7 +14,7 @@ reorder_samples_in_plate(
 )
 }
 \arguments{
-\item{sample_similarities_matrix}{(plate size) x (plate size) numeric matrix. First element of list output by \code{\link[=make_ss_matrices]{make_ss_matrices()}}.}
+\item{sample_similarities_matrix}{(plate size) x (plate size) numeric matrix. Output by \code{\link[=make_ss_matrix]{make_ss_matrix()}}.}
 
 \item{sample_communities}{An \code{\link[igraph:communities]{igraph::communities()}} object.}
 
@@ -38,7 +38,7 @@ str(example_plate_df)
 
 col_weights <- c(5, 5, 10, 4)
 imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-ss_mat <- easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+ss_mat <- easyplater:::make_ss_matrix(example_plate_df, col_weights, imbalance_fixer)
 s_coms <- easyplater:::find_sample_communities(ss_mat)
 
 # These functions are internal to easyplater and needn't ever be called by user

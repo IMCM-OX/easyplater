@@ -7,7 +7,7 @@
 find_sample_communities(sample_similarities_matrix, splitting_ss_thresh = 0.5)
 }
 \arguments{
-\item{sample_similarities_matrix}{(plate size) x (plate size) numeric matrix. First element of list output by \code{\link[=make_ss_matrices]{make_ss_matrices()}}.}
+\item{sample_similarities_matrix}{(plate size) x (plate size) numeric matrix. Output by \code{\link[=make_ss_matrix]{make_ss_matrix()}}.}
 
 \item{splitting_ss_thresh}{Numeric scalar. Similarity threshold for generating adjacency matrix.}
 }
@@ -23,6 +23,6 @@ str(example_plate_df)
 
 col_weights <- c(5, 5, 10, 4)
 imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-ss_mat <- easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+ss_mat <- easyplater:::make_ss_matrix(example_plate_df, col_weights, imbalance_fixer)
 easyplater:::find_sample_communities(ss_mat)
 }
