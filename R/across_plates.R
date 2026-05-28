@@ -404,11 +404,17 @@ chisq_or_perm <- function(manifest, test_column, num_plates, min_cell_expected, 
   lengths <-  rle(sort(manifest[[test_column]]))$lengths
   values <- rle(sort(manifest[[test_column]]))$values
 
+  print(paste0("In chisq_or_perm function for column ", test_column))
+  print(paste0("sum(lengths < (num_plates*min_cell_expected)) is ", sum(lengths < (num_plates*min_cell_expected))))
+
   if(noperm | (sum(lengths < (num_plates*min_cell_expected)) == 0)){
+    print("Doing standard Chi-square test")
     chisq_result <- stats::chisq.test(table(manifest$plate, manifest[[test_column]]))
     return(list('normal', chisq_result))
 
   }else{
+
+    print("Doing permutation instead of Chi-square test")
 
     full_table <- table(manifest$plate, manifest[[test_column]])
     reduced_table <- full_table[,which(dimnames(full_table)[[2]] %in% values[lengths >= (num_plates*min_cell_expected)])]
