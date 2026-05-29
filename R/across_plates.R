@@ -406,6 +406,9 @@ chisq_or_perm <- function(manifest, test_column, num_plates, min_cell_expected, 
 
   print(paste0("In chisq_or_perm function for column ", test_column))
   print(paste0("sum(lengths < (num_plates*min_cell_expected)) is ", sum(lengths < (num_plates*min_cell_expected))))
+  print("Here are the values and lengths for this column:")
+  print(values)
+  print(lengths)
 
   if(noperm | (sum(lengths < (num_plates*min_cell_expected)) == 0)){
     print("Doing standard Chi-square test")
