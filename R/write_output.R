@@ -188,6 +188,7 @@ write_plate_layout_html <- function(manifest_df,
   }
 
   plate_list <- split(manifest_df, manifest_df[[plate_col]])
+  plate_list <- plate_list[gtools::mixedorder(names(plate_list))]
 
   html_dir <- dirname(html_filepath)
   html_file <- basename(html_filepath)
