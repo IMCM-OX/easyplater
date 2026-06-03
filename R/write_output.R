@@ -93,6 +93,8 @@ write_manifest_excel <- function(manifest_df, file,
       return(plate_layout)
     })
 
+  plate_list <- plate_list[gtools::mixedorder(names(plate_list))]
+
   # Arrange wells in manifest rowwise for some platforms (e.g. NULISA)
   if (rowwise) {
     manifest_df <- split(manifest_df, manifest_df[[plate_col]]) |>
