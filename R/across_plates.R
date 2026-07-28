@@ -28,7 +28,7 @@ assign_plates <- function(manifest_df,
               wells_to_skip,
               min_cell_expected = 5,
               perms = 100,
-              perm_p_weight = 0.2,
+              perm_p_weighting = 0.2,
               trials = 1e4,
               seed = 1374,
               print_mode = "progress",
@@ -86,13 +86,15 @@ assign_plates <- function(manifest_df,
 
     ## STEP 2: Test random manifests
     # out_manifests <- read_rds(file.path(output_dir, plate_output_filename))
-    trial_scores_df <- scoreRandoManifests(out_manifests = out_manifests,
+    trial_scores_df <- score_random_manifests(out_manifests = out_manifests,
                                            columns_to_test_df = columns_to_test_df,
                                            testing_seeds = testing_seeds,
                                            assignment_seeds = assignment_seeds,
-                                           PLATESIZE = plate_size, NUMCTRL = num_ctrl, MIN_CELL_EXPECTED = min_cell_expected,
-                                           PERMS = perms, PERM_P_WEIGHTING = perm_p_weight,
-                                           PRINT_MODE = "progress")
+                                           plate_size = plate_size, num_ctrl = num_ctrl,
+                                           num_plates = num_plates,
+                                           min_cell_expected = min_cell_expected,
+                                           perms = perms, perm_p_weighting = perm_p_weighting,
+                                           print_mode = "progress")
 
     readr::write_csv(trial_scores_df, file.path(output_dir, score_output_filename))
   })
@@ -136,19 +138,19 @@ generate_random_manifests <- function(manifest_df, assignment_seeds, plate_size,
 }
 
 # Generate scores for each random manifest
-scoreRandoManifests <- function(out_manifests, columns_to_test_df,
+score_random_manifests <- function(out_manifests, columns_to_test_df,
                                 testing_seeds, assignment_seeds,
-                                PLATESIZE, NUMCTRL,
-                                NUMPLATES = NULL,
-                                MIN_CELL_EXPECTED = 5, PERMS = 100, PERM_P_WEIGHTING = 0.2,
-                                PRINT_MODE = "progress") {
+                                plate_size, num_ctrl,
+                                num_plates,
+                                min_cell_expected = 5, perms = 100, perm_p_weighting = 0.2,
+                                print_mode = "progress") {
 
   trial_scores_df <- data.frame(matrix(ncol = (3+nrow(columns_to_test_df)+1), nrow = 0))
   colnames(trial_scores_df) <- c("trial", "assignment_seed", "testing_seed", columns_to_test_df$test_column, "total_weighted_score")
 
   cat("\nTesting and scoring plated manifest.\n")
 
-  if (PRINT_MODE == "progress") {
+  if (print_mode == "progress") {
     pb <- utils::txtProgressBar(min = 0, max = length(assignment_seeds), style = 3)
   }
 
@@ -165,22 +167,22 @@ scoreRandoManifests <- function(out_manifests, columns_to_test_df,
       column_type  <- col2test$column_type
       column_weight  <- col2test$column_weight
 
-      if (PRINT_MODE == "verbose") {
+      if (print_mode == "verbose") {
         cat(paste0("Trial = ", trial, ", row = ", row, ", column = ", test_column, ", type = ", column_type, ", weight = ", column_weight, "\n"))
       }
 
       if(column_type == "discrete"){
         chisq_or_perm_result <-
-          chisq_or_perm(out_manifest, test_column, NUMPLATES, MIN_CELL_EXPECTED,
-                        PlateSize = PLATESIZE, num_ctrl = NUMCTRL, perms=PERMS,
+          chisq_or_perm(out_manifest, test_column, num_plates, min_cell_expected,
+                        PlateSize=plate_size, num_ctrl=num_ctrl, perms=perms,
                         noperm = FALSE)
-        weighted_score <- get_score_from_test_results(chisq_or_perm_result, column_weight, PERM_P_WEIGHTING)
+        weighted_score <- get_score_from_test_results(chisq_or_perm_result, column_weight, perm_p_weighting)
       }else if(column_type == "discrete_noperm"){
         chisq_or_perm_result <-
-          chisq_or_perm(out_manifest, test_column, NUMPLATES, MIN_CELL_EXPECTED,
-                        PlateSize = PLATESIZE, num_ctrl = NUMCTRL, perms=PERMS,
+          chisq_or_perm(out_manifest, test_column, num_plates, min_cell_expected,
+                        PlateSize=plate_size, num_ctrl=num_ctrl, perms=perms,
                         noperm = TRUE)
-        weighted_score <- get_score_from_test_results(chisq_or_perm_result, column_weight, PERM_P_WEIGHTING)
+        weighted_score <- get_score_from_test_results(chisq_or_perm_result, column_weight, perm_p_weighting)
       }else if(column_type == "continuous"){
         formula_str <- paste(test_column, "~ plate") |> stats::as.formula()
         oneway_error <- TRUE
@@ -198,7 +200,7 @@ scoreRandoManifests <- function(out_manifests, columns_to_test_df,
         if(oneway_error){
           weighted_score <- 0
         }else{
-          weighted_score <- get_score_from_test_results(list('oneway', oneway_result), column_weight, PERM_P_WEIGHTING)
+          weighted_score <- get_score_from_test_results(list('oneway', oneway_result), column_weight, perm_p_weighting)
         }
       }
       if(weighted_score==-1){
@@ -216,7 +218,7 @@ scoreRandoManifests <- function(out_manifests, columns_to_test_df,
       as.data.frame()
     trial_scores_df <- dplyr::bind_rows(trial_scores_df, trial_scores_row)
 
-    if (PRINT_MODE == "progress") {
+    if (print_mode == "progress") {
       utils::setTxtProgressBar(pb, trial)
     }
   }
