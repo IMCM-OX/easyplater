@@ -22,8 +22,8 @@ assign_plates <- function(manifest_df,
               output_dir,
               plate_output_filename = NULL,
               score_output_filename = NULL,
-              plate_size = 96,
-              num_ctrl = 10,
+              plate_size,
+              num_ctrl,
               wells_to_skip = NULL, # default rep(0, num_plates), where num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
               min_cell_expected = 5,
               perms = 100,
@@ -74,10 +74,10 @@ assign_plates <- function(manifest_df,
     }
 
     ## STEP 1: Generate random manifests, save to list, write to rds
-    out_manifests <- genRandoManifests(manifest_df = manifest_df,
-                                       assignment_seeds = assignment_seeds,
-                                       PLATESIZE = plate_size, NUMCTRL = num_ctrl,
-                                       NUMPLATES = num_plates, WELLS2SKIP = wells_to_skip)
+    out_manifests <- generate_random_manifests(manifest_df = manifest_df,
+                                               assignment_seeds = assignment_seeds,
+                                               plate_size = plate_size, num_ctrl = num_ctrl,
+                                               num_plates = num_plates, wells_to_skip = wells_to_skip)
 
     readr::write_rds(out_manifests, file.path(output_dir, plate_output_filename))
 
@@ -96,10 +96,10 @@ assign_plates <- function(manifest_df,
   return(list(manifests = out_manifests, scores = trial_scores_df))
 }
 
+
 # Generate random manifests
-genRandoManifests <- function(manifest_df, assignment_seeds, PLATESIZE = 96, NUMCTRL = 20,
-                              NUMPLATES = NULL,
-                              WELLS2SKIP = rep(0, NUMPLATES)) {
+generate_random_manifests <- function(manifest_df, assignment_seeds, plate_size, num_ctrl,
+                                      num_plates, wells_to_skip, max_attempts=500) {
 
   out_manifests <- list()
   cat("\nGenerating random manifests.\n")
@@ -108,9 +108,9 @@ genRandoManifests <- function(manifest_df, assignment_seeds, PLATESIZE = 96, NUM
     set.seed(assignment_seeds[trial])
 
     out_manifests[[as.character(assignment_seeds[trial])]] <-
-      generate_plate_assignments(manifest_df, num_plates = NUMPLATES, PlateSize = PLATESIZE,
-                                 num_ctrl = NUMCTRL, max_attempts = 500,
-                                 wells_to_skip = WELLS2SKIP)
+      generate_plate_assignments(manifest_df, num_plates = num_plates, plate_size = plate_size,
+                                 num_ctrl = num_ctrl,
+                                 wells_to_skip = wells_to_skip, max_attempts = max_attempts)
     utils::setTxtProgressBar(pb, trial)
   }
   return(out_manifests)
@@ -316,12 +316,12 @@ assign_subjects_to_plates <- function(manifest, num_plates, PlateSize = 96, num_
   }
 }
 
-generate_plate_assignments <- function(manifest, num_plates, PlateSize = 96, num_ctrl = 10, max_attempts = 500, wells_to_skip = rep(0, num_plates)){
+generate_plate_assignments <- function(manifest, num_plates, plate_size, num_ctrl, wells_to_skip, max_attempts = 500){
   num_attempts <- 0
   success <- FALSE
   # Run plate permutation
   while(!(success) & (num_attempts < max_attempts)){
-    plate_permutation <- assign_subjects_to_plates(manifest, num_plates, PlateSize, num_ctrl, wells_to_skip)
+    plate_permutation <- assign_subjects_to_plates(manifest, num_plates, plate_size, num_ctrl, wells_to_skip)
     if(plate_permutation[1]!=-1){
       success <- TRUE
       my_manifest <- manifest
