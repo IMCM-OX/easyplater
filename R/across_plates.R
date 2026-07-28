@@ -24,7 +24,8 @@ assign_plates <- function(manifest_df,
               score_output_filename = NULL,
               plate_size,
               num_ctrl,
-              wells_to_skip = NULL, # default rep(0, num_plates), where num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
+              num_plates,
+              wells_to_skip,
               min_cell_expected = 5,
               perms = 100,
               perm_p_weight = 0.2,
@@ -42,11 +43,13 @@ assign_plates <- function(manifest_df,
     score_output_filename <- paste0("random_manifest_tests-", trials, "trials-", lubridate::today(), ".csv")
   }
 
-  num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
 
-  if (is.null(wells_to_skip)) {
-    wells_to_skip <- rep(0, num_plates)
-  }
+  # Removing these calculations, as these parameters will now always be passed to this function. (There is no default value assumed in order to avoid bugs)
+  # num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
+  #
+  # if (is.null(wells_to_skip)) {
+  #   wells_to_skip <- rep(0, num_plates)
+  # }
 
   ## Create output dir
   if (create_dir) {
@@ -94,6 +97,22 @@ assign_plates <- function(manifest_df,
     readr::write_csv(trial_scores_df, file.path(output_dir, score_output_filename))
   })
   return(list(manifests = out_manifests, scores = trial_scores_df))
+}
+
+
+# Calculate wells_to_skip
+calc_wells_to_skip <- function(plate_size, num_ctrl, num_samples, num_bridging_samples){
+  n_full_plates <- (num_samples + num_bridging_samples) %/% (plate_size - num_ctrl)
+  n_overhang <- (num_samples + num_bridging_samples) %% (plate_size - num_ctrl)
+
+  wells_to_skip <- c(rep((num_bridging_samples %/% n_full_plates), n_full_plates))
+  wells_to_skip <- wells_to_skip + c(rep(1, (num_bridging_samples %% n_full_plates)), rep(0, n_full_plates-(num_bridging_samples %% n_full_plates)))
+
+  if(n_overhang>0){
+    wells_to_skip <- c(wells_to_skip, plate_size - num_ctrl -n_overhang)
+  }
+
+  return(wells_to_skip)
 }
 
 
