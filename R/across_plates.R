@@ -82,7 +82,7 @@ assign_plates <- function(manifest_df,
     })
   }
 
-  if(not(is.null(assignment_seeds)) && not(is.null(testing_seeds))){
+  if(!(is.null(assignment_seeds)) && !(is.null(testing_seeds))){
     print("WARNING: You have opted to supply assignment_seeds and testing_seeds, so parameters trial and seed will be ignored because they are only used when randomly generating these vectors.")
   }
 
