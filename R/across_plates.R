@@ -56,6 +56,12 @@ assign_plates <- function(manifest_df,
     stop("You cannot supply only assignment_seeds, or only testing_seeds. You must either supply both or supply neither.")
   }
 
+  # If seeds are supplied, make sure user is informed of what is going on with parameters trials and seed. Also, reset trials length to match the number of seeds supplied.
+  if(!(is.null(assignment_seeds)) && !(is.null(testing_seeds))){
+    print("WARNING: You have opted to supply assignment_seeds and testing_seeds, so parameters trials and seed will be ignored during plate assignment because they are only used when randomly generating these vectors.")
+    trials <- length(assignment_seeds)
+  }
+
   # if no seeds have been supplied, generate them.
   if(is.null(assignment_seeds) && is.null(testing_seeds)){
     # withr::with_seed() prevents the user's seed from changing, so each run with
@@ -66,12 +72,6 @@ assign_plates <- function(manifest_df,
       assignment_seeds <- c(sample(10^7)[seq(1,trials)])
       testing_seeds <- c(sample(10^7)[seq(1,trials)])
     })
-  }
-
-  # Make sure user is informed of what is going on.
-  if(!(is.null(assignment_seeds)) && !(is.null(testing_seeds))){
-    print("WARNING: You have opted to supply assignment_seeds and testing_seeds, so parameters trials and seed will be ignored during plate assignment because they are only used when randomly generating these vectors.")
-    trials <- length(assignment_seeds)
   }
 
   # Checking validity of inputed seeds
