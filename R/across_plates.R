@@ -26,6 +26,8 @@ assign_plates <- function(manifest_df,
               num_ctrl,
               num_plates,
               wells_to_skip,
+              assignment_seeds = NULL,
+              testing_seeds = NULL,
               min_cell_expected = 5,
               perms = 100,
               perm_p_weighting = 0.2,
@@ -64,34 +66,46 @@ assign_plates <- function(manifest_df,
       dplyr::mutate(dplyr::across(dplyr::all_of(fcts), as.character))
   }
 
-  # withr::with_seed() prevents the user's seed from changing, so each run with
-  # the same seed argument will reproduce the same result, without restarting R
-  withr::with_seed(seed, {
-    # We want to do this randomly, but we need to set seeds and keep track of them so that we can reproduce the outputs.
-    # For each full sample-to-pte assignment we need two seeds: One for the assignment phase, and one for the testing phase.
-    assignment_seeds <- c(sample(10^7)[seq(1,trials)])
-    testing_seeds <- c(sample(10^7)[seq(1,trials)])
+  # stop execution if user has supplied one or other of assignment_seeds or testing_seeds; continue if supplied both or neither.
+  if(xor(is.null(assignment_seeds), is.null(testing_seeds))){
+    stop("You cannot supply only assignment_seeds, or only testing_seeds. You must either supply both or supply neither.")
+  }
 
-    if(length(assignment_seeds)!=length(testing_seeds)){
-      stop("Number of assignment seeds does not match number of testing seeds.")
-    }
+  if(is.null(assignment_seeds) && is.null(testing_seeds)){
+    # withr::with_seed() prevents the user's seed from changing, so each run with
+    # the same seed argument will reproduce the same result, without restarting R
+    withr::with_seed(seed, {
+      # We want to do this randomly, but we need to set seeds and keep track of them so that we can reproduce the outputs.
+      # For each full sample-to-plate assignment we need two seeds: One for the assignment phase, and one for the testing phase.
+      assignment_seeds <- c(sample(10^7)[seq(1,trials)])
+      testing_seeds <- c(sample(10^7)[seq(1,trials)])
+    })
+  }
 
-    ## STEP 1: Generate random manifests, save to list, write to rds
-    out_manifests <- generate_random_manifests(manifest_df, assignment_seeds, plate_size, num_ctrl, num_plates, wells_to_skip)
+  if(not(is.null(assignment_seeds)) && not(is.null(testing_seeds))){
+    print("WARNING: You have opted to supply assignment_seeds and testing_seeds, so parameters trial and seed will be ignored because they are only used when randomly generating these vectors.")
+  }
 
-    readr::write_rds(out_manifests, file.path(output_dir, plate_output_filename))
+  if(length(assignment_seeds)!=length(testing_seeds)){
+    stop("Number of assignment seeds does not match number of testing seeds.")
+  }
 
-    ## STEP 2: Test random manifests
-    # out_manifests <- read_rds(file.path(output_dir, plate_output_filename))
-    trial_scores_df <- score_random_manifests(out_manifests, columns_to_test_df,
+  ## STEP 1: Generate random manifests, save to list, write to rds
+  out_manifests <- generate_random_manifests(manifest_df, assignment_seeds, plate_size, num_ctrl, num_plates, wells_to_skip)
+
+  #readr::write_rds(out_manifests, file.path(output_dir, plate_output_filename))
+
+  ## STEP 2: Test random manifests
+  # out_manifests <- read_rds(file.path(output_dir, plate_output_filename))
+  trial_scores_df <- score_random_manifests(out_manifests, columns_to_test_df,
                                            testing_seeds, assignment_seeds,
                                            plate_size, num_ctrl, num_plates,
                                            wells_to_skip, min_cell_expected,
                                            perms, perm_p_weighting,
                                            print_mode = "progress")
 
-    readr::write_csv(trial_scores_df, file.path(output_dir, score_output_filename))
-  })
+  readr::write_csv(trial_scores_df, file.path(output_dir, score_output_filename))
+
   return(list(manifests = out_manifests, scores = trial_scores_df))
 }
 
