@@ -36,23 +36,6 @@ assign_plates <- function(manifest_df,
               print_mode = "progress",
               create_dir = TRUE) {
 
-  # OUTPUT_DIR <- paste0("output/AD-Olink-", today())
-  if (is.null(plate_output_filename)) {
-    plate_output_filename <- paste0("random_manifest_assignments-", trials, "trials-", lubridate::today(), ".rds")
-  }
-
-  if (is.null(score_output_filename)) {
-    score_output_filename <- paste0("random_manifest_tests-", trials, "trials-", lubridate::today(), ".csv")
-  }
-
-
-  # Removing these calculations, as these parameters will now always be passed to this function. (There is no default value assumed in order to avoid bugs)
-  # num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
-  #
-  # if (is.null(wells_to_skip)) {
-  #   wells_to_skip <- rep(0, num_plates)
-  # }
-
   ## Create output dir
   if (create_dir) {
     dir.create(file.path(output_dir), recursive = TRUE, showWarnings = FALSE)
@@ -66,11 +49,14 @@ assign_plates <- function(manifest_df,
       dplyr::mutate(dplyr::across(dplyr::all_of(fcts), as.character))
   }
 
+  ## Make sure we are using the correct assignment seeds and testing seeds... *************************************
+
   # stop execution if user has supplied one or other of assignment_seeds or testing_seeds; continue if supplied both or neither.
   if(xor(is.null(assignment_seeds), is.null(testing_seeds))){
     stop("You cannot supply only assignment_seeds, or only testing_seeds. You must either supply both or supply neither.")
   }
 
+  # if no seeds have been supplied, generate them.
   if(is.null(assignment_seeds) && is.null(testing_seeds)){
     # withr::with_seed() prevents the user's seed from changing, so each run with
     # the same seed argument will reproduce the same result, without restarting R
@@ -82,13 +68,29 @@ assign_plates <- function(manifest_df,
     })
   }
 
+  # Make sure user is informed of what is going on.
   if(!(is.null(assignment_seeds)) && !(is.null(testing_seeds))){
     print("WARNING: You have opted to supply assignment_seeds and testing_seeds, so parameters trial and seed will be ignored because they are only used when randomly generating these vectors.")
+    trials <- length(assignment_seeds)
   }
 
+  # Checking validity of inputed seeds
   if(length(assignment_seeds)!=length(testing_seeds)){
     stop("Number of assignment seeds does not match number of testing seeds.")
   }
+
+  #*****************************************************************************
+
+  # Now that we know what the seeds are, we know the number of trials, so we can make output file names
+  if (is.null(plate_output_filename)) {
+    plate_output_filename <- paste0("random_manifest_assignments-", trials, "trials-", lubridate::today(), ".rds")
+  }
+
+  if (is.null(score_output_filename)) {
+    score_output_filename <- paste0("random_manifest_tests-", trials, "trials-", lubridate::today(), ".csv")
+  }
+
+  # Now do the actual work...
 
   ## STEP 1: Generate random manifests, save to list, write to rds
   out_manifests <- generate_random_manifests(manifest_df, assignment_seeds, plate_size, num_ctrl, num_plates, wells_to_skip)
