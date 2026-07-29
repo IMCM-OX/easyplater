@@ -123,7 +123,7 @@ generate_random_manifests <- function(manifest_df, assignment_seeds, plate_size,
     set.seed(assignment_seeds[trial])
 
     out_manifests[[as.character(assignment_seeds[trial])]] <-
-      generate_plate_assignments(manifest_df, num_plates, plate_size, num_ctrl, wells_to_skip, max_attempts)
+      generate_plate_assignments(manifest_df, num_plates, plate_size, num_ctrl, wells_to_skip, max_attempts, assignment_seed=assignment_seeds[trial])
     utils::setTxtProgressBar(pb, trial)
   }
   return(out_manifests)
@@ -326,7 +326,7 @@ assign_subjects_to_plates <- function(manifest, num_plates, plate_size, num_ctrl
   }
 }
 
-generate_plate_assignments <- function(manifest, num_plates, plate_size, num_ctrl, wells_to_skip, max_attempts){
+generate_plate_assignments <- function(manifest, num_plates, plate_size, num_ctrl, wells_to_skip, max_attempts, assignment_seed){
   num_attempts <- 0
   success <- FALSE
   # Run plate permutation
@@ -339,6 +339,10 @@ generate_plate_assignments <- function(manifest, num_plates, plate_size, num_ctr
       return(my_manifest)
     }
     num_attempts <- num_attempts + 1
+  }
+
+  if(!(success)){
+    stop(paste0("Unable to generate plate assignment using assignment seed = ", assignment_seed, " in ", max_attempts, " attempts."))
   }
 }
 
