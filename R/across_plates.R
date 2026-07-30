@@ -22,31 +22,19 @@ assign_plates <- function(manifest_df,
               output_dir,
               plate_output_filename = NULL,
               score_output_filename = NULL,
-              plate_size = 96,
-              num_ctrl = 10,
-              wells_to_skip = NULL, # default rep(0, num_plates), where num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
+              plate_size,
+              num_ctrl,
+              num_plates,
+              wells_to_skip,
+              assignment_seeds = NULL,
+              testing_seeds = NULL,
               min_cell_expected = 5,
               perms = 100,
-              perm_p_weight = 0.2,
+              perm_p_weighting = 0.2,
               trials = 1e4,
               seed = 1374,
               print_mode = "progress",
               create_dir = TRUE) {
-
-  # OUTPUT_DIR <- paste0("output/AD-Olink-", today())
-  if (is.null(plate_output_filename)) {
-    plate_output_filename <- paste0("random_manifest_assignments-", trials, "trials-", lubridate::today(), ".rds")
-  }
-
-  if (is.null(score_output_filename)) {
-    score_output_filename <- paste0("random_manifest_tests-", trials, "trials-", lubridate::today(), ".csv")
-  }
-
-  num_plates <- ceiling(nrow(manifest_df)/(plate_size-num_ctrl))
-
-  if (is.null(wells_to_skip)) {
-    wells_to_skip <- rep(0, num_plates)
-  }
 
   ## Create output dir
   if (create_dir) {
@@ -61,45 +49,88 @@ assign_plates <- function(manifest_df,
       dplyr::mutate(dplyr::across(dplyr::all_of(fcts), as.character))
   }
 
-  # withr::with_seed() prevents the user's seed from changing, so each run with
-  # the same seed argument will reproduce the same result, without restarting R
-  withr::with_seed(seed, {
-    # We want to do this randomly, but we need to set seeds and keep track of them so that we can reproduce the outputs.
-    # For each full sample-to-pte assignment we need two seeds: One for the assignment phase, and one for the testing phase.
-    assignment_seeds <- c(sample(10^7)[seq(1,trials)])
-    testing_seeds <- c(sample(10^7)[seq(1,trials)])
+  ## Make sure we are using the correct assignment seeds and testing seeds... *************************************
 
-    if(length(assignment_seeds)!=length(testing_seeds)){
-      stop("Number of assignment seeds does not match number of testing seeds.")
-    }
+  # stop execution if user has supplied one or other of assignment_seeds or testing_seeds; continue if supplied both or neither.
+  if(xor(is.null(assignment_seeds), is.null(testing_seeds))){
+    stop("You cannot supply only assignment_seeds, or only testing_seeds. You must either supply both or supply neither.")
+  }
 
-    ## STEP 1: Generate random manifests, save to list, write to rds
-    out_manifests <- genRandoManifests(manifest_df = manifest_df,
-                                       assignment_seeds = assignment_seeds,
-                                       PLATESIZE = plate_size, NUMCTRL = num_ctrl,
-                                       NUMPLATES = num_plates, WELLS2SKIP = wells_to_skip)
+  # If seeds are supplied, make sure user is informed of what is going on with parameters trials and seed. Also, reset trials length to match the number of seeds supplied.
+  if(!(is.null(assignment_seeds)) && !(is.null(testing_seeds))){
+    print("Warning: You have opted to supply assignment_seeds and testing_seeds, so parameters trials and seed will be ignored during plate assignment because they are only used when randomly generating these vectors.")
+    trials <- length(assignment_seeds)
+  }
 
-    readr::write_rds(out_manifests, file.path(output_dir, plate_output_filename))
+  # if no seeds have been supplied, generate them.
+  if(is.null(assignment_seeds) && is.null(testing_seeds)){
+    # withr::with_seed() prevents the user's seed from changing, so each run with
+    # the same seed argument will reproduce the same result, without restarting R
+    withr::with_seed(seed, {
+      # We want to do this randomly, but we need to set seeds and keep track of them so that we can reproduce the outputs.
+      # For each full sample-to-plate assignment we need two seeds: One for the assignment phase, and one for the testing phase.
+      assignment_seeds <- c(sample(10^7)[seq(1,trials)])
+      testing_seeds <- c(sample(10^7)[seq(1,trials)])
+    })
+  }
 
-    ## STEP 2: Test random manifests
-    # out_manifests <- read_rds(file.path(output_dir, plate_output_filename))
-    trial_scores_df <- scoreRandoManifests(out_manifests = out_manifests,
-                                           columns_to_test_df = columns_to_test_df,
-                                           testing_seeds = testing_seeds,
-                                           assignment_seeds = assignment_seeds,
-                                           PLATESIZE = plate_size, NUMCTRL = num_ctrl, MIN_CELL_EXPECTED = min_cell_expected,
-                                           PERMS = perms, PERM_P_WEIGHTING = perm_p_weight,
-                                           PRINT_MODE = "progress")
+  # Checking validity of inputed seeds
+  if(length(assignment_seeds)!=length(testing_seeds)){
+    stop("Number of assignment seeds does not match number of testing seeds.")
+  }
 
-    readr::write_csv(trial_scores_df, file.path(output_dir, score_output_filename))
-  })
+  #*****************************************************************************
+
+  # Now that we know what the seeds are, we know the number of trials, so we can make output file names
+  if (is.null(plate_output_filename)) {
+    plate_output_filename <- paste0("random_manifest_assignments-", trials, "trials-", lubridate::today(), ".rds")
+  }
+
+  if (is.null(score_output_filename)) {
+    score_output_filename <- paste0("random_manifest_tests-", trials, "trials-", lubridate::today(), ".csv")
+  }
+
+  # Now do the actual work...
+
+  ## STEP 1: Generate random manifests, save to list, write to rds
+  out_manifests <- generate_random_manifests(manifest_df, assignment_seeds, plate_size, num_ctrl, num_plates, wells_to_skip)
+
+  #readr::write_rds(out_manifests, file.path(output_dir, plate_output_filename))
+
+  ## STEP 2: Test random manifests
+  # out_manifests <- read_rds(file.path(output_dir, plate_output_filename))
+  trial_scores_df <- score_random_manifests(out_manifests, columns_to_test_df,
+                                           testing_seeds, assignment_seeds,
+                                           plate_size, num_ctrl, num_plates,
+                                           wells_to_skip, min_cell_expected,
+                                           perms, perm_p_weighting,
+                                           print_mode = "progress")
+
+  readr::write_csv(trial_scores_df, file.path(output_dir, score_output_filename))
+
   return(list(manifests = out_manifests, scores = trial_scores_df))
 }
 
+
+# Calculate wells_to_skip
+calc_wells_to_skip <- function(plate_size, num_ctrl, num_samples, num_bridging_samples){
+  n_full_plates <- (num_samples + num_bridging_samples) %/% (plate_size - num_ctrl)
+  n_overhang <- (num_samples + num_bridging_samples) %% (plate_size - num_ctrl)
+
+  wells_to_skip <- c(rep((num_bridging_samples %/% n_full_plates), n_full_plates))
+  wells_to_skip <- wells_to_skip + c(rep(1, (num_bridging_samples %% n_full_plates)), rep(0, n_full_plates-(num_bridging_samples %% n_full_plates)))
+
+  if(n_overhang>0){
+    wells_to_skip <- c(wells_to_skip, plate_size - num_ctrl -n_overhang)
+  }
+
+  return(wells_to_skip)
+}
+
+
 # Generate random manifests
-genRandoManifests <- function(manifest_df, assignment_seeds, PLATESIZE = 96, NUMCTRL = 20,
-                              NUMPLATES = NULL,
-                              WELLS2SKIP = rep(0, NUMPLATES)) {
+generate_random_manifests <- function(manifest_df, assignment_seeds, plate_size, num_ctrl,
+                                      num_plates, wells_to_skip, max_attempts=500) {
 
   out_manifests <- list()
   cat("\nGenerating random manifests.\n")
@@ -108,28 +139,26 @@ genRandoManifests <- function(manifest_df, assignment_seeds, PLATESIZE = 96, NUM
     set.seed(assignment_seeds[trial])
 
     out_manifests[[as.character(assignment_seeds[trial])]] <-
-      generate_plate_assignments(manifest_df, num_plates = NUMPLATES, PlateSize = PLATESIZE,
-                                 num_ctrl = NUMCTRL, max_attempts = 500,
-                                 wells_to_skip = WELLS2SKIP)
+      generate_plate_assignments(manifest_df, num_plates, plate_size, num_ctrl, wells_to_skip, max_attempts, assignment_seed=assignment_seeds[trial])
     utils::setTxtProgressBar(pb, trial)
   }
   return(out_manifests)
 }
 
 # Generate scores for each random manifest
-scoreRandoManifests <- function(out_manifests, columns_to_test_df,
+score_random_manifests <- function(out_manifests, columns_to_test_df,
                                 testing_seeds, assignment_seeds,
-                                PLATESIZE, NUMCTRL,
-                                NUMPLATES = NULL,
-                                MIN_CELL_EXPECTED = 5, PERMS = 100, PERM_P_WEIGHTING = 0.2,
-                                PRINT_MODE = "progress") {
+                                plate_size, num_ctrl,
+                                num_plates, wells_to_skip,
+                                min_cell_expected = 5, perms = 100, perm_p_weighting = 0.2,
+                                print_mode = "progress") {
 
   trial_scores_df <- data.frame(matrix(ncol = (3+nrow(columns_to_test_df)+1), nrow = 0))
   colnames(trial_scores_df) <- c("trial", "assignment_seed", "testing_seed", columns_to_test_df$test_column, "total_weighted_score")
 
   cat("\nTesting and scoring plated manifest.\n")
 
-  if (PRINT_MODE == "progress") {
+  if (print_mode == "progress") {
     pb <- utils::txtProgressBar(min = 0, max = length(assignment_seeds), style = 3)
   }
 
@@ -146,22 +175,20 @@ scoreRandoManifests <- function(out_manifests, columns_to_test_df,
       column_type  <- col2test$column_type
       column_weight  <- col2test$column_weight
 
-      if (PRINT_MODE == "verbose") {
+      if (print_mode == "verbose") {
         cat(paste0("Trial = ", trial, ", row = ", row, ", column = ", test_column, ", type = ", column_type, ", weight = ", column_weight, "\n"))
       }
 
       if(column_type == "discrete"){
         chisq_or_perm_result <-
-          chisq_or_perm(out_manifest, test_column, NUMPLATES, MIN_CELL_EXPECTED,
-                        PlateSize = PLATESIZE, num_ctrl = NUMCTRL, perms=PERMS,
-                        noperm = FALSE)
-        weighted_score <- get_score_from_test_results(chisq_or_perm_result, column_weight, PERM_P_WEIGHTING)
+          chisq_or_perm(out_manifest, test_column, num_plates, min_cell_expected,
+                        plate_size, num_ctrl, wells_to_skip, perms, noperm = FALSE)
+        weighted_score <- get_score_from_test_results(chisq_or_perm_result, column_weight, perm_p_weighting)
       }else if(column_type == "discrete_noperm"){
         chisq_or_perm_result <-
-          chisq_or_perm(out_manifest, test_column, NUMPLATES, MIN_CELL_EXPECTED,
-                        PlateSize = PLATESIZE, num_ctrl = NUMCTRL, perms=PERMS,
-                        noperm = TRUE)
-        weighted_score <- get_score_from_test_results(chisq_or_perm_result, column_weight, PERM_P_WEIGHTING)
+          chisq_or_perm(out_manifest, test_column, num_plates, min_cell_expected,
+                        plate_size, num_ctrl, wells_to_skip, perms, noperm = TRUE)
+        weighted_score <- get_score_from_test_results(chisq_or_perm_result, column_weight, perm_p_weighting)
       }else if(column_type == "continuous"){
         formula_str <- paste(test_column, "~ plate") |> stats::as.formula()
         oneway_error <- TRUE
@@ -171,19 +198,19 @@ scoreRandoManifests <- function(out_manifests, columns_to_test_df,
             oneway_result <- stats::oneway.test(formula_str, data = out_manifest, var.equal = FALSE)
             oneway_error <- FALSE
           }, error = function(msg){
-            print("Error caught with stats::oneway.test. Setting corresponding score to 0.")
+            print("Error: caught with stats::oneway.test. Setting corresponding score to 0.")
           }, warning = function(msg){
-            print("Warning caught with stats::oneway.test. Setting corresponding score to 0.")
+            print("Warning: caught with stats::oneway.test. Setting corresponding score to 0.")
           }
         )
         if(oneway_error){
           weighted_score <- 0
         }else{
-          weighted_score <- get_score_from_test_results(list('oneway', oneway_result), column_weight, PERM_P_WEIGHTING)
+          weighted_score <- get_score_from_test_results(list('oneway', oneway_result), column_weight, perm_p_weighting)
         }
       }
       if(weighted_score==-1){
-        print(paste("ERROR: column scoring has failed for column", test_column, "has failed. Please check input manifest and try again.", sep=" "))
+        print(paste("Error: column scoring has failed for column", test_column, "has failed. Please check input manifest and try again.", sep=" "))
       }else{
         weighted_scores <- c(weighted_scores, weighted_score)
       }
@@ -197,7 +224,7 @@ scoreRandoManifests <- function(out_manifests, columns_to_test_df,
       as.data.frame()
     trial_scores_df <- dplyr::bind_rows(trial_scores_df, trial_scores_row)
 
-    if (PRINT_MODE == "progress") {
+    if (print_mode == "progress") {
       utils::setTxtProgressBar(pb, trial)
     }
   }
@@ -226,14 +253,13 @@ subtract_plate_allocations_from_free_wells <- function(wells_free_per_plate, pla
   return(wells_free_per_plate - unlist(lapply(seq(1,num_plates), function(p){sum(plate_allocations==p)})))
 }
 
-assign_subjects_to_plates <- function(manifest, num_plates, PlateSize = 96, num_ctrl = 10, wells_to_skip = rep(0, num_plates)){
+assign_subjects_to_plates <- function(manifest, num_plates, plate_size, num_ctrl, wells_to_skip){
   plate_indices <- seq(1,num_plates)           # Note - we don't actually care what the original plate names or numbers are because they do not matter in this permutation process. Also, using numeric indices is neater to code here.
 
-  # Allow user to manually adjust the number of wells free on a plate-specific basis
   if (length(wells_to_skip) != num_plates) {
-    stop("`wells_to_skip` must be NULL (default) or be logical vector of length PlateSize*num_plates")
+    stop("`wells_to_skip` must be vector of length num_plates")
   }
-  wells_free_per_plate <- rep(PlateSize - num_ctrl, num_plates) - wells_to_skip
+  wells_free_per_plate <- rep(plate_size - num_ctrl, num_plates) - wells_to_skip
 
   subject_plate_permutation_df <- data.frame(SubjectID=c(), permplate=c())
   failed = FALSE
@@ -273,7 +299,7 @@ assign_subjects_to_plates <- function(manifest, num_plates, PlateSize = 96, num_
           nr_subset_temp <- nr_subset_temp[-seq(1,length(subset_useful_plates))]
 
         }else{
-          print("PERMUTATION FAILED")
+          print("Warning: a random plate assignment has failed.")
           failed <- TRUE
         }
       }
@@ -289,7 +315,7 @@ assign_subjects_to_plates <- function(manifest, num_plates, PlateSize = 96, num_
     non_longitudinal_samples <- longitudinal_repeats_df$Var1[longitudinal_repeats_df$Freq==1]
 
     if(length(non_longitudinal_samples) > sum(wells_free_per_plate)){
-      print("ERROR DURING PERMUTATION - NOT ENOUGH WELLS AVAILABLE...")
+      print("Warning: a problem has occurred during pernutation - not enough wells available.")
       return(-1)
     }else{
       manifest_non_longitudinal <- manifest[manifest$SubjectID %in% non_longitudinal_samples,]
@@ -316,12 +342,12 @@ assign_subjects_to_plates <- function(manifest, num_plates, PlateSize = 96, num_
   }
 }
 
-generate_plate_assignments <- function(manifest, num_plates, PlateSize = 96, num_ctrl = 10, max_attempts = 500, wells_to_skip = rep(0, num_plates)){
+generate_plate_assignments <- function(manifest, num_plates, plate_size, num_ctrl, wells_to_skip, max_attempts, assignment_seed){
   num_attempts <- 0
   success <- FALSE
   # Run plate permutation
   while(!(success) & (num_attempts < max_attempts)){
-    plate_permutation <- assign_subjects_to_plates(manifest, num_plates, PlateSize, num_ctrl, wells_to_skip)
+    plate_permutation <- assign_subjects_to_plates(manifest, num_plates, plate_size, num_ctrl, wells_to_skip)
     if(plate_permutation[1]!=-1){
       success <- TRUE
       my_manifest <- manifest
@@ -330,17 +356,20 @@ generate_plate_assignments <- function(manifest, num_plates, PlateSize = 96, num
     }
     num_attempts <- num_attempts + 1
   }
+
+  if(!(success)){
+    stop(paste0("Unable to generate plate assignment using assignment seed = ", assignment_seed, " in ", max_attempts, " attempts."))
+  }
 }
 
-olink_plate_permutation <- function(manifest, num_plates, PlateSize = 96, num_ctrl = 10, perms = 100, wells_to_skip = rep(0, num_plates)){
+permute_plate <- function(manifest, num_plates, plate_size, num_ctrl, wells_to_skip, perms){
   my_manifest <- manifest
   num_successful_perms <- 0
   perm_col_names <- c()
   for (perm in seq(1,perms)){
-    plate_permutation <- assign_subjects_to_plates(manifest, num_plates, PlateSize, num_ctrl,
-                                                   wells_to_skip = wells_to_skip)
+    plate_permutation <- assign_subjects_to_plates(manifest, num_plates, plate_size, num_ctrl, wells_to_skip)
     if((length(plate_permutation) == 1) & plate_permutation[1] == -1){
-      print("Warning: a permutation has failed... If this keeps happening, this testing strategy may not be appropriate")
+      print("Warning: a permutation has failed. If this keeps happening, this testing strategy may not be appropriate")
     }else{
       my_manifest[paste('pp', perm, sep="")] <- plate_permutation
       num_successful_perms <- num_successful_perms + 1
@@ -348,19 +377,19 @@ olink_plate_permutation <- function(manifest, num_plates, PlateSize = 96, num_ct
     }
   }
   if( (num_successful_perms/perms) < 0.1){
-    print("Permutation strategy has failed. (Less than 10% of permutations worked).")
-    print(num_successful_perms)
-    print(perms)
+    print("Warning: permutation strategy for testing a variable has failed. (Less than 10% of permutations worked).")
+    print(print(paste0("Successful permutations: ", num_successful_perms)))
+    print(print(paste0("Total permutations: ", perms)))
     return(-1)
   }else{
     return(list(num_successful_perms, my_manifest, perm_col_names))
   }
 }
 
-run_permutation_test <- function(manifest, test_column, num_plates, min_cell_expected, lengths, values, PlateSize = 96, num_ctrl = 10, perms = 100, wells_to_skip = rep(0, num_plates)){
-  permutation_output <- olink_plate_permutation(manifest, num_plates, PlateSize, num_ctrl, perms, wells_to_skip = wells_to_skip)
+run_permutation_test <- function(manifest, test_column, num_plates, min_cell_expected, lengths, values, plate_size, num_ctrl, wells_to_skip, perms){
+  permutation_output <- permute_plate(manifest, num_plates, plate_size, num_ctrl, wells_to_skip, perms)
   if(length(permutation_output)== 1 & permutation_output[1]==-1){
-    print("Unable to run permutation test because not enough permutations have worked.")
+    print("Warning: unable to run permutation test because not enough permutations have worked.")
     return(-1)
   }else{
     num_perms <- permutation_output[[1]]
@@ -400,15 +429,26 @@ run_permutation_test <- function(manifest, test_column, num_plates, min_cell_exp
   }
 }
 
-chisq_or_perm <- function(manifest, test_column, num_plates, min_cell_expected, PlateSize = 96, num_ctrl = 10, perms = 100, noperm = FALSE, wells_to_skip = rep(0, num_plates)){
+chisq_or_perm <- function(manifest, test_column, num_plates, min_cell_expected, plate_size, num_ctrl, wells_to_skip, perms, noperm){
   lengths <-  rle(sort(manifest[[test_column]]))$lengths
   values <- rle(sort(manifest[[test_column]]))$values
 
+  #print(paste0("In chisq_or_perm function for column ", test_column))
+  #print(paste0("(num_plates*min_cell_expected) is ", (num_plates*min_cell_expected)))
+  #print(paste0("lengths < (num_plates*min_cell_expected) is ", lengths < (num_plates*min_cell_expected)))
+  #print(paste0("sum(lengths < (num_plates*min_cell_expected)) is ", sum(lengths < (num_plates*min_cell_expected))))
+  #print("Here are the values and lengths for this column:")
+  #print(values)
+  #print(lengths)
+
   if(noperm | (sum(lengths < (num_plates*min_cell_expected)) == 0)){
+    #print("Doing standard Chi-square test")
     chisq_result <- stats::chisq.test(table(manifest$plate, manifest[[test_column]]))
     return(list('normal', chisq_result))
 
   }else{
+
+    #print("Doing permutation instead of Chi-square test")
 
     full_table <- table(manifest$plate, manifest[[test_column]])
     reduced_table <- full_table[,which(dimnames(full_table)[[2]] %in% values[lengths >= (num_plates*min_cell_expected)])]
@@ -428,10 +468,10 @@ chisq_or_perm <- function(manifest, test_column, num_plates, min_cell_expected, 
       names(chisq_result) <- "p.value"
     }
 
-    perm_ps <- run_permutation_test(manifest, test_column, num_plates, min_cell_expected, lengths, values, PlateSize, num_ctrl, perms, wells_to_skip = wells_to_skip)
+    perm_ps <- run_permutation_test(manifest, test_column, num_plates, min_cell_expected, lengths, values, plate_size, num_ctrl, wells_to_skip, perms)
 
     if(length(perm_ps)==1 & perm_ps[1]==-1){
-      print("Unable to run chisq_or_perm: could not permute plates.")
+      print("Warning: unable to run chisq_or_perm: could not permute plates.")
       return(-1)
     }else{
       perm_ps_weights <- lengths[lengths < (num_plates*min_cell_expected)]
@@ -461,13 +501,13 @@ get_score_from_test_results <- function(wrapped_result, column_weight, perm_p_we
     main_p <- wrapped_result[[2]]$p.value
     perm_p <- perm_ps_weighted_average(wrapped_result[[3]], wrapped_result[[4]])
     if((perm_p_weighting < 0) | (perm_p_weighting > 1)){
-      print("ERROR: Unable to get score from test results... perm_p_weighting is out of range [0,1].")
+      print("Error: unable to get score from test results: perm_p_weighting is out of range [0,1].")
       return(-1)
     }else{
       return( ((main_p + (perm_p_weighting*perm_p))/(1+perm_p_weighting)) * column_weight)
     }
   }else{
-    print("ERROR: Unable to get score from test results... Test result type not recognised.")
+    print("Error: unable to get score from test results: test result type not recognised.")
     return(-1)
   }
 }
