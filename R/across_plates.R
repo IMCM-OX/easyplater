@@ -58,7 +58,7 @@ assign_plates <- function(manifest_df,
 
   # If seeds are supplied, make sure user is informed of what is going on with parameters trials and seed. Also, reset trials length to match the number of seeds supplied.
   if(!(is.null(assignment_seeds)) && !(is.null(testing_seeds))){
-    print("WARNING: You have opted to supply assignment_seeds and testing_seeds, so parameters trials and seed will be ignored during plate assignment because they are only used when randomly generating these vectors.")
+    print("Warning: You have opted to supply assignment_seeds and testing_seeds, so parameters trials and seed will be ignored during plate assignment because they are only used when randomly generating these vectors.")
     trials <- length(assignment_seeds)
   }
 
@@ -198,9 +198,9 @@ score_random_manifests <- function(out_manifests, columns_to_test_df,
             oneway_result <- stats::oneway.test(formula_str, data = out_manifest, var.equal = FALSE)
             oneway_error <- FALSE
           }, error = function(msg){
-            print("Error caught with stats::oneway.test. Setting corresponding score to 0.")
+            print("Error: caught with stats::oneway.test. Setting corresponding score to 0.")
           }, warning = function(msg){
-            print("Warning caught with stats::oneway.test. Setting corresponding score to 0.")
+            print("Warning: caught with stats::oneway.test. Setting corresponding score to 0.")
           }
         )
         if(oneway_error){
@@ -210,7 +210,7 @@ score_random_manifests <- function(out_manifests, columns_to_test_df,
         }
       }
       if(weighted_score==-1){
-        print(paste("ERROR: column scoring has failed for column", test_column, "has failed. Please check input manifest and try again.", sep=" "))
+        print(paste("Error: column scoring has failed for column", test_column, "has failed. Please check input manifest and try again.", sep=" "))
       }else{
         weighted_scores <- c(weighted_scores, weighted_score)
       }
@@ -299,7 +299,7 @@ assign_subjects_to_plates <- function(manifest, num_plates, plate_size, num_ctrl
           nr_subset_temp <- nr_subset_temp[-seq(1,length(subset_useful_plates))]
 
         }else{
-          print("PERMUTATION FAILED")
+          print("Warning: a random plate assignment has failed.")
           failed <- TRUE
         }
       }
@@ -315,7 +315,7 @@ assign_subjects_to_plates <- function(manifest, num_plates, plate_size, num_ctrl
     non_longitudinal_samples <- longitudinal_repeats_df$Var1[longitudinal_repeats_df$Freq==1]
 
     if(length(non_longitudinal_samples) > sum(wells_free_per_plate)){
-      print("ERROR DURING PERMUTATION - NOT ENOUGH WELLS AVAILABLE...")
+      print("Warning: a problem has occurred during pernutation - not enough wells available.")
       return(-1)
     }else{
       manifest_non_longitudinal <- manifest[manifest$SubjectID %in% non_longitudinal_samples,]
@@ -362,14 +362,14 @@ generate_plate_assignments <- function(manifest, num_plates, plate_size, num_ctr
   }
 }
 
-olink_plate_permutation <- function(manifest, num_plates, plate_size, num_ctrl, wells_to_skip, perms){
+permute_plate <- function(manifest, num_plates, plate_size, num_ctrl, wells_to_skip, perms){
   my_manifest <- manifest
   num_successful_perms <- 0
   perm_col_names <- c()
   for (perm in seq(1,perms)){
     plate_permutation <- assign_subjects_to_plates(manifest, num_plates, plate_size, num_ctrl, wells_to_skip)
     if((length(plate_permutation) == 1) & plate_permutation[1] == -1){
-      print("Warning: a permutation has failed... If this keeps happening, this testing strategy may not be appropriate")
+      print("Warning: a permutation has failed. If this keeps happening, this testing strategy may not be appropriate")
     }else{
       my_manifest[paste('pp', perm, sep="")] <- plate_permutation
       num_successful_perms <- num_successful_perms + 1
@@ -377,9 +377,9 @@ olink_plate_permutation <- function(manifest, num_plates, plate_size, num_ctrl, 
     }
   }
   if( (num_successful_perms/perms) < 0.1){
-    print("Permutation strategy has failed. (Less than 10% of permutations worked).")
-    print(num_successful_perms)
-    print(perms)
+    print("Warning: permutation strategy for testing a variable has failed. (Less than 10% of permutations worked).")
+    print(print(paste0("Successful permutations: ", num_successful_perms)))
+    print(print(paste0("Total permutations: ", perms)))
     return(-1)
   }else{
     return(list(num_successful_perms, my_manifest, perm_col_names))
@@ -387,9 +387,9 @@ olink_plate_permutation <- function(manifest, num_plates, plate_size, num_ctrl, 
 }
 
 run_permutation_test <- function(manifest, test_column, num_plates, min_cell_expected, lengths, values, plate_size, num_ctrl, wells_to_skip, perms){
-  permutation_output <- olink_plate_permutation(manifest, num_plates, plate_size, num_ctrl, wells_to_skip, perms)
+  permutation_output <- permute_plate(manifest, num_plates, plate_size, num_ctrl, wells_to_skip, perms)
   if(length(permutation_output)== 1 & permutation_output[1]==-1){
-    print("Unable to run permutation test because not enough permutations have worked.")
+    print("Warning: unable to run permutation test because not enough permutations have worked.")
     return(-1)
   }else{
     num_perms <- permutation_output[[1]]
@@ -433,22 +433,22 @@ chisq_or_perm <- function(manifest, test_column, num_plates, min_cell_expected, 
   lengths <-  rle(sort(manifest[[test_column]]))$lengths
   values <- rle(sort(manifest[[test_column]]))$values
 
-  print(paste0("In chisq_or_perm function for column ", test_column))
-  print(paste0("(num_plates*min_cell_expected) is ", (num_plates*min_cell_expected)))
-  print(paste0("lengths < (num_plates*min_cell_expected) is ", lengths < (num_plates*min_cell_expected)))
-  print(paste0("sum(lengths < (num_plates*min_cell_expected)) is ", sum(lengths < (num_plates*min_cell_expected))))
-  print("Here are the values and lengths for this column:")
-  print(values)
-  print(lengths)
+  #print(paste0("In chisq_or_perm function for column ", test_column))
+  #print(paste0("(num_plates*min_cell_expected) is ", (num_plates*min_cell_expected)))
+  #print(paste0("lengths < (num_plates*min_cell_expected) is ", lengths < (num_plates*min_cell_expected)))
+  #print(paste0("sum(lengths < (num_plates*min_cell_expected)) is ", sum(lengths < (num_plates*min_cell_expected))))
+  #print("Here are the values and lengths for this column:")
+  #print(values)
+  #print(lengths)
 
   if(noperm | (sum(lengths < (num_plates*min_cell_expected)) == 0)){
-    print("Doing standard Chi-square test")
+    #print("Doing standard Chi-square test")
     chisq_result <- stats::chisq.test(table(manifest$plate, manifest[[test_column]]))
     return(list('normal', chisq_result))
 
   }else{
 
-    print("Doing permutation instead of Chi-square test")
+    #print("Doing permutation instead of Chi-square test")
 
     full_table <- table(manifest$plate, manifest[[test_column]])
     reduced_table <- full_table[,which(dimnames(full_table)[[2]] %in% values[lengths >= (num_plates*min_cell_expected)])]
@@ -471,7 +471,7 @@ chisq_or_perm <- function(manifest, test_column, num_plates, min_cell_expected, 
     perm_ps <- run_permutation_test(manifest, test_column, num_plates, min_cell_expected, lengths, values, plate_size, num_ctrl, wells_to_skip, perms)
 
     if(length(perm_ps)==1 & perm_ps[1]==-1){
-      print("Unable to run chisq_or_perm: could not permute plates.")
+      print("Warning: unable to run chisq_or_perm: could not permute plates.")
       return(-1)
     }else{
       perm_ps_weights <- lengths[lengths < (num_plates*min_cell_expected)]
@@ -501,13 +501,13 @@ get_score_from_test_results <- function(wrapped_result, column_weight, perm_p_we
     main_p <- wrapped_result[[2]]$p.value
     perm_p <- perm_ps_weighted_average(wrapped_result[[3]], wrapped_result[[4]])
     if((perm_p_weighting < 0) | (perm_p_weighting > 1)){
-      print("ERROR: Unable to get score from test results... perm_p_weighting is out of range [0,1].")
+      print("Error: unable to get score from test results: perm_p_weighting is out of range [0,1].")
       return(-1)
     }else{
       return( ((main_p + (perm_p_weighting*perm_p))/(1+perm_p_weighting)) * column_weight)
     }
   }else{
-    print("ERROR: Unable to get score from test results... Test result type not recognised.")
+    print("Error: unable to get score from test results: test result type not recognised.")
     return(-1)
   }
 }
