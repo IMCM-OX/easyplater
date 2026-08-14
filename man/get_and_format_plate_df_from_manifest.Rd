@@ -29,9 +29,9 @@ get_and_format_plate_df_from_manifest(
 
 \item{plate_wells}{Character vector of length \code{plate_size}. Well names.}
 
-\item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
+\item{internal_control_well_indices}{(Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if \code{fixed_wells} argument is used.}
 
-\item{internal_control_ids}{Character vector. Names of internal control wells.}
+\item{internal_control_ids}{(Deprecated) Character vector. Names of internal control wells. This argument is ignored if \code{fixed_wells} argument is used.}
 }
 \value{
 List of length two.

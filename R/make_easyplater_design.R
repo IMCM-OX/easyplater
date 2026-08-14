@@ -10,9 +10,9 @@ SampleID <- NULL
 #' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
 #' @param imbalance_fixer FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. **TO DO: Avi, explain this.**
 #' @param plate_size Numeric scalar. Size of plate. Note that currently `easyplater` is currently only implemented for 96-well plates.
-#' @param fixed_wells Data frame output by [easyplater:assign_fixed_wells]. If this argument is used, `internal_control_well_indices` and `internal_control_ids` will be ignored.
-#' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if `fixed_wells` argument is used.
-#' @param internal_control_ids Character vector. Names of internal control wells. This argument is ignored if `fixed_wells` argument is used.
+#' @param fixed_wells Data frame output by [easyplater::assign_fixed_wells]. If this argument is used, `internal_control_well_indices` and `internal_control_ids` will be ignored.
+#' @param internal_control_well_indices (Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if `fixed_wells` argument is used.
+#' @param internal_control_ids (Deprecated) Character vector. Names of internal control wells. This argument is ignored if `fixed_wells` argument is used.
 #' @param full_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
 #' @param scoring_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
 #' @param well_pair_distances_df **TO DO: Avi explain**

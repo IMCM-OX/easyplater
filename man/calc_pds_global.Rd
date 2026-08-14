@@ -27,7 +27,7 @@ calc_pds_global(
 
 \item{plate_n_cols}{Numeric scalar. Default 12.}
 
-\item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
+\item{internal_control_well_indices}{(Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if \code{fixed_wells} argument is used.}
 }
 \value{
 A numeric scalar.
