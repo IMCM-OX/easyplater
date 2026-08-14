@@ -7,7 +7,7 @@
 #'
 #' @returns List of length two.
 #'
-#'  - The first element is data.frame for the specified plate with categorized columns specified in`cols_to_categorize` argument, and an additional column `imbalanceFix_vec`.
+#'  - The first element is data.frame for the specified plate with an optional additional column `imbalanceFix_vec`.
 #'  - The second element is a tibble with columns "SampleID", "plate", "column", "row", "well", plus columns specified in `columns_for_scoring` argument.
 #'
 #' @examples
@@ -17,7 +17,6 @@
 #'   manifest_df = input_manifest,
 #'   plateID = "plate 1",
 #'   columns_for_scoring = c("Cohort", "Group", "Sex", "AgeGroup"),
-#'   cols_to_categorize = list(c("Age", "10", "AgeGroup")),
 #'   plate_size = 96,
 #'   plate_wells = paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8)),
 #'   internal_control_well_indices = 86:95,
@@ -40,42 +39,6 @@ get_and_format_plate_df_from_manifest <- function(manifest_df, plateID, columns_
 
   num_internal_controls <- length(internal_control_well_indices)
   real_plate_size <- plate_size - num_internal_controls
-
-  if(length(cols_to_categorize)>0){ #cols_to_categorize is list of tuples with structure (col_name,num_cats,na_replacement,categorized_col_name)
-    for(col_to_categorize_tuple in cols_to_categorize){
-
-      col_name <- col_to_categorize_tuple[1]
-      num_cats <- as.numeric(col_to_categorize_tuple[2])
-
-      cut_interval_has_worked = FALSE
-      while((!cut_interval_has_worked) & num_cats > 0){
-        tryCatch(
-          {
-            categorized_col_vec <- as.numeric(ggplot2::cut_interval(as.matrix(plate_df_aux[,col_name]),num_cats))
-            cut_interval_has_worked <- TRUE
-            #print(paste0("Final num_cats: ", num_cats))
-
-          }, error = function(msg){
-          }, warning = function(msg){
-          })
-        num_cats <- num_cats - 1
-      }
-      if(!cut_interval_has_worked){
-        categorized_col_vec <- plate_df_aux[,col_name]
-      }
-
-      if(length(col_to_categorize_tuple)==4){
-        na_replacement <- col_to_categorize_tuple[3]
-        categorized_col_name <- col_to_categorize_tuple[4]
-        replace(categorized_col_vec, is.na(categorized_col_vec), na_replacement)
-      }else{
-        categorized_col_name <- col_to_categorize_tuple[3]
-      }
-
-      plate_df_aux[paste(categorized_col_name)] <- categorized_col_vec
-      #print(categorized_col_name)
-    }
-  }
 
   plate_df <- dplyr::select(plate_df_aux, dplyr::all_of(cols_for_analysis))
   #plate_df_aux <- dplyr::select(plate_df_aux, dplyr::all_of(c(cols_for_analysis, c("plate","column","row","well"))))

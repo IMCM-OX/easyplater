@@ -23,8 +23,6 @@ get_and_format_plate_df_from_manifest(
 
 \item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
 
-\item{cols_to_categorize}{List of character vectors. \strong{TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.}}
-
 \item{imbalance_fixer}{FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 
 \item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
@@ -38,7 +36,7 @@ get_and_format_plate_df_from_manifest(
 \value{
 List of length two.
 \itemize{
-\item The first element is data.frame for the specified plate with categorized columns specified in\code{cols_to_categorize} argument, and an additional column \code{imbalanceFix_vec}.
+\item The first element is data.frame for the specified plate with an optional additional column \code{imbalanceFix_vec}.
 \item The second element is a tibble with columns "SampleID", "plate", "column", "row", "well", plus columns specified in \code{columns_for_scoring} argument.
 }
 }
@@ -52,7 +50,6 @@ easyplater:::get_and_format_plate_df_from_manifest(
   manifest_df = input_manifest,
   plateID = "plate 1",
   columns_for_scoring = c("Cohort", "Group", "Sex", "AgeGroup"),
-  cols_to_categorize = list(c("Age", "10", "AgeGroup")),
   plate_size = 96,
   plate_wells = paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8)),
   internal_control_well_indices = 86:95,

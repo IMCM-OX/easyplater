@@ -9,7 +9,6 @@ make_easyplater_design(
   plateID = NULL,
   columns_for_scoring,
   column_weights,
-  cols_to_categorize,
   imbalance_fixer = FALSE,
   plate_size = 96,
   internal_control_well_indices = 86:95,
@@ -38,8 +37,6 @@ make_easyplater_design(
 \item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
-
-\item{cols_to_categorize}{List of character vectors. \strong{TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.}}
 
 \item{imbalance_fixer}{FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
 
@@ -84,13 +81,27 @@ A data.frame (of class tibble) with the same contents as the input, but with sam
 Given a manifest, run the easyplater algorithm on a single plate. \strong{TO DO: Avi and/or Micah, elaborate on this.}
 }
 \examples{
-# Run easyplater in one step
+## Run easyplater
+# easyplater's algorithm treats all input columns as discrete, so it's advised
+# to cut numeric columns with many unique values into bins
+input_manifest$AgeGroup <- ggplot2::cut_interval(input_manifest$Age, 10) |> as.numeric()
+
+# Decide which wells to keep fixed (not randomized), such as those for internal
+# controls and deliberately empty wells.
+# In this example, we have 81 samples and 10 Olink Explore HT internal controls,
+# and we want to plate all the internal controls in the rightmost two columns
+# (wells 87-96):
+n_samples_plate1 <- sum(input_manifest$plate == "plate 1") # 81
+olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
+fixed <- assign_fixed_wells(n_samples_plate1, 87:96, olink_ht_ic_labels)
+
 easyplater_design <- make_easyplater_design(
   manifest_df = input_manifest,
   plateID = "plate 1",
+  internal_control_well_indices = fixed$idcs-1,
+  internal_control_ids = fixed$labs,
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),
-  cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
   plate_size = 96
 )
 
