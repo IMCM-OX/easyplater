@@ -83,7 +83,7 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
 #' @examples
 #' # Say we have 86 samples we want to allocate to wells on a plate with
 #' # 10 internal controls in the bottom row
-#' sample_df <- input_manifest[1:86,1:5] # manifest without starting wells
+#' sample_df <- input_manifest[1:81,1:5] # manifest for first plate without starting wells
 #' fixed_wells <- paste0("H", 3:12)
 #' add_sample_wells(sample_df, fixed_wells)
 add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
@@ -119,15 +119,15 @@ add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
 #'
 #' @examples
 #' #
-#' imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
-#' sample_df <- input_manifest[1:86,]
+#' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
+#' sample_df <- input_manifest[1:81,] # manifest for first plate
 #' add_imbalance_fixer(sample_df, imbalance_fixer)
 add_imbalance_fixer <- function(plate_df, imbalance_fixer) {
   imbfix_col <- imbalance_fixer[[2]]
   imbfix_levels <- imbalance_fixer[[3]] |> unlist()
-  plate_df$imbalanceFix_vec <- rep(1, nrow(plate_df))
+  plate_df$imbalanceFix_vec <- plate_df$SampleID
   samps_these_levels <- plate_df[[imbfix_col]] %in% imbfix_levels
-  plate_df$imbalanceFix_vec[samps_these_levels] <- 1:sum(samps_these_levels)
+  plate_df$imbalanceFix_vec[!samps_these_levels] <- "1"
 
   # Note: imbalanceFix_vec should be made NA for any fixed wells (empty or ic).
   # Should do this in make_easyplater_design

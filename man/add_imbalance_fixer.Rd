@@ -20,6 +20,6 @@ This is a deprecated functionality, kept for historical reasons but not exported
 \examples{
 #
 imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
-sample_df <- input_manifest[1:86,]
+sample_df <- input_manifest[1:81,] # manifest for first plate
 add_imbalance_fixer(sample_df, imbalance_fixer)
 }

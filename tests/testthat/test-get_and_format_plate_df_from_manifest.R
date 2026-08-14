@@ -35,3 +35,20 @@ test_that("get_and_format_plate_df_from_manifest() returns the original example 
     expected = readRDS(test_path("fixtures", "plate_df_aux.rds"))
     )
 })
+
+test_that("add_imbalance_fixer() returns the same imbalanceFix_vec as the deprecated get_and_format_plate_df_from_manifest() implementation", {
+  expect_equal(
+    object = {
+      imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
+      sample_df <- input_manifest[1:81,] # manifest for first plate
+      add_imbalance_fixer(sample_df, imbalance_fixer)$imbalanceFix_vec
+    },
+    expected = {
+      plate_df_imbfix <- readRDS(test_path("fixtures", "plate_df_imbfix.rds"))
+      plate_df_imbfix <- plate_df_imbfix[1:81,] # first plate
+      plate_df_imbfix$imbalanceFix_vec
+    }
+  )
+})
+
+

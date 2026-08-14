@@ -22,7 +22,7 @@ Given a data frame of samples and a data frame of fixed wells, pre-allocate samp
 \examples{
 # Say we have 86 samples we want to allocate to wells on a plate with
 # 10 internal controls in the bottom row
-sample_df <- input_manifest[1:86,1:5] # manifest without starting wells
+sample_df <- input_manifest[1:81,1:5] # manifest for first plate without starting wells
 fixed_wells <- paste0("H", 3:12)
 add_sample_wells(sample_df, fixed_wells)
 }
