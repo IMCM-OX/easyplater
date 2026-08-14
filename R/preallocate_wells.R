@@ -1,3 +1,5 @@
+lets <- desc <- NULL
+
 #' Create a data frame for fixed wells on a plate
 #'
 #' Given a number of samples and the location of known fixed wells (i.e. internal controls), returns a dataframe of all wells on the plate that should be fixed in place, including spaces for empty wells.
@@ -37,7 +39,7 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
   # Fill available wells with samples
   nonic_wells <- all_wells[!(all_wells %in% ic_wells)]
   if (fill_rowwise) {
-    nonic_df <- tibble(
+    nonic_df <- tibble::tibble(
       lets = substr(nonic_wells, 1, 1),
       nums = substr(nonic_wells, 2, 3)
     )
