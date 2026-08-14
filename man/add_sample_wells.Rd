@@ -2,7 +2,7 @@
 % Please edit documentation in R/preallocate_wells.R
 \name{add_sample_wells}
 \alias{add_sample_wells}
-\title{Initialized sample plate locations}
+\title{Create  sample plate locations to existing fixed wells dataframe}
 \usage{
 add_sample_wells(sample_df, fixed_wells, plate_size = 96)
 }
@@ -17,12 +17,12 @@ add_sample_wells(sample_df, fixed_wells, plate_size = 96)
 \code{sample_df} with three additional columns: \code{well}, \code{row} and \code{column}.
 }
 \description{
-Given a data frame of samples and a data frame of fixed wells, pre-allocate samples to wells. These are not the final locations, they are just initialized locations to use ar the start of randomization.
+Given a data frame of samples and a data frame of fixed wells, pre-allocate samples to wells. These are not the final locations, they are just initialized locations to use at the start of randomization.
 }
 \examples{
-# Say we have 86 samples we want to allocate to wells to on a plate with
+# Say we have 86 samples we want to allocate to wells on a plate with
 # 10 internal controls in the bottom row
-sample_df <- input_manifest[1:86,]
+sample_df <- input_manifest[1:86,1:5] # manifest without starting wells
 fixed_wells <- paste0("H", 3:12)
 add_sample_wells(sample_df, fixed_wells)
 }

@@ -69,9 +69,9 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
   fixed_df
 }
 
-#' Initialized sample plate locations
+#' Create  sample plate locations to existing fixed wells dataframe
 #'
-#' Given a data frame of samples and a data frame of fixed wells, pre-allocate samples to wells. These are not the final locations, they are just initialized locations to use ar the start of randomization.
+#' Given a data frame of samples and a data frame of fixed wells, pre-allocate samples to wells. These are not the final locations, they are just initialized locations to use at the start of randomization.
 #'
 #' @param sample_df Data frame where each sample is represented in a row. Cannot have more rows than `plate_size`.
 #' @param fixed_wells Wells that are reserved for non-samples (i.e. internal controls or empty wells).
@@ -81,9 +81,9 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
 #' @export
 #'
 #' @examples
-#' # Say we have 86 samples we want to allocate to wells to on a plate with
+#' # Say we have 86 samples we want to allocate to wells on a plate with
 #' # 10 internal controls in the bottom row
-#' sample_df <- input_manifest[1:86,]
+#' sample_df <- input_manifest[1:86,1:5] # manifest without starting wells
 #' fixed_wells <- paste0("H", 3:12)
 #' add_sample_wells(sample_df, fixed_wells)
 add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
@@ -106,3 +106,33 @@ add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
 
   sample_df
 }
+
+
+#' Add imbalance fixer column
+#'
+#' This is a deprecated functionality, kept for historical reasons but not exported to the user.
+#'
+#' @param plate_df Data frame that includes a column matching the second element of the imbalance_fixer argument.
+#' @param imbalance_fixer List of 4 elements. First is logical. Second is the column name to adjust. Third is a list of factor levels from that group to adjust. Fourth is a weight to apply in `make_ss_matrices()`.
+#'
+#' @returns plate_df with new "imbalanceFix_vec" column.
+#'
+#' @examples
+#' #
+#' imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
+#' sample_df <- input_manifest[1:86,]
+#' add_imbalance_fixer(sample_df, imbalance_fixer)
+add_imbalance_fixer <- function(plate_df, imbalance_fixer) {
+  imbfix_col <- imbalance_fixer[[2]]
+  imbfix_levels <- imbalance_fixer[[3]] |> unlist()
+  plate_df$imbalanceFix_vec <- rep(1, nrow(plate_df))
+  samps_these_levels <- plate_df[[imbfix_col]] %in% imbfix_levels
+  plate_df$imbalanceFix_vec[samps_these_levels] <- 1:sum(samps_these_levels)
+
+  # Note: imbalanceFix_vec should be made NA for any fixed wells (empty or ic).
+  # Should do this in make_easyplater_design
+
+  plate_df
+}
+
+
