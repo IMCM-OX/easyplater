@@ -121,7 +121,7 @@ add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
 #' #
 #' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
 #' sample_df <- input_manifest[1:81,] # manifest for first plate
-#' add_imbalance_fixer(sample_df, imbalance_fixer)
+#' easyplater:::add_imbalance_fixer(sample_df, imbalance_fixer)
 add_imbalance_fixer <- function(plate_df, imbalance_fixer) {
   imbfix_col <- imbalance_fixer[[2]]
   imbfix_levels <- imbalance_fixer[[3]] |> unlist()
