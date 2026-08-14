@@ -83,7 +83,7 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
 #' @examples
 #' # Say we have 86 samples we want to allocate to wells on a plate with
 #' # 10 internal controls in the bottom row
-#' sample_df <- input_manifest[1:81,1:5] # manifest for first plate without starting wells
+#' sample_df <- input_manifest[1:86,1:5] # first 86 samples without starting wells
 #' fixed_wells <- paste0("H", 3:12)
 #' add_sample_wells(sample_df, fixed_wells)
 add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
