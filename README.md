@@ -59,7 +59,7 @@ easyplater_manifest <- make_easyplater_design(
   manifest_df = input_manifest,
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),
-  cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
+  cols_to_categorize = list(c("Age", 10, "AgeGroup")),
   plate_size = 96
 )
 #> [1] "[:::] plate 1 [:::]"

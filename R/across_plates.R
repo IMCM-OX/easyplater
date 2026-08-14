@@ -66,7 +66,7 @@ assign_plates <- function(manifest_df,
       fcts <- names(which(lapply(manifest_df, class) == "factor"))
       warning(paste0("Converting the following columns from factor to character: ", paste(fcts, collapse = ", ")))
       manifest_df <- manifest_df |>
-        dplyr::mutate(dplyr::across(all_of(fcts), as.character))
+        dplyr::mutate(dplyr::across(dplyr::all_of(fcts), as.character))
     }
 
     ## STEP 1: Generate random manifests, save to list, write to rds
