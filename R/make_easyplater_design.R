@@ -10,8 +10,9 @@ SampleID <- NULL
 #' @param column_weights Numeric vector of weights to use for the variables in `columns_for_scoring`. Must be same length as `columns_for_scoring`.
 #' @param imbalance_fixer FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. **TO DO: Avi, explain this.**
 #' @param plate_size Numeric scalar. Size of plate. Note that currently `easyplater` is currently only implemented for 96-well plates.
-#' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.
-#' @param internal_control_ids Character vector. Names of internal control wells.
+#' @param fixed_wells Data frame output by [easyplater:assign_fixed_wells]. If this argument is used, `internal_control_well_indices` and `internal_control_ids` will be ignored.
+#' @param internal_control_well_indices Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if `fixed_wells` argument is used.
+#' @param internal_control_ids Character vector. Names of internal control wells. This argument is ignored if `fixed_wells` argument is used.
 #' @param full_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
 #' @param scoring_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO Avi: explain this**
 #' @param well_pair_distances_df **TO DO: Avi explain**
@@ -46,6 +47,7 @@ SampleID <- NULL
 #' olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
 #' fixed <- assign_fixed_wells(n_samples_plate1, 87:96, olink_ht_ic_labels)
 #'
+#'
 #' easyplater_design <- make_easyplater_design(
 #'   manifest_df = input_manifest,
 #'   plateID = "plate 1",
@@ -61,6 +63,7 @@ SampleID <- NULL
 make_easyplater_design <- function(manifest_df, plateID = NULL,
                                    columns_for_scoring, column_weights, imbalance_fixer=FALSE,
                                    plate_size = 96,
+                                   fixed_wells = NULL,
                                    internal_control_well_indices = 86:95,
                                    internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
                                    full_mask = NULL, scoring_mask = NULL,
@@ -71,6 +74,11 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
                                    pds_local_weight=1, patch_weight = NULL,
                                    plate_col = "plate",
                                    seed = 1){
+
+  if (!is.null(fixed_wells)) {
+    internal_control_well_indices <- fixed_wells$idcs-1
+    internal_control_ids <- fixed_wells$labs
+  }
 
   plateIDs <- manifest_df[[plate_col]] |> unique() |> stringr::str_sort()
   # If no subset of plates is given, run easyplater on all plates
@@ -115,8 +123,12 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
 
       print(paste0("[:::] ", p, " [:::]"))
       print("Getting and formatting plate data from manifest.")
-      plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, p, columns_for_scoring, cols_to_categorize, imbalance_fixer,
-                                                             plate_size, plate_wells, internal_control_well_indices, internal_control_ids)
+      sample_df <- manifest_df |> dplyr::filter(.data[[plate_col]] == p)
+      plate_df <- add_sample_wells(sample_df, fixed_wells)
+      # plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, p, columns_for_scoring, imbalance_fixer,
+      #                                                        plate_size, plate_wells, internal_control_well_indices, internal_control_ids)
+      ## ***Add checks that the user inputted correctly formatted plate_df***
+
 
       # Note: We may want to move the patch_weight calculation from calc_patch_score() up to here, so that this computation isn't repeated with each iteration
 
