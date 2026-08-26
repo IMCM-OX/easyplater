@@ -9,13 +9,13 @@ find_sample_communities(sample_similarities_matrix, splitting_ss_thresh = 0.5)
 \arguments{
 \item{sample_similarities_matrix}{(plate size) x (plate size) numeric matrix. Output by \code{\link[=make_ss_matrix]{make_ss_matrix()}}.}
 
-\item{splitting_ss_thresh}{Numeric scalar. Similarity threshold for generating adjacency matrix.}
+\item{splitting_ss_thresh}{Numeric scalar. Default: 0.5. Sample similarity (ss) threshold. Used to identify pairs of similar samples, i.e., whose pairwise similarity is greater than this threshold; if found to be in nearby wells, these samples might be moved into distal wells (i.e. split apart) to potentially improve the plate design. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 }
 \value{
 An \code{\link[igraph:communities]{igraph::communities()}} object.
 }
 \description{
-Find sample communities using sample similarity matrix and \code{\link[igraph:cluster_edge_betweenness]{igraph::cluster_edge_betweenness()}}.
+Find sample communities using sample similarity matrix and \code{\link[igraph:cluster_edge_betweenness]{igraph::cluster_edge_betweenness()}}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 1.
 }
 \examples{
 # Example of a pre-processed plate data frame
@@ -25,4 +25,9 @@ col_weights <- c(5, 5, 10, 4)
 imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
 ss_mat <- easyplater:::make_ss_matrix(example_plate_df, col_weights, imbalance_fixer)
 easyplater:::find_sample_communities(ss_mat)
+}
+\references{
+[1] Taylor A. & Fletcher MP.
+easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+\emph{arXiv} 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 }

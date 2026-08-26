@@ -18,19 +18,19 @@ reorder_samples_in_plate(
 
 \item{sample_communities}{An \code{\link[igraph:communities]{igraph::communities()}} object.}
 
-\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
+\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user.}}
 
 \item{internal_control_ids}{Character vector. Names of internal control wells.}
 
 \item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
 
-\item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
+\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
 }
 \value{
 A list. First entry is a character vector of length (plate size), with reordered samples on plate. Second entry is a (plate size) x (plate size) numeric similarity matrix of the reordered plate.
 }
 \description{
-A short description... \strong{TO DO: Avi, explain this.}
+This function implements the method described in \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 2.
 }
 \examples{
 # Example of a pre-processed plate data frame
@@ -50,4 +50,9 @@ mask <- nrow(example_plate_df) |>
 ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
 
 easyplater:::reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
+}
+\references{
+[1] Taylor A. & Fletcher MP.
+easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+\emph{arXiv} 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 }

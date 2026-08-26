@@ -27,47 +27,52 @@ find_independent_switches_using_pds(
 )
 }
 \arguments{
-\item{depth}{\strong{TO DO: Avi explain}}
+\item{depth}{Integer. Depth of sample switching search reached so far. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, steps 3, variables \eqn{D_n}.}
 
 \item{plate_df}{Data frame of samples and associated clinical metadata variables.}
 
-\item{ss_matrix}{Sample similarity matrix output by make_ss_matrix()}
+\item{ss_matrix}{(plate size) x (plate size) numeric matrix. Sample similarity matrix output as element 3 of the list output by allocate_similar_samples_to_distal_wells().}
 
-\item{well_distances}{Output of make_well_distance_df()}
+\item{well_distances}{Column "d" of data frame output by make_well_distance_df().}
 
-\item{jiggled_matrix_indices}{\strong{TO DO: Avi explain}}
+\item{jiggled_matrix_indices}{List of integers. Matrix indices are for re-ordering ss_matrix and represent the best scoring plate found so far in the sample switching step. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, steps 3.}
 
-\item{splitting_ss_thresh}{Numeric scalar. Similarity threshold for generating adjacency matrix.}
+\item{splitting_ss_thresh}{Numeric scalar. Default: 0.5. Sample similarity (ss) threshold. Used to identify pairs of similar samples, i.e., whose pairwise similarity is greater than this threshold; if found to be in nearby wells, these samples might be moved into distal wells (i.e. split apart) to potentially improve the plate design. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 
-\item{splitting_wd_thresh}{\strong{TO DO: Avi explain}}
+\item{splitting_wd_thresh}{Numeric scalar. Default: 1. Well distance (wd) threshold. Used to identify pairs of wells which are nearby to one another, i.e., whose distance is less than this threshold. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary FIgure 4.}
 
-\item{replacing_ss_thresh}{\strong{TO DO: Avi explain}}
+\item{replacing_ss_thresh}{Numeric scalar. Default: 0.5. Sample similarity (ss) threshold. Used to identify pairs of dissimilar samples, i.e., whose pairwise similarity is less than or equal to this threshold; if found to be in distal wells, these samples might be switched with a sample that is under consideration for a split. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 
-\item{replacing_wd_thresh}{\strong{TO DO: Avi explain}}
+\item{replacing_wd_thresh}{Numeric scalar. Default: 6. Well distance (wd) threshold. Used to identify pairs of wells which are distal to one another, i.e., whose distance is greater than this threshold. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 
 \item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
-\item{plate_num_rows}{Numeric scalar. Default 8.}
+\item{plate_num_rows}{Numeric scalar. Default: 8.}
 
-\item{plate_num_cols}{Numeric scalar. Default 12.}
+\item{plate_num_cols}{Numeric scalar. Default: 12.}
 
-\item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
+\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
 
 \item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
 
-\item{sample_communities}{\strong{TO DO: Avi explain}}
+\item{sample_communities}{\strong{TO DO: Avi REMOVE this parameter - it is not used in this function.}}
 
-\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
+\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
 
-\item{pds_local_weight}{Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.}
+\item{pds_local_weight}{Numeric scalar. Default: 1. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{global}}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.}
 
-\item{patch_weight}{Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
+\item{patch_weight}{Numeric scalar. Default: 1/6. Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2. \strong{TO DO: Avi, refactor - currently NULL here and later calculated in code, but should just be set to 1/6 here.}}
 }
 \value{
-\strong{TO DO: Avi explain}
+Data frame. One row containing the depth, PDS, and re-ordered (jiggled) indices for ss_matrix for the sample switching step performed.
 }
 \description{
-This function is run within perform_sample_switch_search(). \strong{TO DO: Avi elaborate}
+This function implements the method described in \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3, subsection "Generate a set of independent sample switches". Additionally, the function performs the switches and scores the resultant plate design using PDS. See also Supplementary Figure 4.
+}
+\references{
+[1] Taylor A. & Fletcher MP.
+easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+\emph{arXiv} 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 }

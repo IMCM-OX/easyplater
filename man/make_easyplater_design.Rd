@@ -41,47 +41,47 @@ make_easyplater_design(
 
 \item{cols_to_categorize}{List of character vectors. \strong{TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.}}
 
-\item{imbalance_fixer}{FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
+\item{imbalance_fixer}{Boolean or length 4 list. Default: FALSE. Use imbalance_fixer to create a new column (variable) designed to ameliorate a known category imbalance in an existing column which is being scored. In particular, we are interested in addressing the situation where there are several minority categories of a column which individually are assigned to only a small proportion of samples, but together total a more substantial proportion of samples. See User Guide for further details. First element is logical (indicating whether or not to use an imbalance_fixer), second element is character string of the column name with imbalance, third element is a list of minority category values in the column, and fourth element is a numeric scalar weighting for the imbalance_fixer column that will be created. \strong{TO DO: Avi, add explanation to User Guide.}}
 
-\item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
+\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
 
 \item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
 
 \item{internal_control_ids}{Character vector. Names of internal control wells.}
 
-\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
+\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user.}}
 
-\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
+\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
 
-\item{well_pair_distances_df}{\strong{TO DO: Avi explain}}
+\item{well_pair_distances_df}{\strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
 
-\item{splitting_ss_thresh}{Numeric scalar. Similarity threshold for generating adjacency matrix.}
+\item{splitting_ss_thresh}{Numeric scalar. Default: 0.5. Sample similarity (ss) threshold. Used to identify pairs of similar samples, i.e., whose pairwise similarity is greater than this threshold; if found to be in nearby wells, these samples might be moved into distal wells (i.e. split apart) to potentially improve the plate design. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 
-\item{splitting_wd_thresh}{\strong{TO DO: Avi explain}}
+\item{splitting_wd_thresh}{Numeric scalar. Default: 1. Well distance (wd) threshold. Used to identify pairs of wells which are nearby to one another, i.e., whose distance is less than this threshold. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary FIgure 4.}
 
-\item{replacing_ss_thresh}{\strong{TO DO: Avi explain}}
+\item{replacing_ss_thresh}{Numeric scalar. Default: 0.5. Sample similarity (ss) threshold. Used to identify pairs of dissimilar samples, i.e., whose pairwise similarity is less than or equal to this threshold; if found to be in distal wells, these samples might be switched with a sample that is under consideration for a split. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 
-\item{replacing_wd_thresh}{\strong{TO DO: Avi explain}}
+\item{replacing_wd_thresh}{Numeric scalar. Default: 6. Well distance (wd) threshold. Used to identify pairs of wells which are distal to one another, i.e., whose distance is greater than this threshold. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 
-\item{max_depth}{\strong{TO DO: Avi explain}}
+\item{max_depth}{Integer. Default: 2. Depth of sample switching search. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3, variable \eqn{M}.}
 
-\item{wins_required}{\strong{TO DO: Avi explain}}
+\item{wins_required}{Integer. Default: 10. Number of improved designs required at a given depth of the switching search before that level of the search is ended. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3, variable \eqn{j}.}
 
-\item{max_attempts}{\strong{TO DO: Avi explain}}
+\item{max_attempts}{Integer. Default: 100. Number of designs to search at a given depth of the switching search before that level of the search is ended. Note that this variable ensures that the search for improved designs stops after a sensible number of attempts, even if not enough improvements are found. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3, variable \eqn{k}.}
 
-\item{pds_local_weight}{Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.}
+\item{pds_local_weight}{Numeric scalar. Default: 1. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{global}}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.}
 
-\item{patch_weight}{Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
+\item{patch_weight}{Numeric scalar. Default: 1/6. Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2. \strong{TO DO: Avi, refactor - currently NULL here and later calculated in code, but should just be set to 1/6 here.}}
 
-\item{plate_col}{String. Name of the column specifying which plate each sample belongs to. Default: "plate".}
+\item{plate_col}{String. Default: "plate". Name of the column specifying which plate each sample belongs to.}
 
-\item{seed}{Numeric scalar. Seed to set for reproducibility. Default: 1.}
+\item{seed}{Numeric scalar. Default: 1. Seed to set for reproducibility.}
 }
 \value{
 A data.frame (of class tibble) with the same contents as the input, but with sample locations deconvolved from the clinical variables specified in \code{columns_for_scoring} argument, and with columns in \code{cols_to_categorize} converted into bins.
 }
 \description{
-Given a manifest, run the easyplater algorithm on a single plate. \strong{TO DO: Avi and/or Micah, elaborate on this.}
+This top-level function implements easyplater, the algorithm for generating 96-well plate designs under the constraint that clinical variables are decoupled from plate location effects \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}.
 }
 \examples{
 # Run easyplater in one step
@@ -96,4 +96,9 @@ easyplater_design <- make_easyplater_design(
 
 # Use a function exported from the OlinkAnalyze package to display plate layout
 olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = TRUE)
+}
+\references{
+[1] Taylor A. & Fletcher MP.
+easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+\emph{arXiv} 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 }

@@ -10,7 +10,7 @@ The contents are the same as \code{example_manifest} except that:
 \itemize{
 \item all each column is a character vector
 \item \code{Age} has been replaced with \code{AgeGroup} using \code{ggplot::cut_interval()}
-\item \code{imbalanceFix_vec} has been added \emph{TO DO: Avi, briefly describe purpose of \code{imbalanceFix}}
+\item \code{imbalanceFix_vec} has been added. Length 4 list (note that default value is FALSE if not set). Use imbalance_fixer to create a new column (variable) designed to ameliorate a known category imbalance in an existing column which is being scored. In particular, we are interested in addressing the situation where there are several minority categories of a column which individually are assigned to only a small proportion of samples, but together total a more substantial proportion of samples. See User Guide for further details. First element is logical (indicating whether or not to use an imbalance_fixer), second element is character string of the column name with imbalance, third element is a list of minority category values in the column, and fourth element is a numeric scalar weighting for the imbalance_fixer column that will be created.
 }
 }
 \usage{

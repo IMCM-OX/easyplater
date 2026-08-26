@@ -23,7 +23,7 @@ calc_pds(
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
-\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
+\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
 
 \item{plate_n_rows}{Numeric scalar. Default 8.}
 
@@ -31,18 +31,15 @@ calc_pds(
 
 \item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
 
-\item{pds_local_weight}{Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.}
+\item{pds_local_weight}{Numeric scalar. Default: 1. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{global}}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.}
 
-\item{patch_weight}{Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
+\item{patch_weight}{Numeric scalar. Default: 1/6. Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2. \strong{TO DO: Avi, refactor - currently NULL here and later calculated in code, but should just be set to 1/6 here.}}
 }
 \value{
 A numeric scalar.
 }
 \description{
-One or two sentences describing the purpose of the function, and its inputs and outputs \strong{TO DO: Avi, fill this in}
-}
-\details{
-Additional details of nuances, limitations, potential pitfalls... \strong{TO DO: Avi, fill this in}
+This function implements the method described in \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.1.
 }
 \examples{
 # An example of a preprocessed plate dataframe
@@ -56,4 +53,9 @@ scoring_mask <- nrow(example_plate_df) |>
 ic_well_idcs <- c(86:95)
 easyplater:::calc_pds(example_plate_df, cols_for_scoring, col_weights,
                       scoring_mask, 8, 12, ic_well_idcs)
+}
+\references{
+[1] Taylor A. & Fletcher MP.
+easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+\emph{arXiv} 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 }

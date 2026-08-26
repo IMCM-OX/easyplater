@@ -2,24 +2,24 @@
 % Please edit documentation in R/allocate_similar_samples_to_distal_wells.R
 \name{find_n_wells}
 \alias{find_n_wells}
-\title{Find wells to reallocate to distal wells}
+\title{Find n distal wells to which we can allocate n similar samples}
 \usage{
 find_n_wells(full_mask, n_wells, wells_pre_allocated, plate_size = 96)
 }
 \arguments{
-\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
+\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user.}}
 
 \item{n_wells}{Integer scalar. Number of wells to search for.}
 
 \item{wells_pre_allocated}{Numeric vector. Indices of wells that are excluded from allocation.}
 
-\item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
+\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
 }
 \value{
 Numeric vector with length \code{n_wells}
 }
 \description{
-\strong{TO DO: Avi, fill this in.}
+This function implements the method described in \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 2, inner loop: finding distal wells for similar samples. See also Supplementary Box 2.
 }
 \examples{
 plate_size <- 96
@@ -27,4 +27,9 @@ full_mask <- plate_size |>
   easyplater:::make_well_distances_matrix() |>
   easyplater:::make_full_mask()
 easyplater:::find_n_wells(full_mask, 17L, 86:95, plate_size)
+}
+\references{
+[1] Taylor A. & Fletcher MP.
+easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+\emph{arXiv} 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 }
