@@ -24,13 +24,13 @@ calc_pds_local(
 
 \item{plate_n_cols}{Numeric scalar. Default 12.}
 
-\item{patch_weight}{Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
+\item{patch_weight}{Numeric scalar. Default: 1/6. Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2. \strong{TO DO: Avi, refactor - currently NULL here and later calculated in code, but should just be set to 1/6 here.}}
 }
 \value{
 A numeric scalar.
 }
 \description{
-The condition that variable-wise homogeneous rows, columns and patches should be avoided in a plate design is captured by the sub-score \eqn{PDS_{local}}. We define \eqn{PDS_{local}} to be an inverse-penalty based score such that plate designs that have a non-homogeneous distribution of values for every variable in every row, column and patch score maximally, while deviations from this are penalized.
+This function implements the method described in \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.1.2.
 }
 \examples{
 # An example of a preprocessed plate dataframe
@@ -39,4 +39,9 @@ str(example_plate_df)
 cols_for_scoring <- names(example_plate_df)[2:5]
 col_weights <- c(5, 5, 10, 4)
 easyplater:::calc_pds_local(example_plate_df, cols_for_scoring, col_weights, 8, 12)
+}
+\references{
+[1] Taylor A. & Fletcher MP.
+easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+\emph{arXiv} 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 }

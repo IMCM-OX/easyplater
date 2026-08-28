@@ -1,18 +1,23 @@
 #' Allocate similar samples to distal wells
 #'
 #' @description
-#' A short description... **TO DO: Avi, describe this.**
+#' This function implements the method described in <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, steps 1 and 2.
+#'
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams make_easyplater_design
 #' @param plate_df_list List of length 2. Output of [easyplater::get_and_format_plate_df_from_manifest]
-#' @param plate_num_rows Numeric scalar. Default 8.
-#' @param plate_num_cols Numeric scalar. Default 12.
+#' @param plate_num_rows Numeric scalar. Default: 8.
+#' @param plate_num_cols Numeric scalar. Default: 12.
 #' @param initial_perms Numeric scalar. Initial number of permutations to use.
 #'
 #' @returns List of length 4.
 #'  - First entry is sample communities found using sample similarity matrix and [`igraph::cluster_edge_betweenness()`]
 #'  - Second entry is a character vector of SampleIDs in the order from the best scoring plate randomization
-#'  - Third entry is sample similarity matrix output by first element of [`easyplater::make_ss_matrices()`]
+#'  - Third entry is reordered sample similarity matrix, originally output by [`easyplater::make_ss_matrix()`] and then reordered to match the best scoring plate design found after `initial_perms` permutations
 #'  - Fourth entry is the PDS score for the returned highest-scoring plate design
 #'
 #' @examples
@@ -58,11 +63,7 @@ allocate_similar_samples_to_distal_wells <- function(
   plate_df <- plate_df_list[[1]]
   plate_df_aux <- plate_df_list[[2]]
 
-  ss_matrices_list <- make_ss_matrices(plate_df, column_weights, imbalance_fixer)
-
-  sample_similarities_matrix <- ss_matrices_list[[1]]
-  sample_similarities_si_names <- ss_matrices_list[[2]]
-  sample_similarities_sj_names <- ss_matrices_list[[3]]
+  sample_similarities_matrix <- make_ss_matrix(plate_df, column_weights, imbalance_fixer)
 
   sample_communities <- find_sample_communities(sample_similarities_matrix, splitting_ss_thresh)
 
@@ -104,12 +105,17 @@ allocate_similar_samples_to_distal_wells <- function(
 #' Make sample similarity matrices
 #'
 #' @description
-#' A short description... **TO DO: Avi, explain this.**
+#' Using the \code{plate_df} plate design, builds a numeric (plate size) x (plate size) matrix where the entry at index (i,j) is the weighted overlap of the clinical variables of the samples in wells i and j, respectively. See <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, step 1.
+#'
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams allocate_similar_samples_to_distal_wells
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
 #'
-#' @returns Length 3 list, containing three (plate size) x (plate size) matrices. The first element is a numeric sample similiarity matrix. The second and third are character matrices of sample indices. **TO DO: Avi, explain this.**
+#' @returns Numeric (plate size) x (plate size) sample similarity matrix  where the entry at index (i,j) is the weighted overlap of the clinical variables of the samples in wells i and j, respectively.
 #'
 #' @examples
 #' # Example of a pre-processed plate data frame
@@ -117,8 +123,8 @@ allocate_similar_samples_to_distal_wells <- function(
 #'
 #' col_weights <- c(5, 5, 10, 4)
 #' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-#' easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)
-make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
+#' easyplater:::make_ss_matrix(example_plate_df, col_weights, imbalance_fixer)
+make_ss_matrix <- function(plate_df, column_weights, imbalance_fixer){
 
   plate_size <- nrow(plate_df)
 
@@ -131,9 +137,6 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
   rownames(sample_similarities_matrix) <- plate_df$SampleID
   colnames(sample_similarities_matrix) <- plate_df$SampleID
 
-  sample_similarities_si_names <- matrix("", nrow = plate_size, ncol = plate_size)
-  sample_similarities_sj_names <- matrix("", nrow = plate_size, ncol = plate_size)
-
   for (si in 1:(plate_size-1)){
     sample_si <- plate_df[si,]
 
@@ -144,22 +147,24 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
       sample_similarities_matrix[si,sj] <- ss
       sample_similarities_matrix[sj,si] <- ss
 
-      sample_similarities_si_names[sj,si] <- sample_si$SampleID
-      sample_similarities_sj_names[sj,si] <- sample_sj$SampleID
-
     }
   }
-  return(list(sample_similarities_matrix, sample_similarities_si_names, sample_similarities_sj_names))
+  return(sample_similarities_matrix)
 }
 
 
 #' Find sample communities
 #'
 #' @description
-#' Find sample communities using sample similarity matrix and [`igraph::cluster_edge_betweenness()`].
+#' Find sample communities using sample similarity matrix and [`igraph::cluster_edge_betweenness()`]. See <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, step 1.
+#'
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams allocate_similar_samples_to_distal_wells
-#' @param sample_similarities_matrix (plate size) x (plate size) numeric matrix. First element of list output by [make_ss_matrices()].
+#' @param sample_similarities_matrix (plate size) x (plate size) numeric matrix. Output by [make_ss_matrix()].
 #'
 #' @returns An [igraph::communities()] object.
 #'
@@ -169,7 +174,7 @@ make_ss_matrices <- function(plate_df, column_weights, imbalance_fixer){
 #'
 #' col_weights <- c(5, 5, 10, 4)
 #' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-#' ss_mat <- easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+#' ss_mat <- easyplater:::make_ss_matrix(example_plate_df, col_weights, imbalance_fixer)
 #' easyplater:::find_sample_communities(ss_mat)
 find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thresh = 0.5){
   sample_similarities_matrix_mask <- sample_similarities_matrix
@@ -187,7 +192,12 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
 #' Reorder samples in plate
 #'
 #' @description
-#' A short description... **TO DO: Avi, explain this.**
+#' This function implements the method described in <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, step 2.
+#'
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams allocate_similar_samples_to_distal_wells
 #' @inheritParams find_sample_communities
@@ -200,7 +210,7 @@ find_sample_communities <- function(sample_similarities_matrix, splitting_ss_thr
 #'
 #' col_weights <- c(5, 5, 10, 4)
 #' imbalance_fixer <- list(TRUE,"Group",list("D1","HC1","D7","D8"),3)
-#' ss_mat <- easyplater:::make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+#' ss_mat <- easyplater:::make_ss_matrix(example_plate_df, col_weights, imbalance_fixer)
 #' s_coms <- easyplater:::find_sample_communities(ss_mat)
 #'
 #' # These functions are internal to easyplater and needn't ever be called by user
@@ -219,6 +229,7 @@ reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communit
   wells_allocated <- internal_control_well_indices
 
   community_sizes <- igraph::sizes(sample_communities)
+
   for(community_size in unique(community_sizes[which(community_sizes>1)])){
 
     sample_communities_subset <- sample_communities[which(community_sizes==community_size)]
@@ -234,7 +245,7 @@ reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communit
 
       if(length(sample_community) != length(wells_allocated_to_community)){
 
-        print("Found potential problem. Sample community not allocated the correct number of maps.")
+        print("Found potential problem. Sample community not allocated the correct number of wells.")
         print(sample_community)
         print(wells_allocated_to_community)
         stop()
@@ -255,9 +266,6 @@ reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communit
   samples_allocated <- c(samples_allocated, singleton_samples)
   wells_allocated <- c(wells_allocated, (0:(plate_size-1))[ !(0:(plate_size-1) %in% wells_allocated)])
 
-  ### Finish writing code so that singlton samples are also allocated a well. Then return results as in reorder_samples, but also return community information
-  ### (I feel like there was something else, too??) so that new scoring method based on sample community allocation combined with well allocation can also be calculated in future.
-
   sample_well_allocation_df <- data.frame(sample=samples_allocated,well=wells_allocated)
   sample_well_allocation_df_sorted <- sample_well_allocation_df[order(sample_well_allocation_df$well),]
 
@@ -268,10 +276,15 @@ reorder_samples_in_plate <- function(sample_similarities_matrix, sample_communit
 }
 
 
-#' Find wells to reallocate to distal wells
+#' Find n distal wells to which we can allocate n similar samples
 #'
 #' @description
-#' **TO DO: Avi, fill this in.**
+#' This function implements the method described in <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, step 2, inner loop: finding distal wells for similar samples. See also Supplementary Box 2.
+#'
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams allocate_similar_samples_to_distal_wells
 #' @param n_wells Integer scalar. Number of wells to search for.

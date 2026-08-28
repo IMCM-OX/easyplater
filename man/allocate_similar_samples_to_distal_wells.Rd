@@ -29,27 +29,27 @@ allocate_similar_samples_to_distal_wells(
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
-\item{imbalance_fixer}{FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
+\item{imbalance_fixer}{Boolean or length 4 list. Default: FALSE. Use imbalance_fixer to create a new column (variable) designed to ameliorate a known category imbalance in an existing column which is being scored. In particular, we are interested in addressing the situation where there are several minority categories of a column which individually are assigned to only a small proportion of samples, but together total a more substantial proportion of samples. See User Guide for further details. First element is logical (indicating whether or not to use an imbalance_fixer), second element is character string of the column name with imbalance, third element is a list of minority category values in the column, and fourth element is a numeric scalar weighting for the imbalance_fixer column that will be created. \strong{TO DO: Avi, add explanation to User Guide.}}
 
-\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
+\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user.}}
 
-\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
+\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
 
-\item{splitting_ss_thresh}{Numeric scalar. Similarity threshold for generating adjacency matrix.}
+\item{splitting_ss_thresh}{Numeric scalar. Default: 0.5. Sample similarity (ss) threshold. Used to identify pairs of similar samples, i.e., whose pairwise similarity is greater than this threshold; if found to be in nearby wells, these samples might be moved into distal wells (i.e. split apart) to potentially improve the plate design. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 
 \item{internal_control_ids}{Character vector. Names of internal control wells.}
 
 \item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
 
-\item{plate_num_rows}{Numeric scalar. Default 8.}
+\item{plate_num_rows}{Numeric scalar. Default: 8.}
 
-\item{plate_num_cols}{Numeric scalar. Default 12.}
+\item{plate_num_cols}{Numeric scalar. Default: 12.}
 
-\item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
+\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
 
-\item{pds_local_weight}{Numeric scalar. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{local}}. A sensible default is 1, but may be adjusted as desired.}
+\item{pds_local_weight}{Numeric scalar. Default: 1. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{global}}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.}
 
-\item{patch_weight}{Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. If NULL, weight is calculated automatically. Default value for 96-well plates is 1/6. \strong{TO DO: Avi, check this description}}
+\item{patch_weight}{Numeric scalar. Default: 1/6. Down-weighting for \eqn{PDS_{patch}}, required because \eqn{|patches|=3(|rows|+|columns|)}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2. \strong{TO DO: Avi, refactor - currently NULL here and later calculated in code, but should just be set to 1/6 here.}}
 
 \item{initial_perms}{Numeric scalar. Initial number of permutations to use.}
 }
@@ -58,12 +58,12 @@ List of length 4.
 \itemize{
 \item First entry is sample communities found using sample similarity matrix and \code{\link[igraph:cluster_edge_betweenness]{igraph::cluster_edge_betweenness()}}
 \item Second entry is a character vector of SampleIDs in the order from the best scoring plate randomization
-\item Third entry is sample similarity matrix output by first element of \code{\link[=make_ss_matrices]{make_ss_matrices()}}
+\item Third entry is reordered sample similarity matrix, originally output by \code{\link[=make_ss_matrix]{make_ss_matrix()}} and then reordered to match the best scoring plate design found after \code{initial_perms} permutations
 \item Fourth entry is the PDS score for the returned highest-scoring plate design
 }
 }
 \description{
-A short description... \strong{TO DO: Avi, describe this.}
+This function implements the method described in \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, steps 1 and 2.
 }
 \examples{
 input_manifest
@@ -97,4 +97,9 @@ easyplater:::allocate_similar_samples_to_distal_wells(
   full_mask, scoring_mask, splitting_ss_thresh = 0.5,
   ic_ids, ic_well_idcs)
 
+}
+\references{
+[1] Taylor A. & Fletcher MP.
+easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+\emph{arXiv} 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 }

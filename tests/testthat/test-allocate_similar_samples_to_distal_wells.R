@@ -3,7 +3,7 @@ test_that("find_sample_communities() works", {
     object = {
       col_weights <- c(5, 5, 10, 4)
       imbalance_fixer <- list(T,"Group",list("D1","HC1","D7","D8"),3)
-      ss_mat <- make_ss_matrices(example_plate_df, col_weights, imbalance_fixer)[[1]]
+      ss_mat <- make_ss_matrix(example_plate_df, col_weights, imbalance_fixer)
       find_sample_communities(ss_mat) |> igraph::modularity()
     },
     expected = 0.429774949 # imprecise, but avoids typing out the full communities object

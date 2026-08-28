@@ -25,9 +25,9 @@ get_and_format_plate_df_from_manifest(
 
 \item{cols_to_categorize}{List of character vectors. \strong{TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.}}
 
-\item{imbalance_fixer}{FALSE (default) or length 4 list. First element is logical, second element is character string of a column name, third element is a list of well IDs, and fourth element is a numeric scalar. \strong{TO DO: Avi, explain this.}}
+\item{imbalance_fixer}{Boolean or length 4 list. Default: FALSE. Use imbalance_fixer to create a new column (variable) designed to ameliorate a known category imbalance in an existing column which is being scored. In particular, we are interested in addressing the situation where there are several minority categories of a column which individually are assigned to only a small proportion of samples, but together total a more substantial proportion of samples. See User Guide for further details. First element is logical (indicating whether or not to use an imbalance_fixer), second element is character string of the column name with imbalance, third element is a list of minority category values in the column, and fourth element is a numeric scalar weighting for the imbalance_fixer column that will be created. \strong{TO DO: Avi, add explanation to User Guide.}}
 
-\item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
+\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
 
 \item{plate_wells}{Character vector of length \code{plate_size}. Well names.}
 
