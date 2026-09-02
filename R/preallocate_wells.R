@@ -63,9 +63,9 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
   empty_idcs <- match(empty_wells, all_wells)
   # Create dataframe with indices, well codes and labels for more straightforward input to easyplater
   fixed_df <- dplyr::tibble(
-    idcs = c(ic_idcs, empty_idcs),
-    wells = c(ic_wells, empty_wells),
-    labs = c(ic_labs, empty_labs)
+    idc = c(ic_idcs, empty_idcs),
+    well = c(ic_wells, empty_wells),
+    lab = c(ic_labs, empty_labs)
   )
 
   fixed_df

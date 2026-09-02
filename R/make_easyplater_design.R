@@ -45,14 +45,12 @@ SampleID <- NULL
 #' # (wells 87-96):
 #' n_samples_plate1 <- sum(input_manifest$plate == "plate 1") # 81
 #' olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
-#' fixed <- assign_fixed_wells(n_samples_plate1, 87:96, olink_ht_ic_labels)
-#'
+#' fixed_wells <- assign_fixed_wells(n_samples_plate1, 87:96, olink_ht_ic_labels)
 #'
 #' easyplater_design <- make_easyplater_design(
 #'   manifest_df = input_manifest,
 #'   plateID = "plate 1",
-#'   internal_control_well_indices = fixed$idcs-1,
-#'   internal_control_ids = fixed$labs,
+#'   fixed_wells = fixed_wells,
 #'   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
 #'   column_weights = c(5, 5, 10, 4),
 #'   plate_size = 96
@@ -76,8 +74,8 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
                                    seed = 1){
 
   if (!is.null(fixed_wells)) {
-    internal_control_well_indices <- fixed_wells$idcs-1
-    internal_control_ids <- fixed_wells$labs
+    internal_control_well_indices <- fixed_wells$idc-1
+    internal_control_ids <- fixed_wells$lab
   }
 
   plateIDs <- manifest_df[[plate_col]] |> unique() |> stringr::str_sort()
@@ -125,12 +123,17 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
       print("Getting and formatting plate data from manifest.")
       sample_df <- manifest_df |> dplyr::filter(.data[[plate_col]] == p)
       # Add sample wells (excluding fixed wells)
-      plate_df <- add_sample_wells(sample_df, fixed_wells)
+      plate_df <- add_sample_wells(sample_df, fixed_wells$well)
       # Add imbalance fixer column. Keeping for backwards compatibility, but not
       # likely to encourage users to use this functionality
       if (imbalance_fixer[[1]]) {
         plate_df <- easplater:::add_imbalance_fixer(plate_df, imbalance_fixer)
       }
+      # Add fixed wells to plate_df and arrange by well index
+      plate_df <- plate_df |> dplyr::left_join(fixed_wells)
+      ## Do we need to arrange the wells at all? Keeping this for now to prevent lots of changes to tests.
+      plate_df <- plate_df[match(plate_wells, plate_df$well),]
+
       # plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, p, columns_for_scoring, imbalance_fixer,
       #                                                        plate_size, plate_wells, internal_control_well_indices, internal_control_ids)
       ## ***Add checks that the user inputted correctly formatted plate_df***
