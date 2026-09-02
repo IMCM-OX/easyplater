@@ -131,7 +131,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
       # Add imbalance fixer column. Keeping for backwards compatibility, but not
       # likely to encourage users to use this functionality
       if (imbalance_fixer[[1]]) {
-        plate_df <- easplater:::add_imbalance_fixer(plate_df, imbalance_fixer)
+        plate_df <- easyplater:::add_imbalance_fixer(plate_df, imbalance_fixer)
       }
       # Add fixed wells to plate_df and arrange by well index
       plate_df <- plate_df |> dplyr::left_join(fixed_wells)
