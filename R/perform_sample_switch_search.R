@@ -10,7 +10,7 @@
 #' **TO DO: Avi explain**
 #'
 perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
-                                         plate_df_list, sample_allocation_outputs,
+                                         plate_df, sample_allocation_outputs,
                                          well_pair_distances_df,
                                          splitting_ss_thresh, splitting_wd_thresh,
                                          replacing_ss_thresh, replacing_wd_thresh,
@@ -22,9 +22,6 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
   samples_reordered <- sample_allocation_outputs[[2]]
   sample_similarities_matrix_reordered <- sample_allocation_outputs[[3]]
   best_score <- sample_allocation_outputs[[4]]
-
-  plate_df <- plate_df_list[[1]]
-  plate_df_aux <- plate_df_list[[2]]
 
   jiggled_indices_df <- data.frame(depth=0, pds=best_score, jiggled_matrix_indices=I(list(1:plate_size)))
 
@@ -41,7 +38,7 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
 
       while( (num_wins<wins_required) & (num_attempts<max_attempts) ){
 
-        jiggled_indices_aux_df <- find_independent_switches_using_pds(current_depth,plate_df,
+        jiggled_indices_aux_df <- find_independent_switches_using_pds(current_depth, plate_df,
                                                                       sample_similarities_matrix_reordered,
                                                                       well_pair_distances_df$d,
                                                                       unlist(jiggled_indices_subset_df[ri,]$jiggled_matrix_indices),

@@ -8,7 +8,7 @@ perform_sample_switch_search(
   max_depth,
   wins_required,
   max_attempts,
-  plate_df_list,
+  plate_df,
   sample_allocation_outputs,
   well_pair_distances_df,
   splitting_ss_thresh,
@@ -32,6 +32,8 @@ perform_sample_switch_search(
 \item{wins_required}{\strong{TO DO: Avi explain}}
 
 \item{max_attempts}{\strong{TO DO: Avi explain}}
+
+\item{plate_df}{Data frame. Output of \link{get_and_format_plate_df_from_manifest}}
 
 \item{sample_allocation_outputs}{Output of allocate_similar_samples_to_distal_wells()}
 
