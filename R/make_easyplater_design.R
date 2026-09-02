@@ -34,9 +34,6 @@ SampleID <- NULL
 #'
 #' @examples
 #' ## Run easyplater
-#' # easyplater's algorithm treats all input columns as discrete, so it's advised
-#' # to cut numeric columns with many unique values into bins
-#' input_manifest$AgeGroup <- ggplot2::cut_interval(input_manifest$Age, 10) |> as.numeric()
 #'
 #' # Decide which wells to keep fixed (not randomized), such as those for internal
 #' # controls and deliberately empty wells.
@@ -47,8 +44,15 @@ SampleID <- NULL
 #' olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
 #' fixed_wells <- assign_fixed_wells(n_samples_plate1, 87:96, olink_ht_ic_labels)
 #'
+#' # easyplater's algorithm treats all input columns as discrete, so it's advised
+#' # to cut numeric columns with many unique values into bins
+#' input_manifest_cut <- input_manifest |>
+#'   dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+#'                 .by = "plate")
+#'
+#' # Now we can use easyplater to make a randomized plate design
 #' easyplater_design <- make_easyplater_design(
-#'   manifest_df = input_manifest,
+#'   manifest_df = input_manifest_cut,
 #'   plateID = "plate 1",
 #'   fixed_wells = fixed_wells,
 #'   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
