@@ -126,22 +126,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
       print(paste0("[:::] ", p, " [:::]"))
       print("Getting and formatting plate data from manifest.")
       sample_df <- manifest_df |> dplyr::filter(.data[[plate_col]] == p)
-      # Add sample wells (excluding fixed wells)
-      plate_df <- add_sample_wells(sample_df, fixed_wells$well)
-      # Add imbalance fixer column. Keeping for backwards compatibility, but not
-      # likely to encourage users to use this functionality
-      if (imbalance_fixer[[1]]) {
-        plate_df <- easyplater:::add_imbalance_fixer(plate_df, imbalance_fixer)
-      }
-      # Add fixed wells to plate_df and arrange by well index
-      plate_df <- plate_df |> dplyr::left_join(fixed_wells)
-      ## Do we need to arrange the wells at all? Keeping this for now to prevent lots of changes to tests.
-      plate_df <- plate_df[match(plate_wells, plate_df$well),]
-
-      # plate_df_list <- get_and_format_plate_df_from_manifest(manifest_df, p, columns_for_scoring, imbalance_fixer,
-      #                                                        plate_size, plate_wells, internal_control_well_indices, internal_control_ids)
-      ## ***Add checks that the user inputted correctly formatted plate_df***
-
+      plate_df <- make_plate_df(sample_df, fixed_wells, imbalance_fixer, plate_wells)
 
       # Note: We may want to move the patch_weight calculation from calc_patch_score() up to here, so that this computation isn't repeated with each iteration
 
