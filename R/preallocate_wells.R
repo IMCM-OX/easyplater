@@ -39,7 +39,7 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
   # Fill available wells with samples
   nonic_wells <- all_wells[!(all_wells %in% ic_wells)]
   if (fill_rowwise) {
-    nonic_df <- tibble::tibble(
+    nonic_df <- dplyr::tibble(
       lets = substr(nonic_wells, 1, 1),
       nums = substr(nonic_wells, 2, 3)
     )
