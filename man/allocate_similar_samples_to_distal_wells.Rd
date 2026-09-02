@@ -5,7 +5,7 @@
 \title{Allocate similar samples to distal wells}
 \usage{
 allocate_similar_samples_to_distal_wells(
-  plate_df_list,
+  plate_df,
   columns_for_scoring,
   column_weights,
   imbalance_fixer,
@@ -23,7 +23,7 @@ allocate_similar_samples_to_distal_wells(
 )
 }
 \arguments{
-\item{plate_df_list}{List of length 2. Output of \link{get_and_format_plate_df_from_manifest}}
+\item{plate_df}{Data frame. Output of \link{get_and_format_plate_df_from_manifest}}
 
 \item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
 
@@ -76,7 +76,7 @@ ic_well_idcs <- c(86:95)
 ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
 
 # Getting and formatting plate data from from manifest.
-plate_df_list <- easyplater:::get_and_format_plate_df_from_manifest(
+plate_df <- easyplater:::get_and_format_plate_df_from_manifest(
   input_manifest, "plate 1", cols_for_scoring, cols_to_categorize,
   imbalance_fixer, 96, plate_wells, ic_well_idcs, ic_ids
   )
@@ -93,7 +93,7 @@ scoring_mask <- plate_size |>
   easyplater:::make_scoring_mask()
 
 easyplater:::allocate_similar_samples_to_distal_wells(
-  plate_df_list, cols_for_scoring, col_weights, imbalance_fixer,
+  plate_df, cols_for_scoring, col_weights, imbalance_fixer,
   full_mask, scoring_mask, splitting_ss_thresh = 0.5,
   ic_ids, ic_well_idcs)
 

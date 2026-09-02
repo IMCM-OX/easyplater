@@ -33,8 +33,6 @@ perform_sample_switch_search(
 
 \item{max_attempts}{\strong{TO DO: Avi explain}}
 
-\item{plate_df_list}{List of length 2. Output of \link{get_and_format_plate_df_from_manifest}}
-
 \item{sample_allocation_outputs}{Output of allocate_similar_samples_to_distal_wells()}
 
 \item{well_pair_distances_df}{\strong{TO DO: Avi explain}}

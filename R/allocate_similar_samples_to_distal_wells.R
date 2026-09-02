@@ -4,7 +4,7 @@
 #' A short description... **TO DO: Avi, describe this.**
 #'
 #' @inheritParams make_easyplater_design
-#' @param plate_df_list List of length 2. Output of [easyplater::get_and_format_plate_df_from_manifest]
+#' @param plate_df Data frame. Output of [easyplater::get_and_format_plate_df_from_manifest]
 #' @param plate_num_rows Numeric scalar. Default 8.
 #' @param plate_num_cols Numeric scalar. Default 12.
 #' @param initial_perms Numeric scalar. Initial number of permutations to use.
@@ -26,7 +26,7 @@
 #' ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
 #'
 #' # Getting and formatting plate data from from manifest.
-#' plate_df_list <- easyplater:::get_and_format_plate_df_from_manifest(
+#' plate_df <- easyplater:::get_and_format_plate_df_from_manifest(
 #'   input_manifest, "plate 1", cols_for_scoring, cols_to_categorize,
 #'   imbalance_fixer, 96, plate_wells, ic_well_idcs, ic_ids
 #'   )
@@ -43,20 +43,17 @@
 #'   easyplater:::make_scoring_mask()
 #'
 #' easyplater:::allocate_similar_samples_to_distal_wells(
-#'   plate_df_list, cols_for_scoring, col_weights, imbalance_fixer,
+#'   plate_df, cols_for_scoring, col_weights, imbalance_fixer,
 #'   full_mask, scoring_mask, splitting_ss_thresh = 0.5,
 #'   ic_ids, ic_well_idcs)
 #'
 allocate_similar_samples_to_distal_wells <- function(
-    plate_df_list, columns_for_scoring, column_weights, imbalance_fixer,
+    plate_df, columns_for_scoring, column_weights, imbalance_fixer,
     full_mask, scoring_mask, splitting_ss_thresh,
     internal_control_ids, internal_control_well_indices,
     plate_num_rows = 8, plate_num_cols = 12, plate_size = 96,
     pds_local_weight=1, patch_weight=NULL, initial_perms = 20
     ){
-
-  plate_df <- plate_df_list[[1]]
-  plate_df_aux <- plate_df_list[[2]]
 
   ss_matrices_list <- make_ss_matrices(plate_df, column_weights, imbalance_fixer)
 
@@ -66,7 +63,7 @@ allocate_similar_samples_to_distal_wells <- function(
 
   sample_communities <- find_sample_communities(sample_similarities_matrix, splitting_ss_thresh)
 
-  best_score <- calc_pds(plate_df,columns_for_scoring, column_weights,
+  best_score <- calc_pds(plate_df, columns_for_scoring, column_weights,
                          scoring_mask, plate_num_rows, plate_num_cols,
                          internal_control_well_indices,
                          pds_local_weight, patch_weight)
