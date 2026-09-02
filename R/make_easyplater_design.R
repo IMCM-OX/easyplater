@@ -147,7 +147,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
 
       print("Allocating similar samples to distal wells.")
       sample_allocation_outputs <- allocate_similar_samples_to_distal_wells(
-        plate_df_list, columns_for_scoring, column_weights, imbalance_fixer,
+        plate_df, columns_for_scoring, column_weights, imbalance_fixer,
         full_mask, scoring_mask, splitting_ss_thresh,
         internal_control_ids, internal_control_well_indices,
         plate_num_rows, plate_num_cols, plate_size,
@@ -155,7 +155,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
 
       print("Performing sample switching search.")
       samples_final_order <- perform_sample_switch_search(max_depth, wins_required, max_attempts,
-                                                          plate_df_list, sample_allocation_outputs,
+                                                          plate_df, sample_allocation_outputs,
                                                           well_pair_distances_df,
                                                           splitting_ss_thresh, splitting_wd_thresh,
                                                           replacing_ss_thresh, replacing_wd_thresh,
@@ -164,7 +164,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
                                                           pds_local_weight, patch_weight)
 
       print("Storing the easyplater plate design in a data frame.")
-      easy_plates_list[[p]] <- make_easyplater_design_aux(plate_df_list, samples_final_order, columns_for_scoring)
+      easy_plates_list[[p]] <- apply_final_well_locations(plate_df_list, samples_final_order, columns_for_scoring)
     }
   })
 
