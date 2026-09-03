@@ -130,7 +130,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
                  !is.null(internal_control_well_indices) &
                  !is.null(internal_control_ids)) {
         fixed_wells <- assign_fixed_wells(nrow(sample_df),
-                                          internal_control_well_indices,
+                                          internal_control_well_indices+1,
                                           internal_control_ids,
                                           randomize_empties = TRUE)
       } else {
