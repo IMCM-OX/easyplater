@@ -29,36 +29,54 @@ test_that("example_manifest.csv can be read with utils::read.csv() and the conte
   )
 })
 
+#### Using "fixed_wells", not "internal_control_well_indices" ####
+
+test_that("make_easyplater_design() returns the expected output using `fixed_wells`", {
+  expect_identical(
+    object = {
+      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
+                                     show_col_types = FALSE)
+      # Must cut Age into discrete groups, as `cols_to_categorize` is no longer supported
+      input_manifest_cut <- input_manifest |>
+        dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+                      .by = "plate")
+      # Decide which wells to keep fixed (not randomized), such as those for internal
+      # controls and deliberately empty wells:
+      n_samples_plate1 <- sum(input_manifest$plate == "plate 1") # 81
+      olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
+      fixed_wells <- assign_fixed_wells(n_samples_plate1, 87:96, olink_ht_ic_labels)
+      # Run easyplater
+      make_easyplater_design(
+        manifest_df = input_manifest_cut,
+        plateID = "plate 1",
+        plate_size = 96,
+        fixed_wells = fixed_wells
+      )
+    },
+    expected = readRDS(test_path("fixtures", "easy_plate_df-fixed_wells.rds"))
+  )
+})
+
+#### Original example, using "internal_control_well_indices" not "fixed_wells" ####
+
 test_that("make_easyplater_design() returns the same single plate as the original example", {
   expect_identical(
     object = {
       manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
                                      show_col_types = FALSE)
-      # Prep masks
-      well_pair_distances_df <- easyplater:::make_well_distance_df(96)
-      well_distances_matrix <- easyplater:::make_well_distances_matrix(96)
-      full_mask <- easyplater:::make_full_mask(well_distances_matrix)
-      scoring_mask <- easyplater:::make_scoring_mask(well_distances_matrix)
+      # Must cut Age into discrete groups, as `cols_to_categorize` is no longer supported
+      input_manifest_cut <- input_manifest |>
+        dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+                      .by = "plate")
       # Run easyplater
       make_easyplater_design(
-        manifest_df = manifest_df,
+        manifest_df = input_manifest_cut,
         plateID = "plate 1",
         columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
         column_weights = c(5, 5, 10, 4),
-        cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
         plate_size = 96,
         internal_control_well_indices = 86:95,
-        internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
-        full_mask = full_mask,
-        scoring_mask = scoring_mask,
-        well_pair_distances_df = well_pair_distances_df,
-        splitting_ss_thresh = 0.5,
-        splitting_wd_thresh = 1,
-        replacing_ss_thresh = 0.5,
-        replacing_wd_thresh = 6,
-        max_depth = 2,
-        wins_required = 10,
-        max_attempts = 100
+        internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
       )
     },
     expected = readRDS(test_path("fixtures", "easy_plate_df.rds"))

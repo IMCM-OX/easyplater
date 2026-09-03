@@ -10,7 +10,8 @@ assign_fixed_wells(
   ic_labs,
   plate_size = 96,
   fill_rowwise = FALSE,
-  fill_from_bottom = FALSE
+  fill_from_bottom = FALSE,
+  randomize_empties = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ assign_fixed_wells(
 \item{fill_rowwise}{Logical. Whether to fill samples rowwise (default: FALSE)}
 
 \item{fill_from_bottom}{Logical. Whether to fill samples from bottom (default: FALSE)}
+
+\item{randomize_empties}{Logical. Whether to assign empty wells to fixed wells (i.e. treat them like internal controls, default) or randomize them (i.e. treat them like samples). (default: FALSE)}
 }
 \value{
 A data frame of fixed wells, their labels and indices.
@@ -38,4 +41,8 @@ assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC
 
 # Prepare for a plate with 80 samples and 10 internal controls per Alamar NULISAseq
 assign_fixed_wells(80, (3:12)*8, paste0("IC", 1:10))
+
+# Randomize empty wells among samples, rather than grouping them into fixed wells
+assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
+                   randomize_empties = TRUE)
 }

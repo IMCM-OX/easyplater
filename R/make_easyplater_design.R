@@ -77,11 +77,6 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
                                    plate_col = "plate",
                                    seed = 1){
 
-  if (!is.null(fixed_wells)) {
-    internal_control_well_indices <- fixed_wells$idc-1
-    internal_control_ids <- fixed_wells$lab
-  }
-
   plateIDs <- manifest_df[[plate_col]] |> unique() |> stringr::str_sort()
   # If no subset of plates is given, run easyplater on all plates
   if (is.null(plateID)) {
@@ -126,30 +121,55 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
       print(paste0("[:::] ", p, " [:::]"))
       print("Getting and formatting plate data from manifest.")
       sample_df <- manifest_df |> dplyr::filter(.data[[plate_col]] == p)
+
+      # Create fixed_wells if not input by user
+      if (!is.null(fixed_wells)) {
+        internal_control_well_indices <- fixed_wells$idc-1
+        internal_control_ids <- fixed_wells$lab
+      } else if (is.null(fixed_wells) &
+                 !is.null(internal_control_well_indices) &
+                 !is.null(internal_control_ids)) {
+        fixed_wells <- assign_fixed_wells(nrow(sample_df),
+                                          internal_control_well_indices,
+                                          internal_control_ids,
+                                          randomize_empties = TRUE)
+      } else {
+        stop("fixed_wells was not supplied to make_easyplater_design() and neither were (deprecated) internal_control_well_indices nor internal_control_ids ")
+      }
+
       plate_df <- make_plate_df(sample_df, fixed_wells, imbalance_fixer, plate_wells)
 
       # Note: We may want to move the patch_weight calculation from calc_patch_score() up to here, so that this computation isn't repeated with each iteration
 
       print("Allocating similar samples to distal wells.")
-      sample_allocation_outputs <- allocate_similar_samples_to_distal_wells(
-        plate_df, columns_for_scoring, column_weights, imbalance_fixer,
-        full_mask, scoring_mask, splitting_ss_thresh,
-        internal_control_ids, internal_control_well_indices,
-        plate_num_rows, plate_num_cols, plate_size,
-        pds_local_weight, patch_weight)
+      sample_allocation_outputs <- plate_df |>
+        dplyr::select(dplyr::all_of(c("SampleID", columns_for_scoring))) |>
+        allocate_similar_samples_to_distal_wells(
+          columns_for_scoring, column_weights, imbalance_fixer,
+          full_mask, scoring_mask, splitting_ss_thresh,
+          internal_control_ids, internal_control_well_indices,
+          plate_num_rows, plate_num_cols, plate_size,
+          pds_local_weight, patch_weight
+          )
 
       print("Performing sample switching search.")
-      samples_final_order <- perform_sample_switch_search(max_depth, wins_required, max_attempts,
-                                                          plate_df, sample_allocation_outputs,
-                                                          well_pair_distances_df,
-                                                          splitting_ss_thresh, splitting_wd_thresh,
-                                                          replacing_ss_thresh, replacing_wd_thresh,
-                                                          columns_for_scoring, column_weights, plate_num_rows, plate_num_cols,
-                                                          plate_size, internal_control_well_indices,scoring_mask,
-                                                          pds_local_weight, patch_weight)
+      samples_final_order <-  plate_df |>
+        dplyr::select(dplyr::all_of(c("SampleID", columns_for_scoring))) |>
+        perform_sample_switch_search(
+          max_depth, wins_required, max_attempts,
+          sample_allocation_outputs,
+          well_pair_distances_df,
+          splitting_ss_thresh, splitting_wd_thresh,
+          replacing_ss_thresh, replacing_wd_thresh,
+          columns_for_scoring, column_weights, plate_num_rows, plate_num_cols,
+          plate_size, internal_control_well_indices,scoring_mask,
+          pds_local_weight, patch_weight
+          )
 
       print("Storing the easyplater plate design in a data frame.")
-      easy_plates_list[[p]] <- apply_final_well_locations(plate_df_list, samples_final_order, columns_for_scoring)
+      easy_plates_list[[p]] <- plate_df |>
+        dplyr::select(dplyr::all_of(c("SampleID", columns_for_scoring, "plate", "column", "row", "well"))) |>
+        apply_final_well_locations(samples_final_order, columns_for_scoring)
     }
   })
 
