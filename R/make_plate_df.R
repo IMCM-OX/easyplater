@@ -1,3 +1,5 @@
+idc <- plate <- NULL
+
 # Take input manifest for a single plate, add imbalance fixer, add fixed wells, and arrange by well index
 # Note: This replaces get_and_format_plate_df_from_manifest() with simpler inputs and outputs
 make_plate_df <- function(sample_df, fixed_wells, imbalance_fixer, plate_wells) {
@@ -8,7 +10,7 @@ make_plate_df <- function(sample_df, fixed_wells, imbalance_fixer, plate_wells) 
   # Add imbalance fixer column. Keeping for backwards compatibility, but not
   # likely to encourage users to use this functionality
   if (imbalance_fixer[[1]]) {
-    plate_df <- easyplater:::add_imbalance_fixer(plate_df, imbalance_fixer)
+    plate_df <- add_imbalance_fixer(plate_df, imbalance_fixer)
   }
   # Add fixed wells to plate_df and arrange by well index
   plate_df <- plate_df |>
@@ -41,8 +43,7 @@ apply_final_well_locations <- function(plate_df, samples_final_order, columns_fo
 
   plate_design_df$row <- plate_rows
   plate_design_df$column <- plate_columns
-  plate_design_df$well <- plate_wellsplate_df |>
-    dplyr::mutate(dplyr::across(dplyr::everything(), ~ as.character(.x)))
+  plate_design_df$well <- plate_wells
 
   return(plate_design_df)
 }

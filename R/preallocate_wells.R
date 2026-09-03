@@ -1,4 +1,4 @@
-lets <- desc <- NULL
+lets <- NULL
 
 #' Create a data frame for fixed wells on a plate
 #'
@@ -10,6 +10,7 @@ lets <- desc <- NULL
 #' @param plate_size Scalar numeric. Number of wells on plate (default: 96).
 #' @param fill_rowwise Logical. Whether to fill samples rowwise (default: FALSE)
 #' @param fill_from_bottom Logical. Whether to fill samples from bottom (default: FALSE)
+#' @param randomize_empties Logical. Whether to assign empty wells to fixed wells (i.e. treat them like internal controls, default) or randomize them (i.e. treat them like samples). (default: FALSE)
 #'
 #' @returns A data frame of fixed wells, their labels and indices.
 #' @export
@@ -20,8 +21,13 @@ lets <- desc <- NULL
 #'
 #' # Prepare for a plate with 80 samples and 10 internal controls per Alamar NULISAseq
 #' assign_fixed_wells(80, (3:12)*8, paste0("IC", 1:10))
+#'
+#' # Randomize empty wells among samples, rather than grouping them into fixed wells
+#' assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
+#'                    randomize_empties = TRUE)
 assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
-                               fill_rowwise = FALSE, fill_from_bottom = FALSE) {
+                               fill_rowwise = FALSE, fill_from_bottom = FALSE,
+                               randomize_empties = FALSE) {
   if (length(ic_idcs) != length(ic_labs)) {
     stop("ic_idcs and ic_labs must be the same length")
   }
@@ -46,21 +52,26 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
     if (!fill_from_bottom) {
       nonic_df <- nonic_df |> dplyr::arrange(lets)
     } else if (fill_from_bottom) {
-      nonic_df <- nonic_df |> dplyr::arrange(desc(lets))
+      nonic_df <- nonic_df |> dplyr::arrange(dplyr::desc(lets))
     }
     nonic_wells <- paste0(nonic_df$lets, nonic_df$nums)
   }
   sample_wells <- nonic_wells[1:n_samples]
 
-  # Allocate remaining wells as "empty"
-  empty_wells <- nonic_wells[!(nonic_wells %in% sample_wells)]
-  if (length(empty_wells > 0)) {
-    empty_labs <- paste0("Empty_", empty_wells)
+  if (!randomize_empties) {
+    # Allocate remaining wells as "empty"
+    empty_wells <- nonic_wells[!(nonic_wells %in% sample_wells)]
+    if (length(empty_wells > 0)) {
+      empty_labs <- paste0("Empty_", empty_wells)
+    } else {
+      empty_labs <- NULL
+    }
+    # Get empty indices
+    empty_idcs <- match(empty_wells, all_wells)
   } else {
-    empty_labs <- NULL
+    empty_idcs <- empty_wells <- empty_labs <- NULL
   }
-  # Get indices
-  empty_idcs <- match(empty_wells, all_wells)
+
   # Create dataframe with indices, well codes and labels for more straightforward input to easyplater
   fixed_df <- dplyr::tibble(
     idc = c(ic_idcs, empty_idcs),
@@ -89,24 +100,42 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
 #' fixed_wells <- paste0("H", 3:12)
 #' add_sample_wells(sample_df, fixed_wells)
 add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
+  # SampleID shouldn't be numeric or factor
+  sample_df <- sample_df |> dplyr::mutate(SampleID = as.character(SampleID))
+
   if (plate_size == 96) {
     all_wells <- paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8))
   } else {
     stop("Plate size must be 96.")
   }
+  # If empty wells were not assigned to fixed wells, warn that they will be randomized.
   if ((nrow(sample_df) + length(fixed_wells)) != plate_size) {
-    stop("the sum of the sample count and fixed well count must equal plate_size")
+    message("Empty wells will be randomized among samples. Use `fixed_wells` argument to avoid this behavior.")
   }
 
   nonfixed_wells <- all_wells[!(all_wells %in% fixed_wells)]
   sample_wells <- nonfixed_wells[1:nrow(sample_df)]
 
-  # Add sample well (but not fixed well) locations to sample_df to be used as input for easyplater
-  sample_df$well <- sample_wells
-  sample_df$row <- substr(sample_wells, 1, 1)
-  sample_df$column <- paste0("Column ", substr(sample_wells, 2, 3))
+  # Allocate remaining wells as "empty"
+  empty_wells <- nonfixed_wells[!(nonfixed_wells %in% sample_wells)]
+  if (length(empty_wells > 0)) {
+    empty_labs <- paste0("Empty_", empty_wells)
+  } else {
+    empty_labs <- NULL
+  }
 
-  sample_df
+  # Add sample well (but not fixed well) locations to sample_df to be used as input for easyplater
+  df_to_join <- dplyr::tibble(
+      SampleID = c(sample_df$SampleID, empty_labs),
+      well = c(sample_wells, empty_wells)
+    ) |>
+    dplyr::mutate(
+      row = substr(well, 1, 1),
+      column = paste0("Column ", substr(well, 2, 3))
+      )
+
+  sample_df |>
+    dplyr::full_join(df_to_join, by = c("SampleID", "well", "row", "column"))
 }
 
 

@@ -4,7 +4,7 @@
 #' A short description... **TO DO: Avi, describe this.**
 #'
 #' @inheritParams make_easyplater_design
-#' @param plate_df Data frame. Output of [easyplater::get_and_format_plate_df_from_manifest]
+#' @param plate_df Data frame. Output of [easyplater::make_plate_df]
 #' @param plate_num_rows Numeric scalar. Default 8.
 #' @param plate_num_cols Numeric scalar. Default 12.
 #' @param initial_perms Numeric scalar. Initial number of permutations to use.

@@ -23,7 +23,7 @@ allocate_similar_samples_to_distal_wells(
 )
 }
 \arguments{
-\item{plate_df}{Data frame. Output of \link{get_and_format_plate_df_from_manifest}}
+\item{plate_df}{Data frame. Output of \link{make_plate_df}}
 
 \item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
 

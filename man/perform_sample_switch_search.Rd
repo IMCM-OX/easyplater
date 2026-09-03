@@ -5,10 +5,10 @@
 \title{Perform sample switch search}
 \usage{
 perform_sample_switch_search(
+  plate_df,
   max_depth,
   wins_required,
   max_attempts,
-  plate_df,
   sample_allocation_outputs,
   well_pair_distances_df,
   splitting_ss_thresh,
@@ -27,13 +27,13 @@ perform_sample_switch_search(
 )
 }
 \arguments{
+\item{plate_df}{Data frame. Output of \link{make_plate_df}}
+
 \item{max_depth}{\strong{TO DO: Avi explain}}
 
 \item{wins_required}{\strong{TO DO: Avi explain}}
 
 \item{max_attempts}{\strong{TO DO: Avi explain}}
-
-\item{plate_df}{Data frame. Output of \link{get_and_format_plate_df_from_manifest}}
 
 \item{sample_allocation_outputs}{Output of allocate_similar_samples_to_distal_wells()}
 

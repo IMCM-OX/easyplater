@@ -9,8 +9,9 @@
 #' @returns
 #' **TO DO: Avi explain**
 #'
-perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
-                                         plate_df, sample_allocation_outputs,
+perform_sample_switch_search <- function(plate_df,
+                                         max_depth, wins_required, max_attempts,
+                                         sample_allocation_outputs,
                                          well_pair_distances_df,
                                          splitting_ss_thresh, splitting_wd_thresh,
                                          replacing_ss_thresh, replacing_wd_thresh,
