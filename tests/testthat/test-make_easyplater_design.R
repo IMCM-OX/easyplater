@@ -53,7 +53,7 @@ test_that("make_easyplater_design() returns the expected output using `fixed_wel
         fixed_wells = fixed_wells
       )
     },
-    expected = readRDS(test_path("fixtures", "easy_plate_df-fixed_wells.rds"))
+    expected = readRDS(test_path("fixtures", "easy_plate_df_fixed_wells.rds"))
   )
 })
 

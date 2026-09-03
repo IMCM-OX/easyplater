@@ -1,4 +1,4 @@
-#### manifest_df
+#### manifest_df ####
 # To get an easy-to-copy-and-paste format of manifest_df to test against,
 # run `manifest_df <- read_csv(here("data/example_manifest.csv"))` in the original easyplater example script
 # manifest_df |>
@@ -434,7 +434,7 @@ manifest_df <- tibble::tribble(
 )
 saveRDS(manifest_df, test_path("fixtures", "manifest_df.rds"))
 
-#### easy_multiplate_df
+#### easy_multiplate_df ####
 # run `easy_plate_df <- make_easyplater_design(... imbalance_fixer=FALSE, ...)`
 # in the original easyplater example script, but with the following changes:
 # ## Before the for loop
@@ -936,11 +936,11 @@ easy_multiplate_df <- tibble::tribble(
 saveRDS(easy_multiplate_df, test_path("fixtures", "easy_multiplate_df.rds"))
 
 
-#### easy_plate_df
+#### easy_plate_df ####
 easy_plate_df <- easy_multiplate_df |> dplyr::filter(plate == "plate 1")
 saveRDS(easy_plate_df, test_path("fixtures", "easy_plate_df.rds"))
 
-#### easy_plate_df_imbalance_fixer
+#### easy_plate_df_imbalance_fixer ####
 # To get an easy-to-copy-and-paste format of easy_plate_df_imbalance_fixer to test against,
 # run `easy_plate_df_imbalance_fixer <- make_easyplater_design(...)` in the original easyplater example script
 # easy_plate_df_imbalance_fixer |>
@@ -1050,7 +1050,7 @@ easy_plate_df_imbalance_fixer <- tibble::tribble(
 )
 saveRDS(easy_plate_df_imbalance_fixer, test_path("fixtures", "easy_plate_df_imbalance_fixer.rds"))
 
-## plate_df
+#### plate_df ####
 # To get an easy-to-copy-and-paste format of plate_df to test against,
 # run debug(make_easyplater_design) in the original easyplater example
 # branch then run make_easyplater_design(... imbalance_fixer=FALSE, ...).
@@ -1166,7 +1166,7 @@ plate_df <- tibble::tribble(
 )
 saveRDS(plate_df, test_path("fixtures", "plate_df.rds"))
 
-## plate_df_aux
+#### plate_df_aux ####
 # plate_df_aux is the second element of the plate_df_list object generated above.
 # ## When empty wells were given more meaningful names when `add_fixed_wells()` and
 # ## make_plate_df() was implemented in place of `get_and_format_plate_df_from_manifest()`
@@ -1277,7 +1277,7 @@ plate_df_aux <- tibble::tribble(
 )
 saveRDS(plate_df_aux, test_path("fixtures", "plate_df_aux.rds"))
 
-## plate_df
+#### plate_df_imbfix ####
 # To get an easy-to-copy-and-paste format of plate_df to test against,
 # run debug(make_easyplater_design) in the original easyplater example
 # branch then run make_easyplater_design() with the original example,
@@ -1393,3 +1393,123 @@ plate_df_imbfix <- tibble::tribble(
   "PC5",    NA,    NA,  NA,      NA,            "NA"
 )
 saveRDS(plate_df_imbfix, test_path("fixtures", "plate_df_imbfix.rds"))
+
+#### ***Using fixed_wells instead of internal_control_wells_indices/ids*** ####
+#### easy_plate_df_fixed_wells ####
+# This requires a significant re-write of the underlying easyplater code and results in
+# a deliberately different output, so it's not straightforward to re-run the
+# original easyplater code as a source of test fixtures. Instead, I am running the
+# first example for make_easyplater_design() at commit 644bca90 as a ground truth
+# for the expected output.
+# To get an easy-to-copy-and-paste format to test against, run this:
+# easyplater_design |>
+#   dplyr::mutate(SampleID = ifelse(grepl("Empty_", SampleID, fixed = TRUE), NA, SampleID)) |>
+#   dplyr::mutate(dplyr::across(dplyr::everything(), ~ifelse(!is.na(.x), paste0("\"", .x, "\""), .x))) |>
+#   dplyr::mutate(dplyr::across(dplyr::everything(), ~ paste0(.x, ","))) |>
+#   as.data.frame() |>
+#   print(row.names = FALSE)
+easy_plate_df_fixed_wells <- tibble::tribble(
+  ~SampleID, ~Cohort, ~Group, ~Sex, ~AgeGroup, ~plate, ~column, ~row, ~well,
+  "22",  "C1", "HC1", "2",     "9", "plate 1",  "Column 1", "A",  "A1",
+  "73",  "C1",  "D3", "2",    "10", "plate 1",  "Column 1", "B",  "B1",
+  "56",  "C2",  "D7", "2",     "7", "plate 1",  "Column 1", "C",  "C1",
+  "78",  "C2",  "D1", "2",    "10", "plate 1",  "Column 1", "D",  "D1",
+  "4",  "C1",  "D1", "2",     "5", "plate 1",  "Column 1", "E",  "E1",
+  "67",  "C1",  "D8", "1",     "9", "plate 1",  "Column 1", "F",  "F1",
+  "31",  "C1",  "D1", "1",     "9", "plate 1",  "Column 1", "G",  "G1",
+  "57",  "C1",  "D7", "2",     "9", "plate 1",  "Column 1", "H",  "H1",
+  "75",  "C2",  "D7", "1",     "3", "plate 1",  "Column 2", "A",  "A2",
+  "13",  "C1",  "D1", "2",     "9", "plate 1",  "Column 2", "B",  "B2",
+  "21",  "C1",  "D1", "1",     "8", "plate 1",  "Column 2", "C",  "C2",
+  "1",  "C1",  "D7", "1",     "7", "plate 1",  "Column 2", "D",  "D2",
+  "33",  "C1",  "D7", "2",     "4", "plate 1",  "Column 2", "E",  "E2",
+  "80",  "C2", "HC1", "2",     "6", "plate 1",  "Column 2", "F",  "F2",
+  "30",  "C1",  "D1", "2",     "5", "plate 1",  "Column 2", "G",  "G2",
+  "10",  "C2",  "D7", "2",      NA, "plate 1",  "Column 2", "H",  "H2",
+  "17",  "C1",  "D1", "1",     "8", "plate 1",  "Column 3", "A",  "A3",
+  "24",  "C2",  "D7", "1",     "1", "plate 1",  "Column 3", "B",  "B3",
+  "45",  "C1",  "D7", "2",     "6", "plate 1",  "Column 3", "C",  "C3",
+  "76",  "C1",  "D7", "2",     "4", "plate 1",  "Column 3", "D",  "D3",
+  "18",  "C2",  "D7", "1",     "8", "plate 1",  "Column 3", "E",  "E3",
+  "55",  "C2", "HC1", "1",     "8", "plate 1",  "Column 3", "F",  "F3",
+  "48",  "C2",  "D3", "2",     "4", "plate 1",  "Column 3", "G",  "G3",
+  "15",  "C1", "HC1", "2",    "10", "plate 1",  "Column 3", "H",  "H3",
+  "28",  "C1",  "D7", "2",     "4", "plate 1",  "Column 4", "A",  "A4",
+  "49",  "C2",  "D8", "2",     "5", "plate 1",  "Column 4", "B",  "B4",
+  "79",  "C2",  "D7", "1",      NA, "plate 1",  "Column 4", "C",  "C4",
+  "29",  "C1",  "D1", "1",     "7", "plate 1",  "Column 4", "D",  "D4",
+  "23",  "C2",  "D1", "2",     "8", "plate 1",  "Column 4", "E",  "E4",
+  "42",  "C2",  "D1", "1",     "5", "plate 1",  "Column 4", "F",  "F4",
+  "46",  "C1", "HC1", "1",     "8", "plate 1",  "Column 4", "G",  "G4",
+  "19",  "C1",  "D1", "2",      NA, "plate 1",  "Column 4", "H",  "H4",
+  "36",  "C1",  "D8", "1",     "9", "plate 1",  "Column 5", "A",  "A5",
+  "34",  "C2",  "D7", "2",     "8", "plate 1",  "Column 5", "B",  "B5",
+  "27",  "C1",  "D1", "2",     "7", "plate 1",  "Column 5", "C",  "C5",
+  "37",  "C1",  "D7", "1",     "8", "plate 1",  "Column 5", "D",  "D5",
+  "26",  "C1",  "D7", "1",     "6", "plate 1",  "Column 5", "E",  "E5",
+  "72",  "C1",  "D7", "2",     "4", "plate 1",  "Column 5", "F",  "F5",
+  "8",  "C2",  "D1", "2",     "7", "plate 1",  "Column 5", "G",  "G5",
+  "68",  "C1",    NA, "2",     "8", "plate 1",  "Column 5", "H",  "H5",
+  "52",  "C1",  "D3", "1",      NA, "plate 1",  "Column 6", "A",  "A6",
+  "2",  "C1",  "D7", "1",     "8", "plate 1",  "Column 6", "B",  "B6",
+  "16",  "C2",  "D1",  NA,     "5", "plate 1",  "Column 6", "C",  "C6",
+  "43",  "C2",  "D5",  NA,     "7", "plate 1",  "Column 6", "D",  "D6",
+  "69",  "C1",  "D5", "2",     "6", "plate 1",  "Column 6", "E",  "E6",
+  "41",  "C1",  "D1", "2",     "9", "plate 1",  "Column 6", "F",  "F6",
+  "60",  "C2",  "D1", "1",     "2", "plate 1",  "Column 6", "G",  "G6",
+  "25",  "C2",  "D7", "1",     "5", "plate 1",  "Column 6", "H",  "H6",
+  "7",  "C2",  "D7", "1",     "6", "plate 1",  "Column 7", "A",  "A7",
+  "74",  "C1",  "D1", "2",     "7", "plate 1",  "Column 7", "B",  "B7",
+  "50",  "C1",  "D7", "2",    "10", "plate 1",  "Column 7", "C",  "C7",
+  "0",  "C2",  "D5", "2",     "3", "plate 1",  "Column 7", "D",  "D7",
+  "20",  "C2",  "D3", "1",     "4", "plate 1",  "Column 7", "E",  "E7",
+  "53",  "C2",  "D7", "2",     "7", "plate 1",  "Column 7", "F",  "F7",
+  "35",  "C1", "HC2", "2",     "8", "plate 1",  "Column 7", "G",  "G7",
+  "32",  "C1", "HC1", "1",     "6", "plate 1",  "Column 7", "H",  "H7",
+  "63",  "C2",  "D7", "2",     "8", "plate 1",  "Column 8", "A",  "A8",
+  "62",  "C2",  "D8", "1",     "7", "plate 1",  "Column 8", "B",  "B8",
+  "11",  "C2",  "D7", "2",     "9", "plate 1",  "Column 8", "C",  "C8",
+  "58",  "C1",  "D7", "2",     "9", "plate 1",  "Column 8", "D",  "D8",
+  "44",  "C2",  "D7", "1",     "6", "plate 1",  "Column 8", "E",  "E8",
+  "59",  "C2",  "D8", "1",     "5", "plate 1",  "Column 8", "F",  "F8",
+  "61",  "C1",  "D7", "2",     "9", "plate 1",  "Column 8", "G",  "G8",
+  "70",  "C1",  "D1", "1",     "6", "plate 1",  "Column 8", "H",  "H8",
+  "39",  "C1",  "D1", "2",     "7", "plate 1",  "Column 9", "A",  "A9",
+  "77",  "C2", "HC1", "1",     "3", "plate 1",  "Column 9", "B",  "B9",
+  "64",  "C1", "HC2", "1",     "9", "plate 1",  "Column 9", "C",  "C9",
+  "14",  "C1",  "D8", "2",     "9", "plate 1",  "Column 9", "D",  "D9",
+  "38",  "C1",  "D7", "1",      NA, "plate 1",  "Column 9", "E",  "E9",
+  "12",  "C1",  "D7", "2",     "7", "plate 1",  "Column 9", "F",  "F9",
+  "5",  "C1",  "D7", "2",     "9", "plate 1",  "Column 9", "G",  "G9",
+  "6",  "C2",  "D1", "2",     "7", "plate 1",  "Column 9", "H",  "H9",
+  "51",  "C1",  "D1", "2",     "7", "plate 1", "Column 10", "A", "A10",
+  "71",  "C1",  "D1", "1",     "5", "plate 1", "Column 10", "B", "B10",
+  "54",  "C1", "HC1", "2",     "8", "plate 1", "Column 10", "C", "C10",
+  "65",  "C1",  "D1", "2",     "6", "plate 1", "Column 10", "D", "D10",
+  "9",  "C2",  "D8", "2",     "6", "plate 1", "Column 10", "E", "E10",
+  "47",  "C1", "HC1", "1",     "6", "plate 1", "Column 10", "F", "F10",
+  "66",  "C2",  "D8", "2",     "9", "plate 1", "Column 10", "G", "G10",
+  "40",  "C1",  "D7", "1",     "8", "plate 1", "Column 10", "H", "H10",
+  "3",  "C2",  "D7", "2",     "9", "plate 1", "Column 11", "A", "A11",
+  NA,    NA,    NA,  NA,      NA, "plate 1", "Column 11", "B", "B11",
+  NA,    NA,    NA,  NA,      NA, "plate 1", "Column 11", "C", "C11",
+  NA,    NA,    NA,  NA,      NA, "plate 1", "Column 11", "D", "D11",
+  NA,    NA,    NA,  NA,      NA, "plate 1", "Column 11", "E", "E11",
+  NA,    NA,    NA,  NA,      NA, "plate 1", "Column 11", "F", "F11",
+  "SC1",    NA,    NA,  NA,      NA, "plate 1", "Column 11", "G", "G11",
+  "SC2",    NA,    NA,  NA,      NA, "plate 1", "Column 11", "H", "H11",
+  "NC1",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "A", "A12",
+  "NC2",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "B", "B12",
+  "NC3",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "C", "C12",
+  "PC1",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "D", "D12",
+  "PC2",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "E", "E12",
+  "PC3",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "F", "F12",
+  "PC4",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "G", "G12",
+  "PC5",    NA,    NA,  NA,      NA, "plate 1", "Column 12", "H", "H12"
+)
+saveRDS(easy_plate_df_fixed_wells, test_path("fixtures", "easy_plate_df_fixed_wells.rds"))
+
+#### easy_multiplate_df_fixed_wells ####
+
+# TO DO!
+
