@@ -143,7 +143,8 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
 
       print("Allocating similar samples to distal wells.")
       sample_allocation_outputs <- plate_df |>
-        dplyr::select(dplyr::all_of(c("SampleID", columns_for_scoring))) |>
+        dplyr::select(dplyr::all_of(c("SampleID", columns_for_scoring)),
+                      dplyr::any_of(c("imbalanceFix_vec"))) |>
         allocate_similar_samples_to_distal_wells(
           columns_for_scoring, column_weights, imbalance_fixer,
           full_mask, scoring_mask, splitting_ss_thresh,
@@ -154,7 +155,8 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
 
       print("Performing sample switching search.")
       samples_final_order <-  plate_df |>
-        dplyr::select(dplyr::all_of(c("SampleID", columns_for_scoring))) |>
+        dplyr::select(dplyr::all_of(c("SampleID", columns_for_scoring)),
+                      dplyr::any_of(c("imbalanceFix_vec"))) |>
         perform_sample_switch_search(
           max_depth, wins_required, max_attempts,
           sample_allocation_outputs,

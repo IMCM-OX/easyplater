@@ -34,8 +34,6 @@ test_that("example_manifest.csv can be read with utils::read.csv() and the conte
 test_that("make_easyplater_design() returns the expected output using `fixed_wells`", {
   expect_identical(
     object = {
-      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
-                                     show_col_types = FALSE)
       # Must cut Age into discrete groups, as `cols_to_categorize` is no longer supported
       input_manifest_cut <- input_manifest |>
         dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
@@ -49,6 +47,8 @@ test_that("make_easyplater_design() returns the expected output using `fixed_wel
       make_easyplater_design(
         manifest_df = input_manifest_cut,
         plateID = "plate 1",
+        columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+        column_weights = c(5, 5, 10, 4),
         plate_size = 96,
         fixed_wells = fixed_wells
       )
@@ -62,8 +62,6 @@ test_that("make_easyplater_design() returns the expected output using `fixed_wel
 test_that("make_easyplater_design() returns the same single plate as the original example", {
   expect_identical(
     object = {
-      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
-                                     show_col_types = FALSE)
       # Must cut Age into discrete groups, as `cols_to_categorize` is no longer supported
       input_manifest_cut <- input_manifest |>
         dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
@@ -83,36 +81,22 @@ test_that("make_easyplater_design() returns the same single plate as the origina
   )
 })
 
-test_that("make_easyplater_design() returns the same single plate as the original example with minimal params", {
-  expect_identical(
-    object = {
-      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
-                                     show_col_types = FALSE)
-      make_easyplater_design(
-        manifest_df = manifest_df,
-        plateID = "plate 1",
-        columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
-        column_weights = c(5, 5, 10, 4),
-        cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
-        plate_size = 96
-      )
-    },
-    expected = readRDS(test_path("fixtures", "easy_plate_df.rds"))
-  )
-})
-
 test_that("make_easyplater_design() returns the same single plate as the original example with imbalance_fixer", {
   expect_identical(
     object = {
-      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
-                                     show_col_types = FALSE)
+      # Must cut Age into discrete groups, as `cols_to_categorize` is no longer supported
+      input_manifest_cut <- input_manifest |>
+        dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+                      .by = "plate")
+
       make_easyplater_design(
-        manifest_df = manifest_df,
+        manifest_df = input_manifest_cut,
         plateID = "plate 1",
         columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
         column_weights = c(5, 5, 10, 4),
-        cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
         imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
+        internal_control_well_indices = 86:95,
+        internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
         plate_size = 96
       )
     },
@@ -123,17 +107,21 @@ test_that("make_easyplater_design() returns the same single plate as the origina
 test_that("make_easyplater_design() exits with error if plate_size != 96", {
   expect_error(
     object = {
-      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
-                                     show_col_types = FALSE)
+      # Must cut Age into discrete groups, as `cols_to_categorize` is no longer supported
+      input_manifest_cut <- input_manifest |>
+        dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+                      .by = "plate")
+
       # Make a list of the plates:
-      plates <- stringr::str_sort(unique(manifest_df$plate), numeric = TRUE)
+      plates <- stringr::str_sort(unique(input_manifest_cut$plate), numeric = TRUE)
       make_easyplater_design(
-        manifest_df = manifest_df,
+        manifest_df = input_manifest_cut,
         plateIDs = plates[1],
         columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
         column_weights = c(5, 5, 10, 4),
-        cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
         imbalance_fixer = list(T, "Group", list("D1", "HC1", "D7", "D8"), 3),
+        internal_control_well_indices = 86:95,
+        internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
         plate_size = 48
       )
     },
@@ -144,14 +132,18 @@ test_that("make_easyplater_design() exits with error if plate_size != 96", {
 test_that("make_easyplater_design() returns the same multi-plate manifest as the original example", {
   expect_identical(
     object = {
-      manifest_df <- readr::read_csv(fs::path_package("extdata", "example_manifest.csv", package = "easyplater"),
-                                     show_col_types = FALSE)
+      # Must cut Age into discrete groups, as `cols_to_categorize` is no longer supported
+      input_manifest_cut <- input_manifest |>
+        dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+                      .by = "plate")
+
       make_easyplater_design(
-        manifest_df = manifest_df,
+        manifest_df = input_manifest_cut,
         plateID = NULL,
         columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
         column_weights = c(5, 5, 10, 4),
-        cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
+        internal_control_well_indices = 86:95,
+        internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
         plate_size = 96
       )
     },
