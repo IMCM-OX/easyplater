@@ -14,7 +14,7 @@ make_plate_df <- function(sample_df, fixed_wells, imbalance_fixer, plate_wells) 
   }
   # Add fixed wells to plate_df and arrange by well index
   plate_df <- plate_df |>
-    dplyr::full_join(fixed_wells, by = c("well", "SampleID" = "lab")) |>
+    dplyr::full_join(fixed_wells, by = c("well", "SampleID" = "lab", "plate")) |>
     dplyr::select(-idc) |>
     dplyr::mutate(
       # Fixed/empty wells have these values missing up until now

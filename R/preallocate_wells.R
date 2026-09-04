@@ -4,30 +4,76 @@ lets <- NULL
 #'
 #' Given a number of samples and the location of known fixed wells (i.e. internal controls), returns a dataframe of all wells on the plate that should be fixed in place, including spaces for empty wells.
 #'
-#' @param n_samples Scalar numeric. Number of samples on plate.
+#' @inheritParams make_easyplater_design
 #' @param ic_idcs Numeric vector. Indices of internal controls, filling columnwise from left to right (i.e. 1=A1, 2=B1)
 #' @param ic_labs Character vector. Labels of internal controls.
-#' @param plate_size Scalar numeric. Number of wells on plate (default: 96).
 #' @param fill_rowwise Logical. Whether to fill samples rowwise (default: FALSE)
 #' @param fill_from_bottom Logical. Whether to fill samples from bottom (default: FALSE)
 #' @param randomize_empties Logical. Whether to assign empty wells to fixed wells (i.e. treat them like internal controls, default) or randomize them (i.e. treat them like samples). (default: FALSE)
+
 #'
 #' @returns A data frame of fixed wells, their labels and indices.
 #' @export
 #'
 #' @examples
 #' # Prepare for a plate with 80 samples and 10 internal controls per Olink Explore HT
-#' assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)))
+#' assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)), "plate 1")
 #'
 #' # Prepare for a plate with 80 samples and 10 internal controls per Alamar NULISAseq
-#' assign_fixed_wells(80, (3:12)*8, paste0("IC", 1:10))
+#' assign_fixed_wells(80, (3:12)*8, paste0("IC", 1:10), "plate 1")
 #'
 #' # Randomize empty wells among samples, rather than grouping them into fixed wells
 #' assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
-#'                    randomize_empties = TRUE)
-assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
-                               fill_rowwise = FALSE, fill_from_bottom = FALSE,
-                               randomize_empties = FALSE) {
+#'                          "plate 1", randomize_empties = TRUE)
+assign_fixed_wells <- function(
+    manifest_df, ic_idcs, ic_labs, plate_size = 96,
+    fill_rowwise = FALSE, fill_from_bottom = FALSE,
+    randomize_empties = FALSE, plate_col = "plate") {
+
+  if (is.null(manifest_df[[plate_col]])) {
+    stop("manifest_df must contain a column referring to the plate id")
+  }
+  plate_names <- unique(manifest_df[[plate_col]])
+  if (!is.list(ic_idcs)) {
+    ic_idcs <- lapply(plate_names, function(x) ic_idcs) |> stats::setNames(plate_names)
+  }
+  if (!is.list(ic_labs)) {
+    ic_labs <- lapply(plate_names, function(x) ic_labs) |> stats::setNames(plate_names)
+  }
+  fixed_wells <- plate_names |>
+    lapply(function(p) {
+      n_samples_plate <- sum(manifest_df[[plate_col]] == p)
+      ic_idcs_plate <- ic_idcs[[p]]
+      ic_labs_plate <- ic_labs[[p]]
+      assign_fixed_wells_plate(
+        n_samples = n_samples_plate,
+        ic_idcs = ic_idcs_plate,
+        ic_labs = ic_labs_plate,
+        plate = p,
+        plate_col = plate_col,
+        plate_size = plate_size,
+        fill_rowwise = fill_rowwise,
+        fill_from_bottom = fill_from_bottom,
+        randomize_empties = randomize_empties)
+    }) |>
+    dplyr::bind_rows()
+
+  fixed_wells
+}
+
+# # Prepare for a plate with 80 samples and 10 internal controls per Olink Explore HT
+# assign_fixed_wells_plate(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)), "plate 1")
+#
+# # Prepare for a plate with 80 samples and 10 internal controls per Alamar NULISAseq
+# assign_fixed_wells_plate(80, (3:12)*8, paste0("IC", 1:10), "plate 1")
+#
+# # Randomize empty wells among samples, rather than grouping them into fixed wells
+# assign_fixed_wells_plate(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
+#                          "plate 1", randomize_empties = TRUE)
+assign_fixed_wells_plate <- function(n_samples, ic_idcs, ic_labs, plate, plate_col = "plate",
+                                     plate_size = 96,
+                                     fill_rowwise = FALSE, fill_from_bottom = FALSE,
+                                     randomize_empties = FALSE) {
   if (length(ic_idcs) != length(ic_labs)) {
     stop("ic_idcs and ic_labs must be the same length")
   }
@@ -74,6 +120,7 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
 
   # Create dataframe with indices, well codes and labels for more straightforward input to easyplater
   fixed_df <- dplyr::tibble(
+    "{plate_col}" := plate,
     idc = c(ic_idcs, empty_idcs),
     well = c(ic_wells, empty_wells),
     lab = c(ic_labs, empty_labs)
@@ -96,7 +143,7 @@ assign_fixed_wells <- function(n_samples, ic_idcs, ic_labs, plate_size = 96,
 #' @examples
 #' # Say we have 86 samples we want to allocate to wells on a plate with
 #' # 10 internal controls in the bottom row
-#' sample_df <- input_manifest[1:86,1:5] # first 86 samples without starting wells
+#' sample_df <- input_manifest[1:86,] # first 86 samples without starting wells
 #' fixed_wells <- paste0("H", 3:12)
 #' add_sample_wells(sample_df, fixed_wells)
 add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {

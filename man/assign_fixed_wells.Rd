@@ -5,29 +5,32 @@
 \title{Create a data frame for fixed wells on a plate}
 \usage{
 assign_fixed_wells(
-  n_samples,
+  manifest_df,
   ic_idcs,
   ic_labs,
   plate_size = 96,
   fill_rowwise = FALSE,
   fill_from_bottom = FALSE,
-  randomize_empties = FALSE
+  randomize_empties = FALSE,
+  plate_col = "plate"
 )
 }
 \arguments{
-\item{n_samples}{Scalar numeric. Number of samples on plate.}
+\item{manifest_df}{Data frame or tibble with a \code{SampleID} column, a plate column (default: "plate", but this can be changed with \code{plate_col} argument), and additional columns for each variable to be used for plate design score. See \link{input_manifest} for an example.}
 
 \item{ic_idcs}{Numeric vector. Indices of internal controls, filling columnwise from left to right (i.e. 1=A1, 2=B1)}
 
 \item{ic_labs}{Character vector. Labels of internal controls.}
 
-\item{plate_size}{Scalar numeric. Number of wells on plate (default: 96).}
+\item{plate_size}{Numeric scalar. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
 
 \item{fill_rowwise}{Logical. Whether to fill samples rowwise (default: FALSE)}
 
 \item{fill_from_bottom}{Logical. Whether to fill samples from bottom (default: FALSE)}
 
 \item{randomize_empties}{Logical. Whether to assign empty wells to fixed wells (i.e. treat them like internal controls, default) or randomize them (i.e. treat them like samples). (default: FALSE)}
+
+\item{plate_col}{String. Name of the column specifying which plate each sample belongs to. Default: "plate".}
 }
 \value{
 A data frame of fixed wells, their labels and indices.
@@ -37,12 +40,12 @@ Given a number of samples and the location of known fixed wells (i.e. internal c
 }
 \examples{
 # Prepare for a plate with 80 samples and 10 internal controls per Olink Explore HT
-assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)))
+assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)), "plate 1")
 
 # Prepare for a plate with 80 samples and 10 internal controls per Alamar NULISAseq
-assign_fixed_wells(80, (3:12)*8, paste0("IC", 1:10))
+assign_fixed_wells(80, (3:12)*8, paste0("IC", 1:10), "plate 1")
 
 # Randomize empty wells among samples, rather than grouping them into fixed wells
 assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
-                   randomize_empties = TRUE)
+                         "plate 1", randomize_empties = TRUE)
 }

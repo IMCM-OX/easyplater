@@ -31,7 +31,7 @@ test_that("example_manifest.csv can be read with utils::read.csv() and the conte
 
 #### Using "fixed_wells", not "internal_control_well_indices" ####
 
-test_that("make_easyplater_design() returns the expected output using `fixed_wells`", {
+test_that("make_easyplater_design() returns the expected single plate output using `fixed_wells`", {
   expect_identical(
     object = {
       # Must cut Age into discrete groups, as `cols_to_categorize` is no longer supported
@@ -40,9 +40,8 @@ test_that("make_easyplater_design() returns the expected output using `fixed_wel
                       .by = "plate")
       # Decide which wells to keep fixed (not randomized), such as those for internal
       # controls and deliberately empty wells:
-      n_samples_plate1 <- sum(input_manifest$plate == "plate 1") # 81
       olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
-      fixed_wells <- assign_fixed_wells(n_samples_plate1, 87:96, olink_ht_ic_labels)
+      fixed_wells <- assign_fixed_wells(input_manifest_cut, 87:96, olink_ht_ic_labels)
       # Run easyplater
       make_easyplater_design(
         manifest_df = input_manifest_cut,
@@ -54,6 +53,31 @@ test_that("make_easyplater_design() returns the expected output using `fixed_wel
       )
     },
     expected = readRDS(test_path("fixtures", "easy_plate_df_fixed_wells.rds"))
+  )
+})
+
+test_that("make_easyplater_design() returns the expected multiplate output using `fixed_wells`", {
+  expect_identical(
+    object = {
+      # Must cut Age into discrete groups, as `cols_to_categorize` is no longer supported
+      input_manifest_cut <- input_manifest |>
+        dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+                      .by = "plate")
+      # Decide which wells to keep fixed (not randomized), such as those for internal
+      # controls and deliberately empty wells:
+      olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
+      fixed_wells <- assign_fixed_wells(input_manifest_cut, 87:96, olink_ht_ic_labels)
+      # Run easyplater
+      make_easyplater_design(
+        manifest_df = input_manifest_cut,
+        plateID = NULL,
+        columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+        column_weights = c(5, 5, 10, 4),
+        plate_size = 96,
+        fixed_wells = fixed_wells
+      )
+    },
+    expected = readRDS(test_path("fixtures", "easy_multiplate_df_fixed_wells.rds"))
   )
 })
 

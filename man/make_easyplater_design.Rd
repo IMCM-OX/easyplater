@@ -12,8 +12,8 @@ make_easyplater_design(
   imbalance_fixer = FALSE,
   plate_size = 96,
   fixed_wells = NULL,
-  internal_control_well_indices = 86:95,
-  internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
+  internal_control_well_indices = NULL,
+  internal_control_ids = NULL,
   full_mask = NULL,
   scoring_mask = NULL,
   well_pair_distances_df = NULL,
@@ -84,16 +84,16 @@ A data.frame (of class tibble) with the same contents as the input, but with sam
 Given a manifest, run the easyplater algorithm on a single plate. \strong{TO DO: Avi and/or Micah, elaborate on this.}
 }
 \examples{
-## Run easyplater
+## Run easyplater on a single plate
 
 # Decide which wells to keep fixed (not randomized), such as those for internal
 # controls and deliberately empty wells.
 # In this example, we have 81 samples and 10 Olink Explore HT internal controls,
 # and we want to plate all the internal controls in the rightmost two columns
 # (wells 87-96):
-n_samples_plate1 <- sum(input_manifest$plate == "plate 1") # 81
+plateID <- unique(input_manifest$plate)[1]
 olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
-fixed_wells <- assign_fixed_wells(n_samples_plate1, 87:96, olink_ht_ic_labels)
+fixed_wells <- assign_fixed_wells(input_manifest, 87:96, olink_ht_ic_labels, plateID)
 
 # easyplater's algorithm treats all input columns as discrete, so it's advised
 # to cut numeric columns with many unique values into bins
@@ -104,7 +104,7 @@ input_manifest_cut <- input_manifest |>
 # Now we can use easyplater to make a randomized plate design
 easyplater_design <- make_easyplater_design(
   manifest_df = input_manifest_cut,
-  plateID = "plate 1",
+  plateID = plateID,
   fixed_wells = fixed_wells,
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),
@@ -112,5 +112,25 @@ easyplater_design <- make_easyplater_design(
 )
 
 # Use a function exported from the OlinkAnalyze package to display plate layout
-olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = TRUE)
+easyplater_design |>
+   olink_displayPlateLayout(fill.color = "SampleID", include.label = TRUE) +
+   ggplot2::theme(legend.position = "none")
+
+## We can run easyplater on multiple plates simply by leaving the "plateID" argument unspecified
+easyplater_multiplate_design <- make_easyplater_design(
+  manifest_df = input_manifest_cut,
+  fixed_wells = fixed_wells,
+  columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+  column_weights = c(5, 5, 10, 4),
+  plate_size = 96
+)
+
+# Use a function exported from the OlinkAnalyze package to display plate layout
+easyplater_multiplate_design |> split(~plate) |>
+lapply(function(plate_design) {
+  plate_design |>
+    olink_displayPlateLayout(fill.color = "SampleID", include.label = TRUE) +
+    ggplot2::theme(legend.position = "none")
+})
+
 }

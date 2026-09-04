@@ -33,16 +33,16 @@ SampleID <- NULL
 #' @export
 #'
 #' @examples
-#' ## Run easyplater
+#' ## Run easyplater on a single plate
 #'
 #' # Decide which wells to keep fixed (not randomized), such as those for internal
 #' # controls and deliberately empty wells.
 #' # In this example, we have 81 samples and 10 Olink Explore HT internal controls,
 #' # and we want to plate all the internal controls in the rightmost two columns
 #' # (wells 87-96):
-#' n_samples_plate1 <- sum(input_manifest$plate == "plate 1") # 81
+#' plateID <- unique(input_manifest$plate)[1]
 #' olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
-#' fixed_wells <- assign_fixed_wells(n_samples_plate1, 87:96, olink_ht_ic_labels)
+#' fixed_wells <- assign_fixed_wells(input_manifest, 87:96, olink_ht_ic_labels, plateID)
 #'
 #' # easyplater's algorithm treats all input columns as discrete, so it's advised
 #' # to cut numeric columns with many unique values into bins
@@ -53,7 +53,7 @@ SampleID <- NULL
 #' # Now we can use easyplater to make a randomized plate design
 #' easyplater_design <- make_easyplater_design(
 #'   manifest_df = input_manifest_cut,
-#'   plateID = "plate 1",
+#'   plateID = plateID,
 #'   fixed_wells = fixed_wells,
 #'   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
 #'   column_weights = c(5, 5, 10, 4),
@@ -61,13 +61,33 @@ SampleID <- NULL
 #' )
 #'
 #' # Use a function exported from the OlinkAnalyze package to display plate layout
-#' olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = TRUE)
+#' easyplater_design |>
+#'    olink_displayPlateLayout(fill.color = "SampleID", include.label = TRUE) +
+#'    ggplot2::theme(legend.position = "none")
+#'
+#' ## We can run easyplater on multiple plates simply by leaving the "plateID" argument unspecified
+#' easyplater_multiplate_design <- make_easyplater_design(
+#'   manifest_df = input_manifest_cut,
+#'   fixed_wells = fixed_wells,
+#'   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+#'   column_weights = c(5, 5, 10, 4),
+#'   plate_size = 96
+#' )
+#'
+#' # Use a function exported from the OlinkAnalyze package to display plate layout
+#' easyplater_multiplate_design |> split(~plate) |>
+#' lapply(function(plate_design) {
+#'   plate_design |>
+#'     olink_displayPlateLayout(fill.color = "SampleID", include.label = TRUE) +
+#'     ggplot2::theme(legend.position = "none")
+#' })
+#'
 make_easyplater_design <- function(manifest_df, plateID = NULL,
                                    columns_for_scoring, column_weights, imbalance_fixer=FALSE,
                                    plate_size = 96,
                                    fixed_wells = NULL,
-                                   internal_control_well_indices = 86:95,
-                                   internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
+                                   internal_control_well_indices = NULL,
+                                   internal_control_ids = NULL,
                                    full_mask = NULL, scoring_mask = NULL,
                                    well_pair_distances_df = NULL,
                                    splitting_ss_thresh = 0.5, splitting_wd_thresh = 1,
@@ -108,6 +128,13 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
     well_pair_distances_df <- make_well_distance_df(plate_size)
   }
 
+  # Check that fixed_wells has a plate_col column
+  if (!is.null(fixed_wells)) {
+    if (is.null(fixed_wells[[plate_col]])) {
+      stop("fixed_wells must contain a column matching the 'plate_col' argument (default: 'plate')")
+    }
+  }
+
   # Create a temporarily modified environment with seed set to `seed` input, without changing user's RNG
   withr::with_seed(seed, {
     plate_seeds <- sample(1000000, length(plateIDs))
@@ -124,20 +151,23 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
 
       # Create fixed_wells if not input by user
       if (!is.null(fixed_wells)) {
-        internal_control_well_indices <- fixed_wells$idc-1
-        internal_control_ids <- fixed_wells$lab
-      } else if (is.null(fixed_wells) &
-                 !is.null(internal_control_well_indices) &
+        fixed_wells_plate <- fixed_wells |> dplyr::filter(.data[[plate_col]] == p)
+      # If no fixed_wells, but internal_control... (original, deprecated system)
+      } else if (!is.null(internal_control_well_indices) &
                  !is.null(internal_control_ids)) {
-        fixed_wells <- assign_fixed_wells(nrow(sample_df),
-                                          internal_control_well_indices+1,
-                                          internal_control_ids,
-                                          randomize_empties = TRUE)
+        fixed_wells_plate <- assign_fixed_wells(
+          sample_df,
+          internal_control_well_indices+1,
+          internal_control_ids,
+          randomize_empties = TRUE
+          )
       } else {
-        stop("fixed_wells was not supplied to make_easyplater_design() and neither were (deprecated) internal_control_well_indices nor internal_control_ids ")
+        stop("Must supply either fixed_wells or (deprecated) internal_control_well_indices and internal_control_ids.")
       }
+      ic_idcs_plate <- fixed_wells_plate$idc - 1
+      ic_labs_plate <- fixed_wells_plate$lab
 
-      plate_df <- make_plate_df(sample_df, fixed_wells, imbalance_fixer, plate_wells)
+      plate_df <- make_plate_df(sample_df, fixed_wells_plate, imbalance_fixer, plate_wells)
 
       # Note: We may want to move the patch_weight calculation from calc_patch_score() up to here, so that this computation isn't repeated with each iteration
 
@@ -148,7 +178,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
         allocate_similar_samples_to_distal_wells(
           columns_for_scoring, column_weights, imbalance_fixer,
           full_mask, scoring_mask, splitting_ss_thresh,
-          internal_control_ids, internal_control_well_indices,
+          ic_labs_plate, ic_idcs_plate,
           plate_num_rows, plate_num_cols, plate_size,
           pds_local_weight, patch_weight
           )
@@ -164,7 +194,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
           splitting_ss_thresh, splitting_wd_thresh,
           replacing_ss_thresh, replacing_wd_thresh,
           columns_for_scoring, column_weights, plate_num_rows, plate_num_cols,
-          plate_size, internal_control_well_indices,scoring_mask,
+          plate_size, ic_idcs_plate, scoring_mask,
           pds_local_weight, patch_weight
           )
 

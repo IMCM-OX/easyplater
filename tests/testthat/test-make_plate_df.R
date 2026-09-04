@@ -10,9 +10,8 @@ test_that("make_plate_df() returns the original example plate_df_aux dataframe",
       plate_wells <- paste0(rep(LETTERS[1:plate_num_rows], times = plate_num_cols),
                             rep(1:plate_num_cols, each = plate_num_rows))
 
-      n_samples_plate1 <- sum(manifest_df$plate == "plate 1") # 81
       olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
-      fixed_wells <- assign_fixed_wells(n_samples_plate1, 87:96, olink_ht_ic_labels)
+      fixed_wells <- assign_fixed_wells(manifest_df, 87:96, olink_ht_ic_labels)
 
       manifest_df_cut <- manifest_df |>
         dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
