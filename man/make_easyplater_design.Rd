@@ -35,11 +35,15 @@ make_easyplater_design(
 
 \item{plateID}{Character vector. Value from column specified by \code{plate_col} to generate a  deconvolved plate for. If NULL (default), every plate in the manifest will be deconvolved.}
 
+\item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
+
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
 \item{imbalance_fixer}{Boolean or length 4 list. Default: FALSE. Use imbalance_fixer to create a new column (variable) designed to ameliorate a known category imbalance in an existing column which is being scored. In particular, we are interested in addressing the situation where there are several minority categories of a column which individually are assigned to only a small proportion of samples, but together total a more substantial proportion of samples. See User Guide for further details. First element is logical (indicating whether or not to use an imbalance_fixer), second element is character string of the column name with imbalance, third element is a list of minority category values in the column, and fourth element is a numeric scalar weighting for the imbalance_fixer column that will be created. \strong{TO DO: Avi, add explanation to User Guide.}}
 
 \item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that \code{easyplater} does not currently support non-96-well plates.}
+
+\item{fixed_wells}{Data frame output by \link{assign_fixed_wells}. If this argument is used, \code{internal_control_well_indices} and \code{internal_control_ids} will be ignored.}
 
 \item{internal_control_well_indices}{(Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if \code{fixed_wells} argument is used.}
 

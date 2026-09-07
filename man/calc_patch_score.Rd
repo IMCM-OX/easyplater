@@ -16,6 +16,8 @@ calc_patch_score(
 \arguments{
 \item{plate_df}{Data frame of samples and associated clinical metadata variables.}
 
+\item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
+
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
 \item{plate_n_rows}{Numeric scalar. Default 8.}
