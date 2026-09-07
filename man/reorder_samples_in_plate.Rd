@@ -20,11 +20,11 @@ reorder_samples_in_plate(
 
 \item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user.}}
 
-\item{internal_control_ids}{Character vector. Names of internal control wells.}
+\item{internal_control_ids}{(Deprecated) Character vector. Names of internal control wells. This argument is ignored if \code{fixed_wells} argument is used.}
 
-\item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
+\item{internal_control_well_indices}{(Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if \code{fixed_wells} argument is used.}
 
-\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
+\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that \code{easyplater} does not currently support non-96-well plates.}
 }
 \value{
 A list. First entry is a character vector of length (plate size), with reordered samples on plate. Second entry is a (plate size) x (plate size) numeric similarity matrix of the reordered plate.
@@ -49,7 +49,7 @@ mask <- nrow(example_plate_df) |>
 
 ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
 
-easyplater:::reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
+x <- easyplater:::reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
 }
 \references{
 [1] Taylor A. & Fletcher MP.

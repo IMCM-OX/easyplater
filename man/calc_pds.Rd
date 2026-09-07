@@ -19,8 +19,6 @@ calc_pds(
 \arguments{
 \item{plate_df}{Data frame of samples and associated clinical metadata variables.}
 
-\item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
-
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
 \item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
@@ -29,7 +27,7 @@ calc_pds(
 
 \item{plate_n_cols}{Numeric scalar. Default 12.}
 
-\item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
+\item{internal_control_well_indices}{(Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if \code{fixed_wells} argument is used.}
 
 \item{pds_local_weight}{Numeric scalar. Default: 1. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{global}}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.}
 

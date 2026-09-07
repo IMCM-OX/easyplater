@@ -13,7 +13,7 @@ find_n_wells(full_mask, n_wells, wells_pre_allocated, plate_size = 96)
 
 \item{wells_pre_allocated}{Numeric vector. Indices of wells that are excluded from allocation.}
 
-\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
+\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that \code{easyplater} does not currently support non-96-well plates.}
 }
 \value{
 Numeric vector with length \code{n_wells}

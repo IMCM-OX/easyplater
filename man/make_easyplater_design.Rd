@@ -9,11 +9,11 @@ make_easyplater_design(
   plateID = NULL,
   columns_for_scoring,
   column_weights,
-  cols_to_categorize,
   imbalance_fixer = FALSE,
   plate_size = 96,
-  internal_control_well_indices = 86:95,
-  internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
+  fixed_wells = NULL,
+  internal_control_well_indices = NULL,
+  internal_control_ids = NULL,
   full_mask = NULL,
   scoring_mask = NULL,
   well_pair_distances_df = NULL,
@@ -35,19 +35,15 @@ make_easyplater_design(
 
 \item{plateID}{Character vector. Value from column specified by \code{plate_col} to generate a  deconvolved plate for. If NULL (default), every plate in the manifest will be deconvolved.}
 
-\item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
-
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
-
-\item{cols_to_categorize}{List of character vectors. \strong{TO DO: This needs re-factoring. Leaving for now to populate package functions and create tests.}}
 
 \item{imbalance_fixer}{Boolean or length 4 list. Default: FALSE. Use imbalance_fixer to create a new column (variable) designed to ameliorate a known category imbalance in an existing column which is being scored. In particular, we are interested in addressing the situation where there are several minority categories of a column which individually are assigned to only a small proportion of samples, but together total a more substantial proportion of samples. See User Guide for further details. First element is logical (indicating whether or not to use an imbalance_fixer), second element is character string of the column name with imbalance, third element is a list of minority category values in the column, and fourth element is a numeric scalar weighting for the imbalance_fixer column that will be created. \strong{TO DO: Avi, add explanation to User Guide.}}
 
-\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
+\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that \code{easyplater} does not currently support non-96-well plates.}
 
-\item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
+\item{internal_control_well_indices}{(Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if \code{fixed_wells} argument is used.}
 
-\item{internal_control_ids}{Character vector. Names of internal control wells.}
+\item{internal_control_ids}{(Deprecated) Character vector. Names of internal control wells. This argument is ignored if \code{fixed_wells} argument is used.}
 
 \item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user.}}
 
@@ -84,18 +80,55 @@ A data.frame (of class tibble) with the same contents as the input, but with sam
 This top-level function implements easyplater, the algorithm for generating 96-well plate designs under the constraint that clinical variables are decoupled from plate location effects \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}.
 }
 \examples{
-# Run easyplater in one step
+## Run easyplater on a single plate
+
+# Decide which wells to keep fixed (not randomized), such as those for internal
+# controls and deliberately empty wells.
+# In this example, we have 81 samples and 10 Olink Explore HT internal controls,
+# and we want to plate all the internal controls in the rightmost two columns
+# (wells 87-96):
+plateID <- unique(input_manifest$plate)[1]
+olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
+fixed_wells <- assign_fixed_wells(input_manifest, 87:96, olink_ht_ic_labels)
+
+# easyplater's algorithm treats all input columns as discrete, so it's advised
+# to cut numeric columns with many unique values into bins
+input_manifest_cut <- input_manifest |>
+  dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+                .by = "plate")
+
+# Now we can use easyplater to make a randomized plate design
 easyplater_design <- make_easyplater_design(
-  manifest_df = input_manifest,
-  plateID = "plate 1",
+  manifest_df = input_manifest_cut,
+  plateID = plateID,
+  fixed_wells = fixed_wells,
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
   column_weights = c(5, 5, 10, 4),
-  cols_to_categorize = list(c("Age", 10, NULL, "AgeGroup")),
   plate_size = 96
 )
 
 # Use a function exported from the OlinkAnalyze package to display plate layout
-olink_displayPlateLayout(data = easyplater_design, fill.color = "Group", include.label = TRUE)
+easyplater_design |>
+   olink_displayPlateLayout(fill.color = "SampleID", include.label = TRUE) +
+   ggplot2::theme(legend.position = "none")
+
+## We can run easyplater on multiple plates simply by leaving the "plateID" argument unspecified
+easyplater_multiplate_design <- make_easyplater_design(
+  manifest_df = input_manifest_cut,
+  fixed_wells = fixed_wells,
+  columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+  column_weights = c(5, 5, 10, 4),
+  plate_size = 96
+)
+
+# Use a function exported from the OlinkAnalyze package to display plate layout
+easyplater_multiplate_design |> split(~plate) |>
+lapply(function(plate_design) {
+  plate_design |>
+    olink_displayPlateLayout(fill.color = "SampleID", include.label = TRUE) +
+    ggplot2::theme(legend.position = "none")
+})
+
 }
 \references{
 [1] Taylor A. & Fletcher MP.

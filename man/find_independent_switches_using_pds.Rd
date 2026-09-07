@@ -45,17 +45,15 @@ find_independent_switches_using_pds(
 
 \item{replacing_wd_thresh}{Numeric scalar. Default: 6. Well distance (wd) threshold. Used to identify pairs of wells which are distal to one another, i.e., whose distance is greater than this threshold. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 
-\item{columns_for_scoring}{Character vector. Names of columns to use for calculating plate design score.}
-
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
 \item{plate_num_rows}{Numeric scalar. Default: 8.}
 
 \item{plate_num_cols}{Numeric scalar. Default: 12.}
 
-\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that currently \code{easyplater} is currently only implemented for 96-well plates.}
+\item{plate_size}{Numeric scalar. Default: 96. Size of plate. Note that \code{easyplater} does not currently support non-96-well plates.}
 
-\item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
+\item{internal_control_well_indices}{(Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if \code{fixed_wells} argument is used.}
 
 \item{sample_communities}{\strong{TO DO: Avi REMOVE this parameter - it is not used in this function.}}
 
