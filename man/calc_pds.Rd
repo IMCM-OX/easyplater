@@ -23,7 +23,7 @@ calc_pds(
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
-\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
+\item{scoring_mask}{See paper.}
 
 \item{plate_n_rows}{Numeric scalar. Default 8.}
 

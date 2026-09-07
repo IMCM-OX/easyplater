@@ -37,7 +37,7 @@ perform_sample_switch_search(
 
 \item{sample_allocation_outputs}{Output of allocate_similar_samples_to_distal_wells()}
 
-\item{well_pair_distances_df}{\strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
+\item{well_pair_distances_df}{See paper.}
 
 \item{splitting_ss_thresh}{Numeric scalar. Default: 0.5. Sample similarity (ss) threshold. Used to identify pairs of similar samples, i.e., whose pairwise similarity is greater than this threshold; if found to be in nearby wells, these samples might be moved into distal wells (i.e. split apart) to potentially improve the plate design. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 
@@ -59,7 +59,7 @@ perform_sample_switch_search(
 
 \item{internal_control_well_indices}{(Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if \code{fixed_wells} argument is used.}
 
-\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
+\item{scoring_mask}{See paper.}
 
 \item{pds_local_weight}{Numeric scalar. Default: 1. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{global}}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.}
 

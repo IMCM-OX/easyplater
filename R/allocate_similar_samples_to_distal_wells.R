@@ -9,6 +9,8 @@
 #' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams make_easyplater_design
+#' @param full_mask See paper.
+#' @param scoring_mask See paper.
 #' @param plate_df Data frame. Output of make_plate_df
 #' @param plate_num_rows Numeric scalar. Default 8.
 #' @param plate_num_cols Numeric scalar. Default 12.

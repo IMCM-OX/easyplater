@@ -9,6 +9,7 @@
 #' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams make_easyplater_design
+#' @inheritParams allocate_similar_samples_to_distal_wells
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
 #' @param plate_n_rows Numeric scalar. Default 8.
 #' @param plate_n_cols Numeric scalar. Default 12.
