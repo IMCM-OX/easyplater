@@ -49,5 +49,5 @@ mask <- nrow(example_plate_df) |>
 
 ic_ids <- c("SC1", "SC2", "NC1", "NC2", "NC3", "PC1", "PC2", "PC3", "PC4", "PC5")
 
-easyplater:::reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
+x <- easyplater:::reorder_samples_in_plate(ss_mat, s_coms, mask, ic_ids, 86:95, 96)
 }

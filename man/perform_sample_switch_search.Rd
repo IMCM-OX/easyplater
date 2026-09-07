@@ -27,7 +27,7 @@ perform_sample_switch_search(
 )
 }
 \arguments{
-\item{plate_df}{Data frame. Output of \link{make_plate_df}}
+\item{plate_df}{Data frame. Output of make_plate_df}
 
 \item{max_depth}{\strong{TO DO: Avi explain}}
 

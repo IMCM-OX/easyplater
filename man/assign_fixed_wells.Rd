@@ -40,12 +40,32 @@ Given a number of samples and the location of known fixed wells (i.e. internal c
 }
 \examples{
 # Prepare for a plate with 80 samples and 10 internal controls per Olink Explore HT
-assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)), "plate 1")
+input_plate <- input_manifest[input_manifest$plate == "plate 1",]
+fixed_idcs <- 87:96
+fixed_labs <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
+assign_fixed_wells(input_plate, fixed_idcs, fixed_labs)
 
 # Prepare for a plate with 80 samples and 10 internal controls per Alamar NULISAseq
-assign_fixed_wells(80, (3:12)*8, paste0("IC", 1:10), "plate 1")
+fixed_idcs <- (3:12)*8
+fixed_labs <- paste0("IC", 1:10)
+assign_fixed_wells(input_plate, fixed_idcs, fixed_labs)
 
 # Randomize empty wells among samples, rather than grouping them into fixed wells
-assign_fixed_wells(80, 87:96, c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
-                         "plate 1", randomize_empties = TRUE)
+assign_fixed_wells(input_plate, fixed_idcs, fixed_labs, randomize_empties = TRUE)
+
+# We can also prepare multiple plates at once, assuming each have the same fixed wells and labels
+input_plate <- input_manifest[input_manifest$plate == "plate 1",]
+assign_fixed_wells(input_manifest, fixed_idcs, fixed_labs)
+
+# To assign different fixed wells across plates, pass a list of indices and labels
+input_plates <- input_manifest[input_manifest$plate \%in\% c("plate 1", "plate 2"),]
+fixed_idcs <- list(
+  "plate 1" = 87:96,
+  "plate 2" = 85:96
+)
+fixed_labs <- list(
+  "plate 1" = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
+  "plate 2" = c("BR1", "BR2", paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
+)
+assign_fixed_wells(input_plates, fixed_idcs, fixed_labs)
 }

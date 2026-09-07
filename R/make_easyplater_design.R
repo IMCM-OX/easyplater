@@ -42,7 +42,7 @@ SampleID <- NULL
 #' # (wells 87-96):
 #' plateID <- unique(input_manifest$plate)[1]
 #' olink_ht_ic_labels <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
-#' fixed_wells <- assign_fixed_wells(input_manifest, 87:96, olink_ht_ic_labels, plateID)
+#' fixed_wells <- assign_fixed_wells(input_manifest, 87:96, olink_ht_ic_labels)
 #'
 #' # easyplater's algorithm treats all input columns as discrete, so it's advised
 #' # to cut numeric columns with many unique values into bins
