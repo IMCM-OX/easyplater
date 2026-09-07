@@ -170,7 +170,7 @@ add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
   # SampleID shouldn't be numeric or factor
   sample_df <- sample_df |> dplyr::mutate(SampleID = as.character(SampleID))
   # Throw away any location columns if they exist
-  sample_df <- sample_df |> dplyr::select(-any_of(c("column", "row", "well")))
+  sample_df <- sample_df |> dplyr::select(-dplyr::any_of(c("column", "row", "well")))
 
   if (plate_size == 96) {
     all_wells <- paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8))
@@ -203,7 +203,7 @@ add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
       column = paste0("Column ", substr(well, 2, 3))
       ) |>
     # To align with historical test/example objects
-    dplyr::select(SampleID, column, row, well)
+    dplyr::select(dplyr::all_of(c("SampleID", "column", "row", "well")))
 
   sample_df |>
     dplyr::full_join(df_to_join, by = c("SampleID"))
