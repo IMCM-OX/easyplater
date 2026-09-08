@@ -18,9 +18,9 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-easyplater is a tool for generating microplate manifests while decoupling clinical data from plate location effects.
+`easyplater` is a tool for generating microplate manifests while decoupling clinical data from plate location effects.
 
-In short, easyplater is an easy to use algorithm for generating 96-well plate designs without confounding clinical variables with plate location effects. Simply input clinical data and user-assigned clinical variable weights, and easyplater outputs the most deconvolved plate design it finds in plain text and R Markdown formats.
+In short, `easyplater` is an easy to use algorithm for generating 96-well plate designs without confounding clinical variables with plate location effects. Simply input clinical data and user-assigned clinical variable weights, and easyplater outputs the most deconvolved plate design it finds in plain text and R Markdown formats.
 
 ## Installation
 
@@ -42,14 +42,27 @@ An example input manifest data frame comes loaded with easyplater.
 input_manifest
 ```
 
+There are three requirements for this data frame:
+- It must contain a `SampleID` column.
+- Any columns used for randomization should be categorical and should not have more than 5-10 unique values.
+- There must be a column indicating the plate ID for each sample (default: `plate`).
+
+If a randomization column is numeric, it should be cut into discrete categories, for example, using the `cut_interval()` function from the `ggplot2` package:
+
+```{r}
+library(dplyr)
+library(ggplot2)
+input_manifest_cut <- input_manifest |> 
+  mutate(AgeGroup = cut_interval(Age, 10),
+         .by = plate)
+```
+
 You can run easyplater on a multi-plate manifest data frame in one step.
 ```{r}
 easyplater_manifest <- make_easyplater_design(
-  manifest_df = input_manifest,
+  manifest_df = input_manifest_cut,
   columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
-  column_weights = c(5, 5, 10, 4),
-  cols_to_categorize = list(c("Age", 10, "AgeGroup")),
-  plate_size = 96
+  column_weights = c(5, 5, 10, 4)
 )
 ```
 
@@ -83,6 +96,67 @@ write_plate_layout_html(easyplater_manifest)
 ```
 
 ![](inst/png/write_plate_layouts_html_screenshot.png)
+
+## Reserving specific wells
+
+Often, we need to reserve specific well locations for technical samples, such as internal controls, samples for bridging across plates, or empty wells. This can been achieved by running `allocate_fixed_wells()`.
+
+We can group all the empty wells at one end of the plate:
+```{r, message=FALSE, warning=FALSE}
+plate1 <- input_manifest_cut |> filter(plate == "plate 1")
+
+fixed_wells <- assign_fixed_wells(plate1)
+
+easyplater_manifest <- make_easyplater_design(
+  manifest_df = plate1,
+  columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+  column_weights = c(5, 5, 10, 4),
+  fixed_wells = fixed_wells
+)
+
+easyplater_manifest |>
+  olink_displayPlateLayout(fill.color = "SampleID", include.label = TRUE) +
+  theme(legend.position = "none")
+```
+
+We can also provide a vector of wells we want to reserve and label.
+
+For example, for the Olink Explore HT platform, there are 10 technical controls that go in the final 10 wells when filled column-wise:
+```{r, message=FALSE, warning=FALSE}
+fixed_idcs <- 87:96
+fixed_labs <- c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5))
+fixed_wells <- assign_fixed_wells(plate1, fixed_idcs, fixed_labs)
+
+easyplater_manifest <- make_easyplater_design(
+  manifest_df = plate1,
+  columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+  column_weights = c(5, 5, 10, 4),
+  fixed_wells = fixed_wells
+)
+
+easyplater_manifest |>
+  olink_displayPlateLayout(fill.color = "SampleID", include.label = TRUE) +
+  theme(legend.position = "none")
+```
+
+Whereas the Alamar NULISAseq platform places 10 technical controls in the final 10 well when filled row-wise:
+```{r, message=FALSE, warning=FALSE}
+fixed_idcs <- (3:12)*8
+fixed_labs <- paste0("IC", 1:10)
+fixed_wells <- assign_fixed_wells(plate1, fixed_idcs, fixed_labs, 
+                                  fill_rowwise = TRUE)
+
+easyplater_manifest <- make_easyplater_design(
+  manifest_df = plate1,
+  columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+  column_weights = c(5, 5, 10, 4),
+  fixed_wells = fixed_wells
+)
+
+easyplater_manifest |>
+  olink_displayPlateLayout(fill.color = "SampleID", include.label = TRUE) +
+  theme(legend.position = "none")
+```
 
 ## Troubleshooting
 
