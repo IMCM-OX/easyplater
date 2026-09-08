@@ -33,8 +33,10 @@ remotes::install_github("IMCM-OX/easyplater")
 
 ## Example usage
 
-```{r example, warnings=FALSE}
+```{r example, warnings=FALSE, message=FALSE}
 library(easyplater)
+library(dplyr)
+library(ggplot2)
 ```
 
 An example input manifest data frame comes loaded with easyplater.
@@ -49,9 +51,7 @@ There are three requirements for this data frame:
 
 If a randomization column is numeric, it should be cut into discrete categories, for example, using the `cut_interval()` function from the `ggplot2` package:
 
-```{r}
-library(dplyr)
-library(ggplot2)
+```{r, message=FALSE, warning=FALSE}
 input_manifest_cut <- input_manifest |> 
   mutate(AgeGroup = cut_interval(Age, 10),
          .by = plate)

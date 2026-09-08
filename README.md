@@ -30,6 +30,8 @@ remotes::install_github("IMCM-OX/easyplater")
 
 ``` r
 library(easyplater)
+library(dplyr)
+library(ggplot2)
 ```
 
 An example input manifest data frame comes loaded with easyplater.
@@ -63,16 +65,6 @@ categories, for example, using the `cut_interval()` function from the
 `ggplot2` package:
 
 ``` r
-library(dplyr)
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
-library(ggplot2)
 input_manifest_cut <- input_manifest |> 
   mutate(AgeGroup = cut_interval(Age, 10),
          .by = plate)
