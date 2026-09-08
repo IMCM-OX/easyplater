@@ -89,7 +89,7 @@ fixed_wells <- assign_fixed_wells(input_manifest, 87:96, olink_ht_ic_labels)
 # easyplater's algorithm treats all input columns as discrete, so it's advised
 # to cut numeric columns with many unique values into bins
 input_manifest_cut <- input_manifest |>
-  dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+  dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10),
                 .by = "plate")
 
 # Now we can use easyplater to make a randomized plate design

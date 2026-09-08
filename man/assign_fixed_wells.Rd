@@ -6,8 +6,8 @@
 \usage{
 assign_fixed_wells(
   manifest_df,
-  ic_idcs,
-  ic_labs,
+  ic_idcs = NULL,
+  ic_labs = NULL,
   plate_size = 96,
   fill_rowwise = FALSE,
   fill_from_bottom = FALSE,

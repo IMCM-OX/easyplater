@@ -50,7 +50,7 @@ SampleID <- NULL
 #' # easyplater's algorithm treats all input columns as discrete, so it's advised
 #' # to cut numeric columns with many unique values into bins
 #' input_manifest_cut <- input_manifest |>
-#'   dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+#'   dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10),
 #'                 .by = "plate")
 #'
 #' # Now we can use easyplater to make a randomized plate design
@@ -144,6 +144,8 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
       # Create fixed_wells if not input by user
       if (!is.null(fixed_wells)) {
         fixed_wells_plate <- fixed_wells |> dplyr::filter(.data[[plate_col]] == p)
+        ic_idcs_plate <- fixed_wells_plate$idc - 1
+        ic_labs_plate <- fixed_wells_plate$lab
       # If no fixed_wells, but internal_control... (original, deprecated system)
       } else if (!is.null(internal_control_well_indices) &
                  !is.null(internal_control_ids)) {
@@ -151,13 +153,17 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
           sample_df,
           internal_control_well_indices+1,
           internal_control_ids,
-          randomize_empties = TRUE
+          randomize_empties = TRUE,
+          plate_col = plate_col
           )
+        ic_idcs_plate <- fixed_wells_plate$idc - 1
+        ic_labs_plate <- fixed_wells_plate$lab
       } else {
-        stop("Must supply either fixed_wells or (deprecated) internal_control_well_indices and internal_control_ids.")
+        # If nothing is given, the default is to randomize empty wells among samples
+        fixed_wells_plate <- NULL
+        ic_idcs_plate <- NULL
+        ic_labs_plate <- NULL
       }
-      ic_idcs_plate <- fixed_wells_plate$idc - 1
-      ic_labs_plate <- fixed_wells_plate$lab
 
       plate_df <- make_plate_df(sample_df, fixed_wells_plate, imbalance_fixer, plate_wells)
 

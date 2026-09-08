@@ -46,7 +46,7 @@ lets <- NULL
 #' )
 #' assign_fixed_wells(input_plates, fixed_idcs, fixed_labs)
 assign_fixed_wells <- function(
-    manifest_df, ic_idcs, ic_labs, plate_size = 96,
+    manifest_df, ic_idcs=NULL, ic_labs=NULL, plate_size = 96,
     fill_rowwise = FALSE, fill_from_bottom = FALSE,
     randomize_empties = FALSE, plate_col = "plate") {
 
@@ -107,7 +107,12 @@ assign_fixed_wells_plate <- function(n_samples, ic_idcs, ic_labs, plate, plate_c
     stop("Plate size must be 96.")
   }
 
-  ic_wells = all_wells[ic_idcs]
+  if (is.null(ic_idcs)) {
+    ic_wells <- NULL
+  } else {
+    ic_wells <- all_wells[ic_idcs]
+  }
+
   # Fill available wells with samples
   nonic_wells <- all_wells[!(all_wells %in% ic_wells)]
   if (fill_rowwise) {
@@ -166,7 +171,7 @@ assign_fixed_wells_plate <- function(n_samples, ic_idcs, ic_labs, plate, plate_c
 #' sample_df <- input_manifest[1:86,] # first 86 samples without starting wells
 #' fixed_wells <- paste0("H", 3:12)
 #' add_sample_wells(sample_df, fixed_wells)
-add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
+add_sample_wells <- function(sample_df, fixed_wells = NULL, plate_size = 96) {
   # SampleID shouldn't be numeric or factor
   sample_df <- sample_df |> dplyr::mutate(SampleID = as.character(SampleID))
   # Throw away any location columns if they exist
@@ -177,9 +182,12 @@ add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
   } else {
     stop("Plate size must be 96.")
   }
-  # If empty wells were not assigned to fixed wells, warn that they will be randomized.
-  if ((nrow(sample_df) + length(fixed_wells)) != plate_size) {
-    message("Empty wells will be randomized among samples. Use `fixed_wells` argument to avoid this behavior.")
+
+  if (!is.null(fixed_wells)) {
+    # If empty wells were not assigned to fixed wells, warn that they will be randomized.
+    if ((nrow(sample_df) + length(fixed_wells)) != plate_size) {
+      message("Empty wells will be randomized among samples. Use `fixed_wells` argument to avoid this behavior.")
+    }
   }
 
   nonfixed_wells <- all_wells[!(all_wells %in% fixed_wells)]
