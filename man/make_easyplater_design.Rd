@@ -14,9 +14,6 @@ make_easyplater_design(
   fixed_wells = NULL,
   internal_control_well_indices = NULL,
   internal_control_ids = NULL,
-  full_mask = NULL,
-  scoring_mask = NULL,
-  well_pair_distances_df = NULL,
   splitting_ss_thresh = 0.5,
   splitting_wd_thresh = 1,
   replacing_ss_thresh = 0.5,
@@ -48,12 +45,6 @@ make_easyplater_design(
 \item{internal_control_well_indices}{(Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if \code{fixed_wells} argument is used.}
 
 \item{internal_control_ids}{(Deprecated) Character vector. Names of internal control wells. This argument is ignored if \code{fixed_wells} argument is used.}
-
-\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user.}}
-
-\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
-
-\item{well_pair_distances_df}{\strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
 
 \item{splitting_ss_thresh}{Numeric scalar. Default: 0.5. Sample similarity (ss) threshold. Used to identify pairs of similar samples, i.e., whose pairwise similarity is greater than this threshold; if found to be in nearby wells, these samples might be moved into distal wells (i.e. split apart) to potentially improve the plate design. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.2, step 3. See also Supplementary Figure 4.}
 
@@ -98,7 +89,7 @@ fixed_wells <- assign_fixed_wells(input_manifest, 87:96, olink_ht_ic_labels)
 # easyplater's algorithm treats all input columns as discrete, so it's advised
 # to cut numeric columns with many unique values into bins
 input_manifest_cut <- input_manifest |>
-  dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+  dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10),
                 .by = "plate")
 
 # Now we can use easyplater to make a randomized plate design

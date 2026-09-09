@@ -6,8 +6,8 @@
 \usage{
 assign_fixed_wells(
   manifest_df,
-  ic_idcs,
-  ic_labs,
+  ic_idcs = NULL,
+  ic_labs = NULL,
   plate_size = 96,
   fill_rowwise = FALSE,
   fill_from_bottom = FALSE,
@@ -48,13 +48,13 @@ assign_fixed_wells(input_plate, fixed_idcs, fixed_labs)
 # Prepare for a plate with 80 samples and 10 internal controls per Alamar NULISAseq
 fixed_idcs <- (3:12)*8
 fixed_labs <- paste0("IC", 1:10)
-assign_fixed_wells(input_plate, fixed_idcs, fixed_labs)
+assign_fixed_wells(input_plate, fixed_idcs, fixed_labs, fill_rowwise = TRUE)
 
 # Randomize empty wells among samples, rather than grouping them into fixed wells
 assign_fixed_wells(input_plate, fixed_idcs, fixed_labs, randomize_empties = TRUE)
 
 # We can also prepare multiple plates at once, assuming each have the same fixed wells and labels
-input_plate <- input_manifest[input_manifest$plate == "plate 1",]
+input_plates <- input_manifest[input_manifest$plate \%in\% c("plate 1", "plate 2"),]
 assign_fixed_wells(input_manifest, fixed_idcs, fixed_labs)
 
 # To assign different fixed wells across plates, pass a list of indices and labels

@@ -18,7 +18,7 @@ reorder_samples_in_plate(
 
 \item{sample_communities}{An \code{\link[igraph:communities]{igraph::communities()}} object.}
 
-\item{full_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user.}}
+\item{full_mask}{See paper.}
 
 \item{internal_control_ids}{(Deprecated) Character vector. Names of internal control wells. This argument is ignored if \code{fixed_wells} argument is used.}
 

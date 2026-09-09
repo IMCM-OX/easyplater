@@ -25,13 +25,13 @@ lets <- NULL
 #' # Prepare for a plate with 80 samples and 10 internal controls per Alamar NULISAseq
 #' fixed_idcs <- (3:12)*8
 #' fixed_labs <- paste0("IC", 1:10)
-#' assign_fixed_wells(input_plate, fixed_idcs, fixed_labs)
+#' assign_fixed_wells(input_plate, fixed_idcs, fixed_labs, fill_rowwise = TRUE)
 #'
 #' # Randomize empty wells among samples, rather than grouping them into fixed wells
 #' assign_fixed_wells(input_plate, fixed_idcs, fixed_labs, randomize_empties = TRUE)
 #'
 #' # We can also prepare multiple plates at once, assuming each have the same fixed wells and labels
-#' input_plate <- input_manifest[input_manifest$plate == "plate 1",]
+#' input_plates <- input_manifest[input_manifest$plate %in% c("plate 1", "plate 2"),]
 #' assign_fixed_wells(input_manifest, fixed_idcs, fixed_labs)
 #'
 #' # To assign different fixed wells across plates, pass a list of indices and labels
@@ -46,7 +46,7 @@ lets <- NULL
 #' )
 #' assign_fixed_wells(input_plates, fixed_idcs, fixed_labs)
 assign_fixed_wells <- function(
-    manifest_df, ic_idcs, ic_labs, plate_size = 96,
+    manifest_df, ic_idcs=NULL, ic_labs=NULL, plate_size = 96,
     fill_rowwise = FALSE, fill_from_bottom = FALSE,
     randomize_empties = FALSE, plate_col = "plate") {
 
@@ -107,7 +107,12 @@ assign_fixed_wells_plate <- function(n_samples, ic_idcs, ic_labs, plate, plate_c
     stop("Plate size must be 96.")
   }
 
-  ic_wells = all_wells[ic_idcs]
+  if (is.null(ic_idcs)) {
+    ic_wells <- NULL
+  } else {
+    ic_wells <- all_wells[ic_idcs]
+  }
+
   # Fill available wells with samples
   nonic_wells <- all_wells[!(all_wells %in% ic_wells)]
   if (fill_rowwise) {
@@ -141,7 +146,7 @@ assign_fixed_wells_plate <- function(n_samples, ic_idcs, ic_labs, plate, plate_c
   # Create dataframe with indices, well codes and labels for more straightforward input to easyplater
   fixed_df <- dplyr::tibble(
     "{plate_col}" := plate,
-    idc = c(ic_idcs, empty_idcs),
+    idc = c(ic_idcs, empty_idcs) |> as.integer(),
     well = c(ic_wells, empty_wells),
     lab = c(ic_labs, empty_labs)
   )
@@ -166,18 +171,23 @@ assign_fixed_wells_plate <- function(n_samples, ic_idcs, ic_labs, plate, plate_c
 #' sample_df <- input_manifest[1:86,] # first 86 samples without starting wells
 #' fixed_wells <- paste0("H", 3:12)
 #' add_sample_wells(sample_df, fixed_wells)
-add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
+add_sample_wells <- function(sample_df, fixed_wells = NULL, plate_size = 96) {
   # SampleID shouldn't be numeric or factor
   sample_df <- sample_df |> dplyr::mutate(SampleID = as.character(SampleID))
+  # Throw away any location columns if they exist
+  sample_df <- sample_df |> dplyr::select(-dplyr::any_of(c("column", "row", "well")))
 
   if (plate_size == 96) {
     all_wells <- paste0(rep(LETTERS[1:8], times = 12), rep(1:12, each = 8))
   } else {
     stop("Plate size must be 96.")
   }
-  # If empty wells were not assigned to fixed wells, warn that they will be randomized.
-  if ((nrow(sample_df) + length(fixed_wells)) != plate_size) {
-    message("Empty wells will be randomized among samples. Use `fixed_wells` argument to avoid this behavior.")
+
+  if (!is.null(fixed_wells)) {
+    # If empty wells were not assigned to fixed wells, warn that they will be randomized.
+    if ((nrow(sample_df) + length(fixed_wells)) != plate_size) {
+      message("Empty wells will be randomized among samples. Use `fixed_wells` argument to avoid this behavior.")
+    }
   }
 
   nonfixed_wells <- all_wells[!(all_wells %in% fixed_wells)]
@@ -199,10 +209,12 @@ add_sample_wells <- function(sample_df, fixed_wells, plate_size = 96) {
     dplyr::mutate(
       row = substr(well, 1, 1),
       column = paste0("Column ", substr(well, 2, 3))
-      )
+      ) |>
+    # To align with historical test/example objects
+    dplyr::select(dplyr::all_of(c("SampleID", "column", "row", "well")))
 
   sample_df |>
-    dplyr::full_join(df_to_join, by = c("SampleID", "well", "row", "column"))
+    dplyr::full_join(df_to_join, by = c("SampleID"))
 }
 
 

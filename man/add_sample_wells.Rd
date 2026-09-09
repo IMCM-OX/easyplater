@@ -4,7 +4,7 @@
 \alias{add_sample_wells}
 \title{Create  sample plate locations to existing fixed wells dataframe}
 \usage{
-add_sample_wells(sample_df, fixed_wells, plate_size = 96)
+add_sample_wells(sample_df, fixed_wells = NULL, plate_size = 96)
 }
 \arguments{
 \item{sample_df}{Data frame where each sample is represented in a row. Cannot have more rows than \code{plate_size}.}

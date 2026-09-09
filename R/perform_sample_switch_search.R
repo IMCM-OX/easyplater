@@ -10,6 +10,7 @@
 #'
 #' @inheritParams make_easyplater_design
 #' @inheritParams allocate_similar_samples_to_distal_wells
+#' @param well_pair_distances_df See paper.
 #' @param sample_allocation_outputs Output of allocate_similar_samples_to_distal_wells()
 #' @param plate_num_rows Numeric scalar. Default: 8.
 #' @param plate_num_cols Numeric scalar. Default: 12.

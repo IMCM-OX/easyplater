@@ -19,9 +19,6 @@ SampleID <- NULL
 #' @param fixed_wells Data frame output by [easyplater::assign_fixed_wells]. If this argument is used, `internal_control_well_indices` and `internal_control_ids` will be ignored.
 #' @param internal_control_well_indices (Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if `fixed_wells` argument is used.
 #' @param internal_control_ids (Deprecated) Character vector. Names of internal control wells. This argument is ignored if `fixed_wells` argument is used.
-#' @param full_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user.**
-#' @param scoring_mask `nrow(plate_df) x nrow(plate_df)` numeric matrix. **TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user**
-#' @param well_pair_distances_df **TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user**
 #' @param splitting_ss_thresh Numeric scalar. Default: 0.5. Sample similarity (ss) threshold. Used to identify pairs of similar samples, i.e., whose pairwise similarity is greater than this threshold; if found to be in nearby wells, these samples might be moved into distal wells (i.e. split apart) to potentially improve the plate design. See <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, step 3. See also Supplementary Figure 4.
 #' @param splitting_wd_thresh Numeric scalar. Default: 1. Well distance (wd) threshold. Used to identify pairs of wells which are nearby to one another, i.e., whose distance is less than this threshold. See <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, step 3. See also Supplementary FIgure 4.
 #' @param replacing_ss_thresh Numeric scalar. Default: 0.5. Sample similarity (ss) threshold. Used to identify pairs of dissimilar samples, i.e., whose pairwise similarity is less than or equal to this threshold; if found to be in distal wells, these samples might be switched with a sample that is under consideration for a split. See <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, step 3. See also Supplementary Figure 4.
@@ -53,7 +50,7 @@ SampleID <- NULL
 #' # easyplater's algorithm treats all input columns as discrete, so it's advised
 #' # to cut numeric columns with many unique values into bins
 #' input_manifest_cut <- input_manifest |>
-#'   dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+#'   dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10),
 #'                 .by = "plate")
 #'
 #' # Now we can use easyplater to make a randomized plate design
@@ -94,8 +91,6 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
                                    fixed_wells = NULL,
                                    internal_control_well_indices = NULL,
                                    internal_control_ids = NULL,
-                                   full_mask = NULL, scoring_mask = NULL,
-                                   well_pair_distances_df = NULL,
                                    splitting_ss_thresh = 0.5, splitting_wd_thresh = 1,
                                    replacing_ss_thresh = 0.5, replacing_wd_thresh = 6,
                                    max_depth = 2, wins_required = 10, max_attempts = 100,
@@ -120,19 +115,10 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
   plate_wells <- paste0(rep(LETTERS[1:plate_num_rows], times = plate_num_cols),
                         rep(1:plate_num_cols, each = plate_num_rows))
 
+  well_pair_distances_df <- make_well_distance_df(plate_size)
   well_distances_matrix <- make_well_distances_matrix(plate_size)
-
-  if (is.null(full_mask)) {
-    full_mask <- make_full_mask(well_distances_matrix)
-  }
-
-  if (is.null(scoring_mask)) {
-    scoring_mask <- make_scoring_mask(well_distances_matrix)
-  }
-
-  if (is.null(well_pair_distances_df)) {
-    well_pair_distances_df <- make_well_distance_df(plate_size)
-  }
+  full_mask <- make_full_mask(well_distances_matrix)
+  scoring_mask <- make_scoring_mask(well_distances_matrix)
 
   # Check that fixed_wells has a plate_col column
   if (!is.null(fixed_wells)) {
@@ -158,6 +144,8 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
       # Create fixed_wells if not input by user
       if (!is.null(fixed_wells)) {
         fixed_wells_plate <- fixed_wells |> dplyr::filter(.data[[plate_col]] == p)
+        ic_idcs_plate <- fixed_wells_plate$idc - 1
+        ic_labs_plate <- fixed_wells_plate$lab
       # If no fixed_wells, but internal_control... (original, deprecated system)
       } else if (!is.null(internal_control_well_indices) &
                  !is.null(internal_control_ids)) {
@@ -165,13 +153,17 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
           sample_df,
           internal_control_well_indices+1,
           internal_control_ids,
-          randomize_empties = TRUE
+          randomize_empties = TRUE,
+          plate_col = plate_col
           )
+        ic_idcs_plate <- fixed_wells_plate$idc - 1
+        ic_labs_plate <- fixed_wells_plate$lab
       } else {
-        stop("Must supply either fixed_wells or (deprecated) internal_control_well_indices and internal_control_ids.")
+        # If nothing is given, the default is to randomize empty wells among samples
+        fixed_wells_plate <- NULL
+        ic_idcs_plate <- NULL
+        ic_labs_plate <- NULL
       }
-      ic_idcs_plate <- fixed_wells_plate$idc - 1
-      ic_labs_plate <- fixed_wells_plate$lab
 
       plate_df <- make_plate_df(sample_df, fixed_wells_plate, imbalance_fixer, plate_wells)
 

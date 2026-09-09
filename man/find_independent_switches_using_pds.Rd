@@ -59,7 +59,7 @@ find_independent_switches_using_pds(
 
 \item{sample_communities}{\strong{TO DO: Avi REMOVE this parameter - it is not used in this function.}}
 
-\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO: Micah, please hide this technical, internal variable that needs to be hidden/ de-surfaced from the user}}
+\item{scoring_mask}{See paper.}
 
 \item{pds_local_weight}{Numeric scalar. Default: 1. Weight to give the \eqn{PDS_{local}} relative to \eqn{PDS_{global}}. See \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.}
 

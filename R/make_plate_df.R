@@ -2,7 +2,7 @@ idc <- plate <- NULL
 
 # Take input manifest for a single plate, add imbalance fixer, add fixed wells, and arrange by well index
 # Note: This replaces get_and_format_plate_df_from_manifest() with simpler inputs and outputs
-make_plate_df <- function(sample_df, fixed_wells, imbalance_fixer, plate_wells) {
+make_plate_df <- function(sample_df, fixed_wells = NULL, imbalance_fixer, plate_wells) {
   # SampleID shouldn't be numeric or factor
   sample_df <- sample_df |> dplyr::mutate(SampleID = as.character(SampleID))
   # Add sample wells (excluding fixed wells)
@@ -12,10 +12,13 @@ make_plate_df <- function(sample_df, fixed_wells, imbalance_fixer, plate_wells) 
   if (imbalance_fixer[[1]]) {
     plate_df <- add_imbalance_fixer(plate_df, imbalance_fixer)
   }
-  # Add fixed wells to plate_df and arrange by well index
+  if (!is.null(fixed_wells)) {
+    # Add fixed wells to plate_df and arrange by well index
+    plate_df <- plate_df |>
+      dplyr::full_join(fixed_wells, by = c("well", "SampleID" = "lab", "plate")) |>
+      dplyr::select(-idc)
+  }
   plate_df <- plate_df |>
-    dplyr::full_join(fixed_wells, by = c("well", "SampleID" = "lab", "plate")) |>
-    dplyr::select(-idc) |>
     dplyr::mutate(
       # Fixed/empty wells have these values missing up until now
       plate = dplyr::first(plate),
