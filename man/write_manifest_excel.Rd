@@ -9,7 +9,8 @@ write_manifest_excel(
   file,
   plate_col = "plate",
   display_col = "SampleID",
-  plate_size = 96
+  plate_size = 96,
+  rowwise = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ write_manifest_excel(
 \item{display_col}{String. Column to draw labels for plate layout from.}
 
 \item{plate_size}{Numeric. Size of plate. Currently, anything other than 96 will return error.}
+
+\item{rowwise}{Logical. Arrange manifest as if filling plates rowwise, rather than columnwise.}
 }
 \value{
 Returns input \code{manifest_df} invisibly.
