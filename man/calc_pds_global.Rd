@@ -21,19 +21,19 @@ calc_pds_global(
 
 \item{column_weights}{Numeric vector of weights to use for the variables in \code{columns_for_scoring}. Must be same length as \code{columns_for_scoring}.}
 
-\item{scoring_mask}{\verb{nrow(plate_df) x nrow(plate_df)} numeric matrix. \strong{TO DO Avi: explain this}}
+\item{scoring_mask}{See paper.}
 
 \item{plate_n_rows}{Numeric scalar. Default 8.}
 
 \item{plate_n_cols}{Numeric scalar. Default 12.}
 
-\item{internal_control_well_indices}{Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right.}
+\item{internal_control_well_indices}{(Deprecated) Numeric vector containing indices of control wells. Expecting zero index, and numbering going first top to bottom, then left to right. This argument is ignored if \code{fixed_wells} argument is used.}
 }
 \value{
 A numeric scalar.
 }
 \description{
-\code{calc_pds_global()} calculates \eqn{PDS_{v_x}}, the sub-score of \eqn{PDS_v} where \eqn{v} is a clinical metadata variable and \eqn{x} is a unique value of \eqn{v}, accounting for the randomization of value \eqn{x} of \eqn{v} across a plate design.
+This function implements the method described in \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.1, subsection 2.1.1.
 }
 \examples{
 # An example of a preprocessed plate dataframe
@@ -47,4 +47,9 @@ scoring_mask <- nrow(example_plate_df) |>
 ic_well_idcs <- c(86:95)
 easyplater:::calc_pds_global(example_plate_df, cols_for_scoring, col_weights,
                              scoring_mask, 8, 12, ic_well_idcs)
+}
+\references{
+[1] Taylor A. & Fletcher MP.
+easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+\emph{arXiv} 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 }

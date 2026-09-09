@@ -1,12 +1,15 @@
 #' Calculate plate design score
 #'
 #' @description
-#' One or two sentences describing the purpose of the function, and its inputs and outputs **TO DO: Avi, fill this in**
+#' This function implements the method described in <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.1.
 #'
-#' @details
-#' Additional details of nuances, limitations, potential pitfalls... **TO DO: Avi, fill this in**
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams make_easyplater_design
+#' @inheritParams allocate_similar_samples_to_distal_wells
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
 #' @param plate_n_rows Numeric scalar. Default 8.
 #' @param plate_n_cols Numeric scalar. Default 12.
@@ -44,7 +47,12 @@ calc_pds <- function(plate_df, columns_for_scoring, column_weights,
 #' Calculate local plate design score
 #'
 #' @description
-#' The condition that variable-wise homogeneous rows, columns and patches should be avoided in a plate design is captured by the sub-score \eqn{PDS_{local}}. We define \eqn{PDS_{local}} to be an inverse-penalty based score such that plate designs that have a non-homogeneous distribution of values for every variable in every row, column and patch score maximally, while deviations from this are penalized.
+#' This function implements the method described in <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.1.2.
+#'
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams calc_pds
 #'
@@ -70,7 +78,12 @@ calc_pds_local <- function(plate_df, columns_for_scoring, column_weights,
 #' Calculate patch score
 #'
 #' @description
-#' `calc_patch_score()` calculates **TO DO: Avi fill this in**
+#' This function implements the method described in <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.1, subsection 2.1.2: patches. See also Supplementary Figure 2.
+#'
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams calc_pds
 #'
@@ -135,7 +148,12 @@ calc_patch_score <- function(plate_df, columns_for_scoring, column_weights,
 #' Calculate row column score
 #'
 #' @description
-#' `calc_row_column_score()` calculates **TO DO: Avi fill this in**
+#' This function implements the method described in <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.1, subsection 2.1.2: rows and columns. See also Supplementary Figure 2.
+#'
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams calc_pds
 #'
@@ -192,7 +210,12 @@ calc_row_column_score <- function(plate_df, columns_for_scoring, column_weights,
 #' Calculate global plate design score
 #'
 #' @description
-#' `calc_pds_global()` calculates \eqn{PDS_{v_x}}, the sub-score of \eqn{PDS_v} where \eqn{v} is a clinical metadata variable and \eqn{x} is a unique value of \eqn{v}, accounting for the randomization of value \eqn{x} of \eqn{v} across a plate design.
+#' This function implements the method described in <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.1, subsection 2.1.1.
+#'
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 #'
 #' @inheritParams calc_pds
 #'

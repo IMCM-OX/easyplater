@@ -1,16 +1,26 @@
 #' Perform sample switch search
 #'
+#' @description
+#' This function implements the method described in <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, steps 3.
+#'
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
+#'
 #' @inheritParams make_easyplater_design
 #' @inheritParams allocate_similar_samples_to_distal_wells
+#' @param well_pair_distances_df See paper.
 #' @param sample_allocation_outputs Output of allocate_similar_samples_to_distal_wells()
-#' @param plate_num_rows Numeric scalar. Default 8.
-#' @param plate_num_cols Numeric scalar. Default 12.
+#' @param plate_num_rows Numeric scalar. Default: 8.
+#' @param plate_num_cols Numeric scalar. Default: 12.
 #'
 #' @returns
-#' **TO DO: Avi explain**
+#' Character vector of SampleIDs in their final order after searching for an improved plate design using sample switches.
 #'
-perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
-                                         plate_df_list, sample_allocation_outputs,
+perform_sample_switch_search <- function(plate_df,
+                                         max_depth, wins_required, max_attempts,
+                                         sample_allocation_outputs,
                                          well_pair_distances_df,
                                          splitting_ss_thresh, splitting_wd_thresh,
                                          replacing_ss_thresh, replacing_wd_thresh,
@@ -22,9 +32,6 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
   samples_reordered <- sample_allocation_outputs[[2]]
   sample_similarities_matrix_reordered <- sample_allocation_outputs[[3]]
   best_score <- sample_allocation_outputs[[4]]
-
-  plate_df <- plate_df_list[[1]]
-  plate_df_aux <- plate_df_list[[2]]
 
   jiggled_indices_df <- data.frame(depth=0, pds=best_score, jiggled_matrix_indices=I(list(1:plate_size)))
 
@@ -41,7 +48,7 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
 
       while( (num_wins<wins_required) & (num_attempts<max_attempts) ){
 
-        jiggled_indices_aux_df <- find_independent_switches_using_pds(current_depth,plate_df,
+        jiggled_indices_aux_df <- find_independent_switches_using_pds(current_depth, plate_df,
                                                                       sample_similarities_matrix_reordered,
                                                                       well_pair_distances_df$d,
                                                                       unlist(jiggled_indices_subset_df[ri,]$jiggled_matrix_indices),
@@ -73,19 +80,25 @@ perform_sample_switch_search <- function(max_depth, wins_required, max_attempts,
 
 #' Find independent switches using PDS
 #'
-#' This function is run within perform_sample_switch_search(). **TO DO: Avi elaborate**
+#' @description
+#' This function implements the method described in <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, step 3, subsection "Generate a set of independent sample switches". Additionally, the function performs the switches and scores the resultant plate design using PDS. See also Supplementary Figure 4.
 #'
-#' @param depth **TO DO: Avi explain**
+#' @references
+#' \[1\] Taylor A. & Fletcher MP.
+#' easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+#' *arXiv* 2026. doi: \url{https://arxiv.org/abs/2512.17988}
+#'
+#' @param depth Integer. Depth of sample switching search reached so far. See <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, steps 3, variables \eqn{D_n}.
 #' @param plate_df Data frame of samples and associated clinical metadata variables.
-#' @param ss_matrix Sample similarity matrix output by make_ss_matrices()\[\[3\]\]
-#' @param well_distances Output of make_well_distance_df()
-#' @param jiggled_matrix_indices **TO DO: Avi explain**
-#' @param sample_communities **TO DO: Avi explain**
+#' @param ss_matrix (plate size) x (plate size) numeric matrix. Sample similarity matrix output as element 3 of the list output by allocate_similar_samples_to_distal_wells().
+#' @param well_distances Column "d" of data frame output by make_well_distance_df().
+#' @param jiggled_matrix_indices List of integers. Matrix indices are for re-ordering ss_matrix and represent the best scoring plate found so far in the sample switching step. See <a href='https://arxiv.org/abs/2512.17988'>\[1\]</a>; section 2.2, steps 3.
+#' @param sample_communities **TO DO: Avi REMOVE this parameter - it is not used in this function.**
 #' @inheritParams perform_sample_switch_search
 #' @inheritParams allocate_similar_samples_to_distal_wells
 #'
 #' @returns
-#' **TO DO: Avi explain**
+#' Data frame. One row containing the depth, PDS, and re-ordered (jiggled) indices for ss_matrix for the sample switching step performed.
 #'
 find_independent_switches_using_pds <- function(depth, plate_df,
                                                 ss_matrix, well_distances, jiggled_matrix_indices,

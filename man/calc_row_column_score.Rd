@@ -27,7 +27,7 @@ calc_row_column_score(
 A numeric scalar.
 }
 \description{
-\code{calc_row_column_score()} calculates \strong{TO DO: Avi fill this in}
+This function implements the method described in \if{html}{\out{<a href='https://arxiv.org/abs/2512.17988'>}}[1]\if{html}{\out{</a>}}; section 2.1, subsection 2.1.2: rows and columns. See also Supplementary Figure 2.
 }
 \examples{
 # An example of a preprocessed plate dataframe
@@ -36,4 +36,9 @@ str(example_plate_df)
 cols_for_scoring <- names(example_plate_df)[2:5]
 col_weights <- c(5, 5, 10, 4)
 easyplater:::calc_row_column_score(example_plate_df, cols_for_scoring, col_weights, 8, 12)
+}
+\references{
+[1] Taylor A. & Fletcher MP.
+easyplater: The easy way to generate microplate designs deconvolved from multivariate clinical data.
+\emph{arXiv} 2026. doi: \url{https://arxiv.org/abs/2512.17988}
 }
