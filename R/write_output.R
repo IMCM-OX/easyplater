@@ -78,7 +78,7 @@ write_manifest_excel <- function(manifest_df, file,
   }
 
   # Construct plate layouts
-  plate_layouts <- split(manifest_df, gtools::mixed_sort(manifest_df[[plate_col]]))
+  plate_layouts <- split(manifest_df, gtools::mixedsort(manifest_df[[plate_col]]))
     lapply(\(plate_df) {
       # Reorder well ids so that they fill the plate layout matrix by column (not by row)
       if (wells_in_A1) {
@@ -187,7 +187,7 @@ write_plate_layout_html <- function(manifest_df,
     include_legend <- color_by[!color_by %in% "SampleID"]
   }
 
-  plate_list <- split(manifest_df, gtools::mixed_sort(manifest_df[[plate_col]]))
+  plate_list <- split(manifest_df, gtools::mixedsort(manifest_df[[plate_col]]))
 
   html_dir <- dirname(html_filepath)
   html_file <- basename(html_filepath)
