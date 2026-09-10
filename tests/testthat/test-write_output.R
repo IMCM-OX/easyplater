@@ -41,6 +41,23 @@ test_that("write_manifest_excel() reorders rows into the correct order for mappi
   )
 })
 
+test_that("write_manifest_excel() orders plates in correct order, not alphabetical", {
+  expect_identical(
+    object = {
+      output_manifest_mod <- output_manifest |>
+        mutate(plate = ifelse(plate == "plate 1", "plate 10", plate))
+      write_dir = tempdir()
+      write_manifest_excel(output_manifest_mod, file.path(write_dir, "output_manifest.xlsx"))
+      sheets <- readxl::excel_sheets(file.path(write_dir, "output_manifest.xlsx"))
+      file.remove(file.path(write_dir, "output_manifest.xlsx"))
+      sheets[2:3]
+    },
+    expected = {
+      c("plate 2", "plate 10")
+    }
+  )
+})
+
 test_that("write_manifest_excel() errors when given well ids that deviate from the complete 96-well complete set", {
   expect_error(
     object = {

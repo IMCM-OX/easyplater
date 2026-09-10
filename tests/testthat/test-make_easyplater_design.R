@@ -174,3 +174,28 @@ test_that("make_easyplater_design() returns the same multi-plate manifest as the
     expected = readRDS(test_path("fixtures", "easy_multiplate_df.rds"))
   )
 })
+
+test_that("make_easyplater_design() run through plates in correct order, not alphabetical", {
+  expect_identical(
+    object = {
+      input_manifest_mod <- input_manifest |>
+        mutate(plate = ifelse(plate == "plate 1", "plate 10", plate))
+
+      # Must cut Age into discrete groups, as `cols_to_categorize` is no longer supported
+      input_manifest_cut <- input_manifest_mod |>
+        dplyr::mutate(AgeGroup = ggplot2::cut_interval(Age, 10) |> as.numeric(),
+                      .by = "plate")
+
+      make_easyplater_design(
+        manifest_df = input_manifest_cut,
+        plateID = NULL,
+        columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+        column_weights = c(5, 5, 10, 4),
+        internal_control_well_indices = 86:95,
+        internal_control_ids = c(paste0("SC", 1:2), paste0("NC", 1:3), paste0("PC", 1:5)),
+        plate_size = 96
+      ) |> slice_head(n=1, by=plate) |> pull(plate)
+    },
+    expected = c("plate 2", "plate 10")
+  )
+})

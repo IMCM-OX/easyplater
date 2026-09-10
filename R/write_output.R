@@ -78,7 +78,7 @@ write_manifest_excel <- function(manifest_df, file,
   }
 
   # Construct plate layouts
-  plate_layouts <- split(manifest_df, gtools::mixedsort(manifest_df[[plate_col]]))
+  plate_layouts <- split(manifest_df, manifest_df[[plate_col]]) |>
     lapply(\(plate_df) {
       # Reorder well ids so that they fill the plate layout matrix by column (not by row)
       if (wells_in_A1) {
@@ -92,17 +92,21 @@ write_manifest_excel <- function(manifest_df, file,
 
       return(plate_layout)
     })
+  plate_layouts <- plate_layouts[gtools::mixedorder(names(plate_layouts))]
 
   # Arrange wells in manifest rowwise for some platforms (e.g. NULISA)
   if (rowwise) {
-    manifest_df <- split(manifest_df, gtools::mixedsort(manifest_df[[plate_col]])) |>
+    manifest_df <- split(manifest_df, manifest_df[[plate_col]]) |>
       lapply(\(plate_df) {
         ordered_wells <- gtools::mixedsort(plate_df$well)
         plate_df <- plate_df[match(ordered_wells, plate_df$well),]
-
         return(plate_df)
       }) |> dplyr::bind_rows(.id = plate_col)
   }
+
+  # Arrange by plates in correct order, not alphabetically
+  manifest_df <- manifest_df |>
+    dplyr::slice(gtools::mixedorder(.data[[plate_col]]))
 
   c(
     list(Manifest = manifest_df),

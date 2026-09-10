@@ -203,7 +203,9 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
     }
   })
 
-  easy_plate_df <- easy_plates_list |> dplyr::bind_rows(.id = plate_col)
+  easy_plate_df <- easy_plates_list |>
+    dplyr::bind_rows(.id = plate_col) |>
+    dplyr::slice(.data[[plate_col]] |> gtools::mixedorder())
 
   # Convert empty wells to NA. Numeric suffix after "Empty_" is meaningless and NAs display better in plate layouts.
   easy_plate_df <- easy_plate_df |>
