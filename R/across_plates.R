@@ -411,7 +411,7 @@ run_permutation_test <- function(manifest, test_column, num_plates, min_cell_exp
       perm_col_name <- perm_col_names[perm]
 
       perm_full_table <- table(manifest_with_permutations[[perm_col_name]], manifest_with_permutations[[test_column]])
-      perm_other_table <- perm_full_table[,which(dimnames(perm_full_table)[[2]] %in% values[lengths < (num_plates*min_cell_expected)]), drop = TRUE]
+      perm_other_table <- perm_full_table[,which(dimnames(perm_full_table)[[2]] %in% values[lengths < (num_plates*min_cell_expected)]), drop = FALSE]
 
       perm_peaks <- as.vector(apply(perm_other_table, 2, function(x){max(x)}))
       perm_spreads <- as.vector(apply(perm_other_table, 2, function(x){sum(x>0)}))
