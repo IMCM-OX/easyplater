@@ -98,7 +98,7 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
                                    plate_col = "plate",
                                    seed = 1){
 
-  plateIDs <- manifest_df[[plate_col]] |> unique() |> stringr::str_sort()
+  plateIDs <- manifest_df[[plate_col]] |> unique() |> gtools::mixedsort()
   # If no subset of plates is given, run easyplater on all plates
   if (is.null(plateID)) {
     plateID <- plateIDs
