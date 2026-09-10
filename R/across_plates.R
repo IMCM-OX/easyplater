@@ -399,7 +399,7 @@ run_permutation_test <- function(manifest, test_column, num_plates, min_cell_exp
     reduced_manifest_with_permutations_other <- manifest_with_permutations[manifest_with_permutations[[test_column]] %in% values[lengths < (num_plates*min_cell_expected)],]
 
     real_full_table <- table(manifest_with_permutations$plate, manifest_with_permutations[[test_column]])
-    real_other_table <- real_full_table[,which(dimnames(real_full_table)[[2]] %in% values[lengths < (num_plates*min_cell_expected)])]
+    real_other_table <- real_full_table[,which(dimnames(real_full_table)[[2]] %in% values[lengths < (num_plates*min_cell_expected)]), drop=FALSE]
 
     peaks <- as.vector(apply(real_other_table, 2, function(x){max(x)}))
     spreads <- as.vector(apply(real_other_table, 2, function(x){sum(x>0)}))
