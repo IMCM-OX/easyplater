@@ -45,7 +45,7 @@ test_that("write_manifest_excel() orders plates in correct order, not alphabetic
   expect_identical(
     object = {
       output_manifest_mod <- output_manifest |>
-        mutate(plate = ifelse(plate == "plate 1", "plate 10", plate))
+        dplyr::mutate(plate = ifelse(plate == "plate 1", "plate 10", plate))
       write_dir = tempdir()
       write_manifest_excel(output_manifest_mod, file.path(write_dir, "output_manifest.xlsx"))
       sheets <- readxl::excel_sheets(file.path(write_dir, "output_manifest.xlsx"))
@@ -79,16 +79,5 @@ test_that("write_plate_layout_html() works on example output manifest", {
       file.remove(file.path(write_dir, "plate_layouts.html"))
     },
     regexp = "Output created"
-  )
-})
-
-test_that("write_plate_layout_html() errors if asked to render pdf document", {
-  expect_error(
-    object = {
-      write_dir = tempdir()
-      write_plate_layout_html(output_manifest, html_filepath = file.path(write_dir, "plate_layouts.html"), output_format = "pdf_document")
-      file.remove(file.path(write_dir, "plate_layouts.html"))
-    },
-    class = "simpleError"
   )
 })

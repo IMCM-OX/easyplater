@@ -153,7 +153,6 @@ write_plate_layout_html <- function(manifest_df,
                                     include_label = NULL,
                                     include_legend = NULL,
                                     html_title = "Plate layouts",
-                                    output_format = "html_document",
                                     fig_height = 8,
                                     fig_width = 10,
                                     rmd_template = NULL) {
@@ -163,16 +162,6 @@ write_plate_layout_html <- function(manifest_df,
   # Check that plate size is 96
   if (plate_size != 96) {
     stop("plate_size (", plate_size, ") != 96: write_plate_layout_html() is currently only implemented for 96-well plates")
-  }
-
-  # Error if user asks to render pdf_document or word_document
-  if (identical(output_format, rmarkdown::pdf_document) |
-      identical(output_format, rmarkdown::pdf_document()) |
-      identical(output_format, rmarkdown::word_document) |
-      identical(output_format, rmarkdown::word_document())) {
-    stop("Tabs in the template document cannot be rendered as pdf or word documents. Please use an html-based document format, like `rmarkdown::html_document` (default) or `rmdformats::robobook`.")
-  } else if (output_format %in% c("pdf_document", "word_document")) {
-    stop("Tabs in the template document cannot be rendered as pdf or word documents. Please use an html-based document format, like 'html_document' (default) or `rmdformats::robobook`.")
   }
 
   if (is.null(rmd_template)) {
@@ -200,6 +189,5 @@ write_plate_layout_html <- function(manifest_df,
 
   rmarkdown::render(input = rmd_template,
                     output_dir = html_dir,
-                    output_file = html_file,
-                    output_format = output_format)
+                    output_file = html_file)
 }
