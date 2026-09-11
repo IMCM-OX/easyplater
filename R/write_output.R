@@ -191,7 +191,9 @@ write_plate_layout_html <- function(manifest_df,
     include_legend <- color_by[!color_by %in% "SampleID"]
   }
 
-  plate_list <- split(manifest_df, gtools::mixedsort(manifest_df[[plate_col]]))
+  plate_list <- split(manifest_df, manifest_df[[plate_col]])
+  # Arrange by plates in correct order, not alphabetically
+  plate_list <- plate_list[gtools::mixedorder(names(plate_list))]
 
   html_dir <- dirname(html_filepath)
   html_file <- basename(html_filepath)
