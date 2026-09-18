@@ -41,6 +41,23 @@ test_that("write_manifest_excel() reorders rows into the correct order for mappi
   )
 })
 
+test_that("write_manifest_excel() orders plates in correct order, not alphabetical", {
+  expect_identical(
+    object = {
+      output_manifest_mod <- output_manifest |>
+        dplyr::mutate(plate = ifelse(plate == "plate 1", "plate 10", plate))
+      write_dir = tempdir()
+      write_manifest_excel(output_manifest_mod, file.path(write_dir, "output_manifest.xlsx"))
+      sheets <- readxl::excel_sheets(file.path(write_dir, "output_manifest.xlsx"))
+      file.remove(file.path(write_dir, "output_manifest.xlsx"))
+      sheets[2:3]
+    },
+    expected = {
+      c("plate 2", "plate 10")
+    }
+  )
+})
+
 test_that("write_manifest_excel() errors when given well ids that deviate from the complete 96-well complete set", {
   expect_error(
     object = {
@@ -62,16 +79,5 @@ test_that("write_plate_layout_html() works on example output manifest", {
       file.remove(file.path(write_dir, "plate_layouts.html"))
     },
     regexp = "Output created"
-  )
-})
-
-test_that("write_plate_layout_html() errors if asked to render pdf document", {
-  expect_error(
-    object = {
-      write_dir = tempdir()
-      write_plate_layout_html(output_manifest, html_filepath = file.path(write_dir, "plate_layouts.html"), output_format = "pdf_document")
-      file.remove(file.path(write_dir, "plate_layouts.html"))
-    },
-    class = "simpleError"
   )
 })

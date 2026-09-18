@@ -92,6 +92,7 @@ write_manifest_excel <- function(manifest_df, file,
 
       return(plate_layout)
     })
+  plate_layouts <- plate_layouts[gtools::mixedorder(names(plate_layouts))]
 
   # Arrange wells in manifest rowwise for some platforms (e.g. NULISA)
   if (rowwise) {
@@ -99,10 +100,13 @@ write_manifest_excel <- function(manifest_df, file,
       lapply(\(plate_df) {
         ordered_wells <- gtools::mixedsort(plate_df$well)
         plate_df <- plate_df[match(ordered_wells, plate_df$well),]
-
         return(plate_df)
       }) |> dplyr::bind_rows(.id = plate_col)
   }
+
+  # Arrange by plates in correct order, not alphabetically
+  manifest_df <- manifest_df |>
+    dplyr::slice(gtools::mixedorder(.data[[plate_col]]))
 
   c(
     list(Manifest = manifest_df),
@@ -129,7 +133,6 @@ write_manifest_excel <- function(manifest_df, file,
 #' @param include_label Character vector. Names of variables to be labeled in plate wells. Defaults to be identical to `color_by` argument. It can be handy to leave out columms with variables that are too large to display.
 #' @param include_legend Character vector. Names of variables for which to plot a legend. Defaults to be identical to `color_by` argument, except "SampleID". It can be handy to leave out columms with too many unique values to display in a legend.
 #' @param html_title String. Main title of html report.
-#' @param output_format The R Markdown output format to convert to. This should either be "html_document" (default) or an output format object (e.g. [rmarkdown::html_document()] or [rmdformats::robobook()])
 #' @param fig_height Numeric. Figure height in inches.
 #' @param fig_width Numeric. Figure width in inches.
 #' @param rmd_template The input R Markdown file to be rendered. See `Customizing the html output` below for details.
@@ -149,7 +152,6 @@ write_plate_layout_html <- function(manifest_df,
                                     include_label = NULL,
                                     include_legend = NULL,
                                     html_title = "Plate layouts",
-                                    output_format = "html_document",
                                     fig_height = 8,
                                     fig_width = 10,
                                     rmd_template = NULL) {
@@ -159,16 +161,6 @@ write_plate_layout_html <- function(manifest_df,
   # Check that plate size is 96
   if (plate_size != 96) {
     stop("plate_size (", plate_size, ") != 96: write_plate_layout_html() is currently only implemented for 96-well plates")
-  }
-
-  # Error if user asks to render pdf_document or word_document
-  if (identical(output_format, rmarkdown::pdf_document) |
-      identical(output_format, rmarkdown::pdf_document()) |
-      identical(output_format, rmarkdown::word_document) |
-      identical(output_format, rmarkdown::word_document())) {
-    stop("Tabs in the template document cannot be rendered as pdf or word documents. Please use an html-based document format, like `rmarkdown::html_document` (default) or `rmdformats::robobook`.")
-  } else if (output_format %in% c("pdf_document", "word_document")) {
-    stop("Tabs in the template document cannot be rendered as pdf or word documents. Please use an html-based document format, like 'html_document' (default) or `rmdformats::robobook`.")
   }
 
   if (is.null(rmd_template)) {
@@ -188,12 +180,13 @@ write_plate_layout_html <- function(manifest_df,
   }
 
   plate_list <- split(manifest_df, manifest_df[[plate_col]])
+  # Arrange by plates in correct order, not alphabetically
+  plate_list <- plate_list[gtools::mixedorder(names(plate_list))]
 
   html_dir <- dirname(html_filepath)
   html_file <- basename(html_filepath)
 
   rmarkdown::render(input = rmd_template,
                     output_dir = html_dir,
-                    output_file = html_file,
-                    output_format = output_format)
+                    output_file = html_file)
 }

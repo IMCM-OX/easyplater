@@ -13,7 +13,6 @@ write_plate_layout_html(
   include_label = NULL,
   include_legend = NULL,
   html_title = "Plate layouts",
-  output_format = "html_document",
   fig_height = 8,
   fig_width = 10,
   rmd_template = NULL
@@ -35,8 +34,6 @@ write_plate_layout_html(
 \item{include_legend}{Character vector. Names of variables for which to plot a legend. Defaults to be identical to \code{color_by} argument, except "SampleID". It can be handy to leave out columms with too many unique values to display in a legend.}
 
 \item{html_title}{String. Main title of html report.}
-
-\item{output_format}{The R Markdown output format to convert to. This should either be "html_document" (default) or an output format object (e.g. \code{\link[rmarkdown:html_document]{rmarkdown::html_document()}} or \code{\link[rmdformats:robobook]{rmdformats::robobook()}})}
 
 \item{fig_height}{Numeric. Figure height in inches.}
 
