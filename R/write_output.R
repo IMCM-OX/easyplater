@@ -133,7 +133,6 @@ write_manifest_excel <- function(manifest_df, file,
 #' @param include_label Character vector. Names of variables to be labeled in plate wells. Defaults to be identical to `color_by` argument. It can be handy to leave out columms with variables that are too large to display.
 #' @param include_legend Character vector. Names of variables for which to plot a legend. Defaults to be identical to `color_by` argument, except "SampleID". It can be handy to leave out columms with too many unique values to display in a legend.
 #' @param html_title String. Main title of html report.
-#' @param output_format The R Markdown output format to convert to. This should either be "html_document" (default) or an output format object (e.g. [rmarkdown::html_document()] or [rmdformats::robobook()])
 #' @param fig_height Numeric. Figure height in inches.
 #' @param fig_width Numeric. Figure width in inches.
 #' @param rmd_template The input R Markdown file to be rendered. See `Customizing the html output` below for details.
