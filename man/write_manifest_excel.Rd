@@ -14,7 +14,7 @@ write_manifest_excel(
 )
 }
 \arguments{
-\item{manifest_df}{A data frame or tibble to write to disk.}
+\item{manifest_df}{A data frame or tibble in a format matching the output of make_easyplater_design().}
 
 \item{file}{String. File to write to.}
 
