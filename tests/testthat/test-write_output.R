@@ -1,13 +1,19 @@
-test_that("manifest2layouts() generates expected layout", {
+test_that("make_plate_layouts() generates expected layouts", {
   expect_identical(
     object = {
-      manifest2layouts(output_manifest)[[1]][1:2,1:3]
+      make_plate_layouts(output_manifest) |> lapply(function(x) x[1:2,1:3])
     },
     expected = {
-      data.frame("." = c("A", "B"),
-                 "1" = c("13", "36"),
-                 "2" = c("8", "80"),
-                 check.names = FALSE)
+      list(
+        "plate 1" = data.frame("." = c("A", "B"),
+                               "1" = c("13", "36"),
+                               "2" = c("8", "80"),
+                               check.names = FALSE),
+        "plate 2" = data.frame("." = c("A", "B"),
+                               "1" = c("995", "952"),
+                               "2" = c("967", "1018"),
+                               check.names = FALSE)
+      )
     }
   )
 })
