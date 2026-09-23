@@ -127,6 +127,17 @@ make_easyplater_design <- function(manifest_df, plateID = NULL,
     }
   }
 
+  # Check that columns_for_scoring and column_weights have matching lengths
+  if (length(columns_for_scoring) != length(column_weights))  {
+    stop("length(columns_for_scoring) != length(column_weights)")
+  }
+
+  # Check that columns_for_scoring are present in the input data frame
+  if (!all(columns_for_scoring %in% colnames(manifest_df))) {
+    missing_cols <- columns_for_scoring[!columns_for_scoring %in% colnames(manifest_df)]
+    stop(paste0("The following column names in 'columns_for_scoring' are missing from 'manifest_df': ", missing_cols))
+  }
+
   # Create a temporarily modified environment with seed set to `seed` input, without changing user's RNG
   withr::with_seed(seed, {
     plate_seeds <- sample(1000000, length(plateIDs))
