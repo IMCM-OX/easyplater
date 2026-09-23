@@ -5,42 +5,47 @@ well <- let <- num <- NULL
 #' @importFrom OlinkAnalyze olink_displayPlateLayout
 OlinkAnalyze::olink_displayPlateLayout
 
-#' Write plate manifest to Excel spreadsheet
+#' Convert manifest into an 8 x 12 plate layout matrices
 #'
-#' Write the plate manifest output by [easyplater::make_easyplater_design] to an excel spreadsheet.
+#' Takes output manifest from [easyplater::make_easyplater_design] and generates a 8 x 12 layout matrix for each plate.
 #'
-#' @param manifest_df A data frame or tibble to write to disk.
-#' @param file String. File to write to.
+#' @param manifest_df A data frame or tibble in a format matching the output of make_easyplater_design().
 #' @param plate_col String. Name of column indicating the plate that samples belong to.
 #' @param display_col String. Column to draw labels for plate layout from.
 #' @param plate_size Numeric. Size of plate. Currently, anything other than 96 will return error.
-#' @param rowwise Logical. Arrange manifest as if filling plates rowwise, rather than columnwise.
 #'
-#' @returns Returns input `manifest_df` invisibly.
-#'
-#' @section Output:
-#' The first sheet in the output is a tabular manifest with the same contents as x. Additional sheets contain a plate layout matrix for each plate specified by the column controlled by the `plate_col` argument.
+#' @returns List of plate layout matrices, named by plate.
 #'
 #' @export
 #'
 #' @examples
-#' \dontshow{
-#' .old_wd <- setwd(tempdir())
-#' }
-#' # If a filename is given without a path, write_manifest_excel() will write
-#' # the file to the current working directory.
-#' write_manifest_excel(output_manifest, "output_manifest.xlsx")
-#'
-#' \dontshow{
-#' file.remove("output_manifest.xlsx")
-#' setwd(.old_wd)
-#' }
-write_manifest_excel <- function(manifest_df, file,
-                                 plate_col = "plate",
-                                 display_col = "SampleID",
-                                 plate_size = 96,
-                                 rowwise = FALSE) {
-
+#' ## We can use the built-in output_manifest loaded with easyplater
+#' make_plate_layouts(output_manifest)
+#' #> $`plate 1`
+#' #> .  1  2  3  4    5    6    7    8    9 10  11  12
+#' #> 1 A 13  8 14  2   42   16    9   18   38 54  35 NC1
+#' #> 2 B 36 80 75 46   62 <NA>    5 <NA>   53 12  28 NC2
+#' #> 3 C 64 33 43 76 <NA>   10   15   30   77 26  48 NC3
+#' #> 4 D 63 22 45 79   37   51   24    3   32 57  67 PC1
+#' #> 5 E 58 17 20 34   69   70 <NA>   44    4  7  78 PC2
+#' #> 6 F 66 71 39 29   19   41   23   59 <NA> 50  52 PC3
+#' #> 7 G 74 73 25 56   60   31   55   68   49 40 SC1 PC4
+#' #> 8 H 47 65 21 72   11    6    1   61   27  0 SC2 PC5
+#' #
+#' #> $`plate 2`
+#' #> .    1    2    3    4    5    6    7   8    9   10   11  12
+#' #> 1 A  995  967  984  981  999  988  972 950 1009  947  955 NC1
+#' #> 2 B  952 1018  962 1022  949  961  993 944  991 1021  941 NC2
+#' #> 3 C  960  974 1004  945 1013 1005 1012 954  957  965 1014 NC3
+#' #> 4 D 1002 1017 1008  987 1025  994  951 982 1020  979  983 PC1
+#' #> 5 E  953  946 1001 1010  959  956 1011 942 1026  973  977 PC2
+#' #> 6 F  968 1015 1023 1000 1006  970 1003 976  980  969  966 PC3
+#' #> 7 G  998  963  996 1016 1019  958  990 989  997  964  SC1 PC4
+#' #> 8 H 1024  992  986  978  975 1007  971 943  985  948  SC2 PC5
+make_plate_layouts <- function(manifest_df,
+                               plate_col = "plate",
+                               display_col = "SampleID",
+                               plate_size = 96) {
   # Check that plate size is 96
   if (plate_size == 96) {
     plate_num_rows <- 8
@@ -94,14 +99,106 @@ write_manifest_excel <- function(manifest_df, file,
     })
   plate_layouts <- plate_layouts[gtools::mixedorder(names(plate_layouts))]
 
+  plate_layouts
+}
+
+#' Arrange manifest rowwise
+#'
+#' Arranges rows of output manifest from [easyplater::make_easyplater_design] in order they appear on a plate arranged rowwise (A1, A2, A3, etc.), rather than columnwise (A1, B1, C1, etc.).
+#'
+#' @inheritParams make_plate_layouts
+#'
+#' @returns Data frame or tibble (preserving class of `manifest_df` argument)
+#'
+#' @export
+#'
+#' @examples
+#' ## We can use the built-in output_manifest loaded with easyplater
+#' ## By default, easyplater produces manifests arranged to fill plates columnwise:
+#' output_manifest
+#' #> # A tibble: 192 × 9
+#' #>    SampleID Cohort Group Sex   AgeGroup plate   column   row   well
+#' #>    <chr>    <chr>  <chr> <chr> <chr>    <chr>   <chr>    <chr> <chr>
+#' #>  1 13       C1     D1    2     9        plate 1 Column 1 A     A1
+#' #>  2 36       C1     D8    1     9        plate 1 Column 1 B     B1
+#' #>  3 64       C1     HC2   1     9        plate 1 Column 1 C     C1
+#' #>  4 63       C2     D7    2     8        plate 1 Column 1 D     D1
+#' #>  5 58       C1     D7    2     9        plate 1 Column 1 E     E1
+#' #>  6 66       C2     D8    2     9        plate 1 Column 1 F     F1
+#' #>  7 74       C1     D1    2     7        plate 1 Column 1 G     G1
+#' #>  8 47       C1     HC1   1     6        plate 1 Column 1 H     H1
+#' #>  9 8        C2     D1    2     7        plate 1 Column 2 A     A2
+#' #> 10 80       C2     HC1   2     6        plate 1 Column 2 B     B2
+#' #> # ℹ 182 more rows
+#' #> # ℹ Use `print(n = ...)` to see more rows
+#'
+#' ## The following manifest is easier to read if filling plates rowwise:
+#' arrange_manifest_rowwise(output_manifest)
+#' #> # A tibble: 192 × 9
+#' #>    SampleID Cohort Group Sex   AgeGroup plate   column    row   well
+#' #>    <chr>    <chr>  <chr> <chr> <chr>    <chr>   <chr>     <chr> <chr>
+#' #>  1 13       C1     D1    2     9        plate 1 Column 1  A     A1
+#' #>  2 8        C2     D1    2     7        plate 1 Column 2  A     A2
+#' #>  3 14       C1     D8    2     9        plate 1 Column 3  A     A3
+#' #>  4 2        C1     D7    1     8        plate 1 Column 4  A     A4
+#' #>  5 42       C2     D1    1     5        plate 1 Column 5  A     A5
+#' #>  6 16       C2     D1    NA    5        plate 1 Column 6  A     A6
+#' #>  7 9        C2     D8    2     6        plate 1 Column 7  A     A7
+#' #>  8 18       C2     D7    1     8        plate 1 Column 8  A     A8
+#' #>  9 38       C1     D7    1     NA       plate 1 Column 9  A     A9
+#' #> 10 54       C1     HC1   2     8        plate 1 Column 10 A     A10
+#' #> # ℹ 182 more rows
+#' #> # ℹ Use `print(n = ...)` to see more rows
+arrange_manifest_rowwise <- function(manifest_df, plate_col = "plate") {
+  manifest_df <- split(manifest_df, manifest_df[[plate_col]]) |>
+    lapply(\(plate_df) {
+      ordered_wells <- gtools::mixedsort(plate_df$well)
+      plate_df <- plate_df[match(ordered_wells, plate_df$well),]
+      return(plate_df)
+    }) |> dplyr::bind_rows(.id = plate_col)
+
+  manifest_df
+}
+
+
+#' Write plate manifest to Excel spreadsheet
+#'
+#' Write the plate manifest output by [easyplater::make_easyplater_design] to an excel spreadsheet.
+#'
+#' @inheritParams make_plate_layouts
+#' @param file String. File to write to.
+#' @param rowwise Logical. Arrange manifest as if filling plates rowwise, rather than columnwise.
+#'
+#' @returns Returns input `manifest_df` invisibly.
+#'
+#' @section Output:
+#' The first sheet in the output is a tabular manifest with the same contents as x. Additional sheets contain a plate layout matrix for each plate specified by the column controlled by the `plate_col` argument.
+#'
+#' @export
+#'
+#' @examples
+#' \dontshow{
+#' .old_wd <- setwd(tempdir())
+#' }
+#' # If a filename is given without a path, write_manifest_excel() will write
+#' # the file to the current working directory.
+#' write_manifest_excel(output_manifest, "output_manifest.xlsx")
+#'
+#' \dontshow{
+#' file.remove("output_manifest.xlsx")
+#' setwd(.old_wd)
+#' }
+write_manifest_excel <- function(manifest_df, file,
+                                 plate_col = "plate",
+                                 display_col = "SampleID",
+                                 plate_size = 96,
+                                 rowwise = FALSE) {
+
+  plate_layouts <- make_plate_layouts(manifest_df)
+
   # Arrange wells in manifest rowwise for some platforms (e.g. NULISA)
   if (rowwise) {
-    manifest_df <- split(manifest_df, manifest_df[[plate_col]]) |>
-      lapply(\(plate_df) {
-        ordered_wells <- gtools::mixedsort(plate_df$well)
-        plate_df <- plate_df[match(ordered_wells, plate_df$well),]
-        return(plate_df)
-      }) |> dplyr::bind_rows(.id = plate_col)
+    manifest_df <- arrange_manifest_rowwise(manifest_df)
   }
 
   # Arrange by plates in correct order, not alphabetically
@@ -190,3 +287,4 @@ write_plate_layout_html <- function(manifest_df,
                     output_dir = html_dir,
                     output_file = html_file)
 }
+

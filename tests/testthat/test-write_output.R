@@ -1,3 +1,34 @@
+test_that("make_plate_layouts() generates expected layouts", {
+  expect_identical(
+    object = {
+      make_plate_layouts(output_manifest) |> lapply(function(x) x[1:2,1:3])
+    },
+    expected = {
+      list(
+        "plate 1" = data.frame("." = c("A", "B"),
+                               "1" = c("13", "36"),
+                               "2" = c("8", "80"),
+                               check.names = FALSE),
+        "plate 2" = data.frame("." = c("A", "B"),
+                               "1" = c("995", "952"),
+                               "2" = c("967", "1018"),
+                               check.names = FALSE)
+      )
+    }
+  )
+})
+
+test_that("arrange_manifest_rowwise() works", {
+  expect_identical(
+    object = {
+      arrange_manifest_rowwise(output_manifest)$well[1:3]
+    },
+    expected = {
+      c("A1", "A2", "A3")
+    }
+  )
+})
+
 test_that("write_manifest_excel() errors when each plate doesn't have exactly 96 samples", {
   expect_error(
     object = {
