@@ -29,6 +29,36 @@ test_that("example_manifest.csv can be read with utils::read.csv() and the conte
   )
 })
 
+test_that("columns_for_scoring that don't exist in manifest_df causes custom simple error", {
+  expect_error(
+    object = {
+      # Run easyplater
+      make_easyplater_design(
+        manifest_df = input_manifest,
+        columns_for_scoring = c("Cohort","Group","Sex","AgeGroup"),
+        column_weights = c(5, 5, 10, 4)
+      )
+    },
+    class = "simpleError"
+  )
+})
+
+test_that("length(columns_for_scoring) != length(column_weights) causes simple error", {
+  expect_error(
+    object = {
+      # Run easyplater
+      make_easyplater_design(
+        manifest_df = input_manifest,
+        columns_for_scoring = c("Cohort","Group","Sex"),
+        column_weights = c(5, 5, 10, 4)
+      )
+    },
+    class = "simpleError"
+  )
+})
+
+
+
 #### Using "fixed_wells", not "internal_control_well_indices" ####
 
 test_that("make_easyplater_design() returns the expected single plate output using `fixed_wells`", {
