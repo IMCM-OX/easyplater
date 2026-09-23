@@ -1,3 +1,18 @@
+test_that("manifest2layouts() generates expected layout", {
+  expect_identical(
+    object = {
+      manifest2layouts(output_manifest)[[1]][1:2,1:3]
+    },
+    expected = {
+      data.frame("." = c("A", "B"),
+                 "1" = c("13", "36"),
+                 "2" = c("8", "80"),
+                 check.names = FALSE)
+    }
+  )
+})
+
+
 test_that("write_manifest_excel() errors when each plate doesn't have exactly 96 samples", {
   expect_error(
     object = {
