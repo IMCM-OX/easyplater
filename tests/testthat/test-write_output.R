@@ -18,6 +18,16 @@ test_that("make_plate_layouts() generates expected layouts", {
   )
 })
 
+test_that("arrange_manifest_rowwise() works", {
+  expect_identical(
+    object = {
+      arrange_manifest_rowwise(output_manifest)$well[1:3]
+    },
+    expected = {
+      c("A1", "A2", "A3")
+    }
+  )
+})
 
 test_that("write_manifest_excel() errors when each plate doesn't have exactly 96 samples", {
   expect_error(
